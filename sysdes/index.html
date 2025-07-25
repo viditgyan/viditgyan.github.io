@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Big Tech System Design Ultimate List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .generic-section.expandable-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .generic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .generic-header:hover {
+            transform: translateX(5px);
+        }
+        
+        .expand-icon {
+            font-size: 1.2em;
+            color: #667eea;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+        }
+        
+        .generic-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+        
+        .generic-content.expanded {
+            /*increase it more if content is big*/
+            max-height: 2000px;
+            opacity: 1;
+        }
+        
+        .generic-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 30px;
+        }
+        
+        .system-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .system-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .system-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .system-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+        
+        .card-preview {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        .card-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 24px;
+            height: 24px;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        
+        .system-card:hover .card-icon {
+            opacity: 1;
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            max-height: 90vh;
+            width: 100%;
+            overflow-y: auto;
+            transform: scale(0.8) translateY(50px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        
+        .modal-header {
+            padding: 30px 30px 20px;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .modal-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .modal-subtitle {
+            color: #666;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .section-title {
+            color: #34495e;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        li {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        li::before {
+            content: '•';
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        strong {
+            color: #c0392b;
+            font-weight: 600;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .modal-content {
+                margin: 10px;
+                max-height: 95vh;
+            }
+            
+            .modal-header, .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-title {
+                font-size: 1.5em;
+            }
+        }
+        
+        /* Smooth scrollbar for modal */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>System Design Guide</h1>
+            <p class="subtitle">Master Big Tech System Design with Interactive Cards</p>
+        </header>
+
+        <div class="generic-section expandable-card" id="nfr-card">
+            <!-- <div class="nfr-header" onclick="toggleNFR()"> -->
+            <div class="generic-header" onclick="toggleSection('nfr')">
+                <h2 style="color: #2c3e50; margin-bottom: 0;">Understanding Non-Functional Requirements (NFRs)</h2>
+                <div class="expand-icon" id="nfr-icon">▼</div>
+            </div>
+            <div class="generic-content" id="nfr-content">
+                <p style="margin-top: 20px;">Before diving into specific system designs, it's crucial to understand Non-Functional Requirements (NFRs). Unlike functional requirements that define what a system <em>does</em>, NFRs specify <em>how</em> a system should operate. These are the quality attributes that determine a system's success in the real world. Key NFRs include:</p>
+                <ul style="margin-top: 15px;">
+                    <li><strong>Scalability:</strong> The ability to handle increasing loads without performance degradation.</li>
+                    <li><strong>Availability:</strong> The measure of a system's uptime and accessibility to users.</li>
+                    <li><strong>Performance:</strong> The speed and responsiveness of the system, often measured in latency and throughput.</li>
+                    <li><strong>Consistency:</strong> Ensuring that all nodes in a distributed system have the same data at the same time.</li>
+                    <li><strong>Reliability:</strong> The system's ability to perform its intended function without failure.</li>
+                    <li><strong>Security:</strong> Protecting the system and its data from unauthorized access.</li>
+                    <li><strong>Maintainability:</strong> The ease with which a system can be modified or repaired.</li>
+                </ul>
+                <p style="margin-top: 15px;">Ignoring NFRs is a common pitfall in system design interviews and can lead to systems that fail under real-world conditions.</p>
+            </div>
+        </div>
+
+        <div class="generic-section expandable-card" id="capacity-card">
+            <div class="generic-header" onclick="toggleSection('capacity')">
+                <h2 style="color: #2c3e50; margin-bottom: 0;">Capacity Estimation & Performance Numbers</h2>
+                <div class="expand-icon" id="capacity-icon">▼</div>
+            </div>
+            <div class="generic-content" id="capacity-content">
+                <p style="margin-top: 20px;">Back-of-the-envelope calculations are crucial in system design interviews. These help estimate system capacity, performance requirements, and resource needs. Here are key numbers and calculation techniques:</p>
+                
+                <h4 style="color: #2980b9; margin-top: 25px;">Key Performance Numbers to Remember:</h4>
+                <ul style="margin-top: 15px;">
+                    <li><strong>L1 Cache Reference:</strong> 0.5 ns</li>
+                    <li><strong>L2 Cache Reference:</strong> 7 ns</li>
+                    <li><strong>Main Memory Reference:</strong> 100 ns</li>
+                    <li><strong>SSD Random Read:</strong> 150 μs (150,000 ns)</li>
+                    <li><strong>HDD Seek:</strong> 10 ms (10,000,000 ns)</li>
+                    <li><strong>Network Round Trip (Same Datacenter):</strong> 0.5 ms</li>
+                    <li><strong>Network Round Trip (Cross-Continental):</strong> 150 ms</li>
+                </ul>
+
+                <h4 style="color: #2980b9; margin-top: 25px;">Storage and Bandwidth Estimates:</h4>
+                <ul style="margin-top: 15px;">
+                    <li><strong>1 KB:</strong> Small text message or tweet</li>
+                    <li><strong>100 KB:</strong> Small image or web page</li>
+                    <li><strong>1 MB:</strong> High-quality photo</li>
+                    <li><strong>10 MB:</strong> Minute of HD video</li>
+                    <li><strong>100 MB:</strong> Movie trailer</li>
+                    <li><strong>1 GB:</strong> Movie or 1000 high-quality photos</li>
+                </ul>
+
+                <h4 style="color: #2980b9; margin-top: 25px;">QPS and Scale Calculations:</h4>
+                <ul style="margin-top: 15px;">
+                    <li><strong>Daily Active Users (DAU) to QPS:</strong> DAU × Actions/Day ÷ 86,400 seconds</li>
+                    <li><strong>Peak QPS:</strong> Average QPS × 2-3 (accounting for traffic spikes)</li>
+                    <li><strong>Database Connections:</strong> QPS ÷ 1000 (rough estimate for connection pooling)</li>
+                    <li><strong>Cache Hit Ratio:</strong> Typically 80-95% for well-designed systems</li>
+                    <li><strong>Single Server Capacity:</strong> ~1000-10,000 QPS depending on complexity</li>
+                </ul>
+
+                <h4 style="color: #2980b9; margin-top: 25px;">Common Calculation Examples:</h4>
+                <ul style="margin-top: 15px;">
+                    <li><strong>Twitter-like System:</strong> 300M DAU × 2 tweets/day = 600M tweets/day = ~7,000 QPS</li>
+                    <li><strong>URL Shortener:</strong> 100M URLs/day creation = ~1,200 QPS write, 10:1 read ratio = 12,000 QPS read</li>
+                    <li><strong>Chat System:</strong> 1B messages/day = ~12,000 QPS, each message ~100 bytes = 1.2 MB/s</li>
+                    <li><strong>Video Platform:</strong> 1M hours watched/day = 40,000 concurrent streams, 1 Mbps each = 40 Gbps bandwidth</li>
+                </ul>
+
+                <h4 style="color: #2980b9; margin-top: 25px;">Storage Estimation Tips:</h4>
+                <ul style="margin-top: 15px;">
+                    <li><strong>Text Data:</strong> Username (50 bytes), Tweet (280 chars = 280 bytes), Metadata (200 bytes)</li>
+                    <li><strong>Media Storage:</strong> Photo (~2 MB), Video (~100 MB/minute), Thumbnail (~50 KB)</li>
+                    <li><strong>Growth Over Time:</strong> Calculate for 5 years: Daily storage × 365 × 5</li>
+                    <li><strong>Replication Factor:</strong> Multiply by 3x for redundancy and backups</li>
+                    <li><strong>Compression:</strong> Text (50% reduction), Images (10-20% reduction)</li>
+                </ul>
+
+                <p style="margin-top: 15px;"><strong>Pro Tip:</strong> Always state your assumptions clearly (e.g., "Assuming 1 billion users, each posting twice a day...") and round numbers for easier calculation. The goal is to be in the right ballpark, not to be perfectly accurate.</p>
+            </div>
+        </div>
+
+        <div class="cards-grid">
+            <div class="system-card" onclick="openModal('modal1')">
+                <div class="card-icon">🎟️</div>
+                <div class="card-title">Ticket Booking System</div>
+                <div class="card-preview">Design a high-concurrency ticket booking system like BookMyShow with atomic seat locks and consistent payments.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal2')">
+                <div class="card-icon">🔗</div>
+                <div class="card-title">URL Shortener</div>
+                <div class="card-preview">Build a URL shortening service like Bitly with unique code generation and high QPS redirects.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal3')">
+                <div class="card-icon">💬</div>
+                <div class="card-title">Messaging System</div>
+                <div class="card-preview">Create a real-time messaging platform like WhatsApp with reliable delivery and offline storage.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal4')">
+                <div class="card-icon">💳</div>
+                <div class="card-title">Payment Gateway</div>
+                <div class="card-preview">Develop a secure payment system like Stripe with idempotency, fraud detection, and PCI compliance.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal5')">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Ad Click Aggregator</div>
+                <div class="card-preview">Build a real-time ad analytics system like Google Ads with deduplication and scalable queries.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal6')">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">Distributed Cache</div>
+                <div class="card-preview">Design a distributed caching system like Redis with sharding, eviction, and replication strategies.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal7')">
+                <div class="card-icon">📱</div>
+                <div class="card-title">News Feed System</div>
+                <div class="card-preview">Create a personalized news feed like Instagram with timeline ranking and efficient fanout mechanisms.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal8')">
+                <div class="card-icon">🚦</div>
+                <div class="card-title">Rate Limiter</div>
+                <div class="card-preview">Implement API rate limiting with token bucket algorithm and Redis-based per-user limits.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal9')">
+                <div class="card-icon">🔔</div>
+                <div class="card-title">Webhooks System</div>
+                <div class="card-preview">Design a reliable webhook delivery system with retry mechanisms and exactly-once delivery patterns.</div>
+            </div>
+
+            <div class="system-card" onclick="openModal('modal10')">
+                <div class="card-icon">📈</div>
+                <div class="card-title">Trending Hashtags</div>
+                <div class="card-preview">Build a real-time trending system like Twitter with sliding windows and approximate counting algorithms.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal1" onclick="closeModal(event, 'modal1')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal1')">&times;</button>
+                <div class="modal-title">Ticket Booking System (e.g., BookMyShow)</div>
+                <div class="modal-subtitle">Designing a ticket booking system involves handling high concurrency and ensuring data consistency, especially during peak demand for popular events.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Atomic Seat Locks:</strong> To prevent double booking, the system must implement a mechanism to lock seats atomically when a user selects them. This can be achieved using database transactions with appropriate isolation levels or distributed locking mechanisms. A temporary lock with a timeout (e.g., 5 minutes) allows the user to complete the payment. If the payment is not completed within the timeframe, the lock is released.</li>
+                    <li><strong>Consistent Payments, Cancellations, and Refunds:</strong> Payments should be processed through a reliable payment gateway. The system must handle payment failures gracefully and ensure that seat locks are released if payment fails. Cancellations and refunds require a clear workflow to update seat availability and process financial transactions accurately.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>High Availability:</strong> The system must be available, especially during high-traffic periods for popular event ticket releases.</li>
+                    <li><strong>Scalability:</strong> The architecture should scale horizontally to handle a massive number of concurrent users.</li>
+                    <li><strong>Consistency:</strong> Strong consistency is crucial for booking and payment processing to prevent issues like double booking.</li>
+                    <li><strong>Low Latency:</strong> Searching for events and viewing seat maps should be fast.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Optimistic Locking:</strong> Used for seat reservation to handle concurrent bookings without blocking reads</li>
+                    <li><strong>Pessimistic Locking:</strong> Alternative approach that locks seats immediately upon selection</li>
+                    <li><strong>Database Isolation Levels:</strong> SERIALIZABLE or REPEATABLE_READ to prevent phantom reads during booking</li>
+                    <li><strong>Circuit Breaker Pattern:</strong> Protect payment gateway from cascading failures</li>
+                    <li><strong>SAGA Pattern:</strong> Handle distributed transactions across booking, payment, and notification services</li>
+                    <li><strong>Redis TTL:</strong> Implement seat lock expiration using time-to-live on cached locks</li>
+                    <li><strong>Database Sharding:</strong> Partition by event_id or venue_id for horizontal scaling</li>
+                    <li><strong>CQRS:</strong> Separate read models for seat availability from write models for bookings</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://www.educative.io/courses/grokking-the-system-design-interview/3j6xJ3n646m" target="_blank">Grokking the System Design Interview: Design a Movie Ticket Booking System</a></li>
+                    <li><a href="https://interviewready.io/blog/ticket-booking-system-design" target="_blank">System Design of a ticket booking system - InterviewReady</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal2" onclick="closeModal(event, 'modal2')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal2')">&times;</button>
+                <div class="modal-title">URL Shortener (e.g., Bitly)</div>
+                <div class="modal-subtitle">A URL shortener service creates a short alias for a long URL, making it easier to share.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Unique Short Code Generation:</strong> The core of a URL shortener is generating a unique and short identifier for each long URL. Common approaches include hashing (like MD5 or SHA256) or using a base-62 encoded auto-incrementing counter.</li>
+                    <li><strong>High QPS Redirects:</strong> The redirection process must be extremely fast. A simple key-value store (like Redis or DynamoDB) mapping the short code to the long URL is ideal for low-latency lookups.</li>
+                    <li><strong>Link Expiry, Analytics, and Custom Aliases:</strong> Implement features like setting an expiration time for links, logging click data for analytics, and allowing users to create custom short codes.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>High Availability:</strong> The redirection service must be highly available.</li>
+                    <li><strong>Low Latency:</strong> Redirects should happen with minimal delay, typically under 100ms.</li>
+                    <li><strong>Scalability:</strong> The system should be able to handle a massive number of URLs and a high rate of read requests for redirection.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Base62 Encoding:</strong> Convert numeric IDs to short alphanumeric strings (a-z, A-Z, 0-9)</li>
+                    <li><strong>Consistent Hashing:</strong> Distribute URLs across cache servers for horizontal scaling</li>
+                    <li><strong>Collision Handling:</strong> Handle hash collisions using techniques like linear probing or chaining</li>
+                    <li><strong>CDN (Content Delivery Network):</strong> Cache redirects geographically close to users</li>
+                    <li><strong>Database Partitioning:</strong> Shard by hash of short URL for even distribution</li>
+                    <li><strong>Bloom Filter:</strong> Quickly check if a custom alias already exists before database lookup</li>
+                    <li><strong>Write-Heavy System:</strong> Optimize for frequent URL creation with eventual consistency</li>
+                    <li><strong>Analytics Pipeline:</strong> Use message queues to collect click events asynchronously</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://www.educative.io/courses/grokking-the-system-design-interview/m2G4n9n0qAG" target="_blank">System Design Interview – URL Shortener</a></li>
+                    <li><a href="https://www.bytebytego.com/courses/system-design-interview/design-a-url-shortener" target="_blank">Design a URL Shortener - ByteByteGo</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal3" onclick="closeModal(event, 'modal3')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal3')">&times;</button>
+                <div class="modal-title">WhatsApp/Slack Messaging</div>
+                <div class="modal-subtitle">A real-time messaging system needs to deliver messages reliably and handle a massive number of concurrent users.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Reliable Delivery and Order Guarantees:</strong> Use WebSockets for real-time communication and message queues (like RabbitMQ or Kafka) to ensure messages aren't lost if a recipient is offline. Message ordering can be handled with timestamps or sequence numbers.</li>
+                    <li><strong>Offline Storage and Real-time Scaling:</strong> Store messages for offline users in a database. When the user comes online, their client fetches the undelivered messages. The system should be designed with stateless services that can be scaled horizontally.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>Low Latency:</strong> Message delivery should be near real-time, under 500ms for online users.</li>
+                    <li><strong>High Availability:</strong> The messaging service must be highly available.</li>
+                    <li><strong>Scalability:</strong> The system must handle billions of users and a high volume of messages.</li>
+                    <li><strong>Durability:</strong> Messages should not be lost.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>WebSocket:</strong> Persistent bidirectional connection for real-time message delivery</li>
+                    <li><strong>Message Queue (Kafka/RabbitMQ):</strong> Ensure message delivery even when recipients are offline</li>
+                    <li><strong>At-least-once Delivery:</strong> Guarantee message delivery with possible duplicates</li>
+                    <li><strong>Idempotency:</strong> Handle duplicate messages gracefully using unique message IDs</li>
+                    <li><strong>Push vs Pull Model:</strong> WebSocket push for online users, polling for message retrieval</li>
+                    <li><strong>Message Ordering:</strong> Use sequence numbers or vector clocks for chronological ordering</li>
+                    <li><strong>Presence Service:</strong> Track user online/offline status using heartbeat mechanism</li>
+                    <li><strong>End-to-End Encryption:</strong> Encrypt messages on client side for security</li>
+                    <li><strong>Database Sharding:</strong> Partition messages by user_id or chat_id for scaling</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://www.infoq.com/articles/whatsapp-architecture/" target="_blank">Designing WhatsApp: A Deep Dive into a Messaging System Architecture</a></li>
+                    <li><a href="https://www.youtube.com/watch?v=c3QZq-V3aJc" target="_blank">System Design Interview: Design WhatsApp</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal4" onclick="closeModal(event, 'modal4')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal4')">&times;</button>
+                <div class="modal-title">Payment Gateway (e.g., Stripe)</div>
+                <div class="modal-subtitle">A payment gateway facilitates secure financial transactions between customers and merchants.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Idempotency:</strong> To prevent duplicate transactions, especially during network retries, each request should have a unique idempotency key. The server processes the first request and returns a cached result for subsequent retries with the same key.</li>
+                    <li><strong>Fraud Detection:</strong> Implement a real-time fraud detection system that analyzes various signals (e.g., user location, transaction amount) to block fraudulent transactions.</li>
+                    <li><strong>Retry Flows and PCI Compliance:</strong> Implement retry mechanisms with exponential backoff for transient failures. For handling sensitive card data, the system must adhere to PCI DSS, often by integrating with a certified Payment Service Provider (PSP).</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>High Reliability:</strong> The system must be extremely reliable to prevent financial losses.</li>
+                    <li><strong>Security:</strong> This is paramount. All communication must be encrypted, and sensitive data must be stored securely.</li>
+                    <li><strong>Consistency:</strong> Strong consistency is required for financial transactions.</li>
+                    <li><strong>Low Latency:</strong> Transaction processing should be fast to provide a good user experience.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>PCI DSS Compliance:</strong> Payment Card Industry Data Security Standard for handling card data</li>
+                    <li><strong>Idempotency Key:</strong> Unique request identifier to prevent duplicate transactions</li>
+                    <li><strong>Two-Phase Commit:</strong> Distributed transaction protocol for consistent payment processing</li>
+                    <li><strong>Payment Service Provider (PSP):</strong> Third-party service for secure card processing</li>
+                    <li><strong>Webhook:</strong> HTTP callbacks to notify merchants of payment status changes</li>
+                    <li><strong>Tokenization:</strong> Replace sensitive card data with non-sensitive tokens</li>
+                    <li><strong>Exponential Backoff:</strong> Retry strategy with increasing delays for failed transactions</li>
+                    <li><strong>Circuit Breaker:</strong> Prevent cascading failures when payment processors are down</li>
+                    <li><strong>ACID Properties:</strong> Ensure transaction atomicity, consistency, isolation, durability</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://www.youtube.com/watch?v=uWd7-a0a34I" target="_blank">Designing a Payment System - System Design Interview</a></li>
+                    <li><a href="https://stripe.com/docs/api" target="_blank">Stripe's API Design</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal5" onclick="closeModal(event, 'modal5')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal5')">&times;</button>
+                <div class="modal-title">Ad Click Aggregator (e.g., Google Ads)</div>
+                <div class="modal-subtitle">An ad click aggregator collects, processes, and provides analytics on ad clicks in near real-time.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Real-time Deduplication & Aggregation:</strong> Use a stream processing framework like Apache Flink or Spark Streaming. Deduplicate clicks using a unique event ID and a distributed cache. Aggregate clicks by various dimensions over different time windows.</li>
+                    <li><strong>Scalable Dashboard Queries:</strong> Store aggregated data in a database optimized for analytical queries, such as a columnar database (e.g., ClickHouse) or a data warehouse (e.g., BigQuery).</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>High Throughput:</strong> The system must handle a very high volume of click events, potentially millions per second.</li>
+                    <li><strong>Low Latency:</strong> The time from a click event to it being reflected in the analytics dashboard should be minimal.</li>
+                    <li><strong>Scalability:</strong> The entire pipeline, from ingestion to processing and storage, must be scalable.</li>
+                    <li><strong>Data Integrity:</strong> The system must not lose click data.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Stream Processing:</strong> Real-time data processing using Apache Kafka, Flink, or Spark Streaming</li>
+                    <li><strong>Deduplication:</strong> Remove duplicate clicks using unique event IDs and distributed cache</li>
+                    <li><strong>Time-based Windowing:</strong> Aggregate clicks over sliding or tumbling time windows</li>
+                    <li><strong>Columnar Database:</strong> Use ClickHouse or BigQuery for fast analytical queries</li>
+                    <li><strong>Lambda Architecture:</strong> Combine batch and stream processing for real-time and historical data</li>
+                    <li><strong>Event Sourcing:</strong> Store all click events as immutable log for replay and debugging</li>
+                    <li><strong>Partitioning:</strong> Distribute events by advertiser_id or campaign_id for parallel processing</li>
+                    <li><strong>Bloom Filter:</strong> Quickly check for duplicate events before expensive operations</li>
+                    <li><strong>Data Pipeline:</strong> ETL processes to transform raw clicks into aggregated metrics</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://medium.com/@bugfree.ai/designing-an-ad-click-aggregation-system-meta-senior-engineer-system-design-interview-guide-9a2f1b4c9c81" target="_blank">Designing an Ad Click Aggregation System - Meta Senior Engineer Guide</a></li>
+                    <li><a href="https://www.youtube.com/watch?v=tB0hQSLvY1o" target="_blank">System Design Interview: Ad Click Aggregator</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal6" onclick="closeModal(event, 'modal6')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal6')">&times;</button>
+                <div class="modal-title">Distributed Cache (e.g., Redis/Memcached)</div>
+                <div class="modal-subtitle">A distributed cache is a system that pools the RAM of multiple computers to create a single, fast in-memory data store.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Fast Reads/Writes and Cache Invalidation:</strong> Storing data in RAM allows for extremely fast operations. Keeping the cache consistent with the source of truth is a major challenge, addressed by strategies like write-through, write-back, and cache-aside.</li>
+                    <li><strong>Sharding, Eviction, and Replication:</strong> Data is distributed across nodes using consistent hashing. When the cache is full, an eviction policy (like LRU or LFU) removes data. Data is replicated across multiple nodes for high availability.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>Low Latency:</strong> The primary goal of a cache is to provide low-latency data access.</li>
+                    <li><strong>High Availability:</strong> The cache should be resilient to node failures.</li>
+                    <li><strong>Scalability:</strong> The cache should be able to scale horizontally to handle more data and traffic.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Consistent Hashing:</strong> Distribute cache keys evenly across nodes and handle node failures</li>
+                    <li><strong>Cache-aside Pattern:</strong> Application manages cache, loads from database on cache miss</li>
+                    <li><strong>Write-through Cache:</strong> Write to cache and database simultaneously for consistency</li>
+                    <li><strong>Write-behind Cache:</strong> Write to cache first, database write happens asynchronously</li>
+                    <li><strong>LRU/LFU Eviction:</strong> Least Recently Used or Least Frequently Used cache replacement policies</li>
+                    <li><strong>Hot Partitioning:</strong> Handle uneven load distribution across cache nodes</li>
+                    <li><strong>Replication Factor:</strong> Number of copies of each cache entry for fault tolerance</li>
+                    <li><strong>Cache Stampede:</strong> Multiple processes regenerating same cache entry simultaneously</li>
+                    <li><strong>TTL (Time To Live):</strong> Automatic expiration of cache entries</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://www.educative.io/courses/grokking-the-system-design-interview/NE5wKkQv3YJ" target="_blank">Grokking the System Design Interview: Design a Distributed Cache</a></li>
+                    <li><a href="https://serhatgiydiren.com/blog/posts/system-design-interview-distributed-cache/" target="_blank">System Design Interview – Distributed Cache</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal7" onclick="closeModal(event, 'modal7')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal7')">&times;</button>
+                <div class="modal-title">News Feed (e.g., Instagram)</div>
+                <div class="modal-subtitle">A news feed system generates a personalized timeline of content for each user.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Timeline Ranking and Push vs. Pull:</strong> A personalized feed requires a ranking algorithm (often ML-based). A hybrid approach of push (fanout-on-write for most users) and pull (fanout-on-load for celebrities) is often used to generate feeds.</li>
+                    <li><strong>Fanout, Pagination, and De-dupe:</strong> A dedicated fanout service pushes new posts to follower feeds. Use cursor-based pagination to load the feed incrementally. The system should also de-duplicate posts to avoid showing the same content multiple times.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>Low Latency:</strong> Generating and retrieving the news feed should be fast.</li>
+                    <li><strong>High Availability:</strong> The news feed is a core feature and must be highly available.</li>
+                    <li><strong>Scalability:</strong> The system must scale to handle a large number of users, posts, and social connections.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Fanout-on-Write:</strong> Pre-compute feeds when posts are created (push model)</li>
+                    <li><strong>Fanout-on-Read:</strong> Generate feed when user requests it (pull model)</li>
+                    <li><strong>Hybrid Approach:</strong> Fanout-on-write for regular users, fanout-on-read for celebrities</li>
+                    <li><strong>Ranking Algorithm:</strong> ML-based scoring to personalize feed content</li>
+                    <li><strong>Celebrity Problem:</strong> Handle users with millions of followers efficiently</li>
+                    <li><strong>Timeline Service:</strong> Dedicated service to manage user timelines and feed generation</li>
+                    <li><strong>Cursor-based Pagination:</strong> Efficient pagination using timestamps instead of offsets</li>
+                    <li><strong>Content Deduplication:</strong> Prevent showing same post multiple times</li>
+                    <li><strong>Hot-Cold Storage:</strong> Recent posts in fast storage, older posts in cheaper storage</li>
+                    <li><strong>Feed Aggregation:</strong> Merge multiple content sources into single personalized timeline</li>
+                    <li><strong>Edge Rank Algorithm:</strong> Facebook's approach to scoring and ranking feed content</li>
+                    <li><strong>Real-time Updates:</strong> WebSocket connections for instant feed updates</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://www.bytebytego.com/courses/system-design-interview/design-a-news-feed-system" target="_blank">Designing a News Feed System - ByteByteGo</a></li>
+                    <li><a href="https://www.youtube.com/watch?v=U-Oa_b-cGG0" target="_blank">System Design Interview: Facebook News Feed</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal8" onclick="closeModal(event, 'modal8')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal8')">&times;</button>
+                <div class="modal-title">Rate Limiter (e.g., API Gateways)</div>
+                <div class="modal-subtitle">A rate limiter is a crucial component for protecting APIs from overuse and abuse.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Per-user/API Limits using Redis:</strong> Rate limiting rules are often stored in a configuration. A distributed cache like Redis is ideal for storing request counters for each user or API key due to its speed and atomic operations.</li>
+                    <li><strong>Token Bucket and Burst Control:</strong> The token bucket algorithm is a popular method. A bucket has a certain capacity and is filled with tokens at a fixed rate. Each request consumes a token. If the bucket is empty, the request is rejected. This naturally handles bursts of requests.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>High Performance:</strong> The rate limiter should add minimal overhead to the request processing time.</li>
+                    <li><strong>Scalability:</strong> The rate limiter must be able to handle a high volume of requests.</li>
+                    <li><strong>Accuracy:</strong> The rate limiting decisions should be accurate.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Token Bucket Algorithm:</strong> Allow bursts by filling bucket with tokens at fixed rate</li>
+                    <li><strong>Sliding Window:</strong> Track requests within a moving time window for accurate limiting</li>
+                    <li><strong>Fixed Window:</strong> Reset counters at fixed intervals (simpler but less accurate)</li>
+                    <li><strong>Distributed Rate Limiting:</strong> Coordinate limits across multiple servers using Redis</li>
+                    <li><strong>Redis Atomic Operations:</strong> Use INCR, EXPIRE commands for thread-safe counting</li>
+                    <li><strong>Rate Limiting Headers:</strong> Return X-RateLimit-Remaining, X-RateLimit-Reset to clients</li>
+                    <li><strong>Graceful Degradation:</strong> Allow some requests through even when limiter fails</li>
+                    <li><strong>Hot Partitioning:</strong> Handle high-traffic users by spreading across multiple keys</li>
+                    <li><strong>Circuit Breaker Integration:</strong> Disable rate limiting temporarily if backing store fails</li>
+                    <li><strong>Leaky Bucket Algorithm:</strong> Process requests at constant rate, overflow gets dropped</li>
+                    <li><strong>Sliding Window Log:</strong> Keep timestamps of all requests for precise rate limiting</li>
+                    <li><strong>Rate Limiting Strategies:</strong> Per-user, per-IP, per-API key, global rate limits</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://www.bytebytego.com/courses/system-design-interview/design-a-rate-limiter" target="_blank">Design a Rate Limiter - ByteByteGo</a></li>
+                    <li><a href="https://www.youtube.com/watch?v=SgWb6tWx3S8" target="_blank">System Design Interview: Rate Limiter</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal9" onclick="closeModal(event, 'modal9')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal9')">&times;</button>
+                <div class="modal-title">Webhooks/Event Callback</div>
+                <div class="modal-subtitle">Webhooks are a way for an application to provide other applications with real-time information.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Reliable Retries and Error Handling:</strong> When an event occurs, the webhook request should be placed in a message queue. A separate worker process sends the webhook. If delivery fails, the worker should retry with an exponential backoff strategy. After several retries, the failed webhook can be moved to a dead-letter queue.</li>
+                    <li><strong>Exactly-once Delivery Patterns:</strong> Achieving exactly-once delivery is complex. A more practical goal is "at-least-once" delivery. To handle potential duplicates, the webhook payload should include a unique event ID, allowing the receiver to make their processing idempotent.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>Reliability:</strong> Webhooks must be delivered reliably.</li>
+                    <li><strong>Low Latency:</strong> Notifications should be delivered as close to real-time as possible.</li>
+                    <li><strong>Scalability:</strong> The system should be able to handle a large number of webhooks.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Dead Letter Queue:</strong> Store failed webhook deliveries for manual inspection/retry</li>
+                    <li><strong>Exponential Backoff:</strong> Increase retry delays exponentially to avoid overwhelming receivers</li>
+                    <li><strong>Idempotency Key:</strong> Include unique event ID to allow receivers to deduplicate</li>
+                    <li><strong>Webhook Signature:</strong> HMAC-based authentication to verify webhook authenticity</li>
+                    <li><strong>Circuit Breaker:</strong> Stop sending to consistently failing endpoints temporarily</li>
+                    <li><strong>Message Queue Integration:</strong> Use Kafka/RabbitMQ for reliable webhook delivery</li>
+                    <li><strong>Jitter:</strong> Add randomness to retry intervals to prevent thundering herd</li>
+                    <li><strong>Webhook Discovery:</strong> Allow clients to register/manage webhook endpoints</li>
+                    <li><strong>Event Filtering:</strong> Let subscribers choose which events they want to receive</li>
+                    <li><strong>HTTP Status Codes:</strong> Handle 2xx success, 4xx client errors, 5xx server errors appropriately</li>
+                    <li><strong>Timeout Configuration:</strong> Set appropriate timeouts for webhook HTTP requests</li>
+                    <li><strong>At-least-once Delivery:</strong> Guarantee delivery with possible duplicates, not exactly-once</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="https://webhook.site/" target="_blank">Webhook.site - A great tool for testing and debugging webhooks</a></li>
+                    <li><a href="https://www.youtube.com/watch?v=H7nCoanb-Cg" target="_blank">System Design Interview: Design a Webhook Service</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal10" onclick="closeModal(event, 'modal10')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event, 'modal10')">&times;</button>
+                <div class="modal-title">Trending Hashtags (e.g., Twitter)</div>
+                <div class="modal-subtitle">This system identifies the most popular hashtags in real-time.</div>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">Key Challenges & Solutions:</div>
+                <ul>
+                    <li><strong>Real-time Top-K and Sliding Windows:</strong> Hashtags from tweets are processed as a continuous stream. The system analyzes hashtags within a sliding time window (e.g., the last 5 minutes) to find the top K most frequent items.</li>
+                    <li><strong>Approximate Counting and Memory Efficiency:</strong> Since an exact count is not always necessary and can be memory-intensive, use probabilistic data structures like Count-Min Sketch or algorithms like "Heavy Hitters" to estimate frequencies efficiently.</li>
+                </ul>
+
+                <div class="section-title">Non-Functional Requirements:</div>
+                <ul>
+                    <li><strong>Real-time Processing:</strong> The system must identify trending topics with very low latency.</li>
+                    <li><strong>Scalability:</strong> It needs to handle the massive volume of tweets on a platform like Twitter.</li>
+                    <li><strong>Accuracy:</strong> While some approximation is acceptable, the results should be reasonably accurate.</li>
+                </ul>
+
+                <div class="section-title">Keywords:</div>
+                <ul>
+                    <li><strong>Count-Min Sketch:</strong> Probabilistic data structure for frequency counting with bounded error</li>
+                    <li><strong>Heavy Hitters Algorithm:</strong> Identify top-K frequent items in streaming data</li>
+                    <li><strong>Sliding Window:</strong> Maintain counts for recent time periods (e.g., last 5 minutes)</li>
+                    <li><strong>Stream Processing:</strong> Use Apache Storm, Flink, or Kafka Streams for real-time analysis</li>
+                    <li><strong>Hash Functions:</strong> Use multiple hash functions for Count-Min Sketch implementation</li>
+                    <li><strong>Time-based Partitioning:</strong> Partition data by timestamp for parallel processing</li>
+                    <li><strong>Approximate Algorithms:</strong> Trade accuracy for memory efficiency in high-volume streams</li>
+                    <li><strong>Min-Heap:</strong> Maintain top-K hashtags efficiently using priority queue</li>
+                    <li><strong>Lossy Counting:</strong> Alternative algorithm for finding frequent items with error bounds</li>
+                    <li><strong>Tumbling Window:</strong> Non-overlapping time windows for batch processing</li>
+                    <li><strong>Space-Saving Algorithm:</strong> Another approach for finding frequent items with limited memory</li>
+                    <li><strong>Decay Factor:</strong> Give more weight to recent hashtags vs older ones in trending calculation</li>
+                </ul>
+
+                <div class="section-title">External Links for Deeper Dive:</div>
+                <ul>
+                    <li><a href="http://infolab.stanford.edu/~ullman/mmds/ch4.pdf" target="_blank">Mining Data Streams - Chapter from "Mining of Massive Datasets"</a></li>
+                    <li><a href="https://towardsdatascience.com/system-design-real-time-trending-topics-on-social-media-7a47b196c816" target="_blank">System Design: Real-time Trending Topics on Social Media</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const icon = document.getElementById(sectionId + '-icon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('rotated');
+                icon.textContent = '▼';
+            } else {
+                content.classList.add('expanded');
+                icon.classList.add('rotated');
+                icon.textContent = '▲';
+            }
+        }
+
+        // function toggleNFR() {
+        //     const content = document.getElementById('nfr-content');
+        //     const icon = document.getElementById('nfr-icon');
+            
+        //     if (content.classList.contains('expanded')) {
+        //         content.classList.remove('expanded');
+        //         icon.classList.remove('rotated');
+        //         icon.textContent = '▼';
+        //     } else {
+        //         content.classList.add('expanded');
+        //         icon.classList.add('rotated');
+        //         icon.textContent = '▲';
+        //     }
+        // }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeModal(event, modalId) {
+            event.stopPropagation();
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                event.preventDefault(); // Prevent default browser behavior
+                // First check if there's an active modal
+                const activeModal = document.querySelector('.modal-overlay.active');
+                if (activeModal) {
+                    activeModal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                    return;
+                }
+                
+                // If no modal is active, check if NFR card is expanded
+                const nfrContent = document.getElementById('nfr-content');
+                const nfrIcon = document.getElementById('nfr-icon');
+                if (nfrContent && nfrContent.classList.contains('expanded')) {
+                    nfrContent.classList.remove('expanded');
+                    nfrIcon.classList.remove('rotated');
+                    nfrIcon.textContent = '▼';
+                    return;
+                }
+
+                const capacityContent = document.getElementById('capacity-content');
+                const capacityIcon = document.getElementById('capacity-icon');
+                if (capacityContent && capacityContent.classList.contains('expanded')) {
+                    capacityContent.classList.remove('expanded');
+                    capacityIcon.classList.remove('rotated');
+                    capacityIcon.textContent = '▼';
+                    return;
+                }
+            }
+        });
+
+        // Add smooth entrance animation for cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.system-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

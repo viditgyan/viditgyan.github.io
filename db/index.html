@@ -1,0 +1,3042 @@
+<!-- https://medium.com/@gaelgthomas/how-to-deploy-a-static-website-for-free-using-github-pages-8eddc194853b -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Indexing Strategies - Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nav-item {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            gap: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .sidebar-nav {
+            width: 280px;
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            bottom: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border-right: 3px solid #3498db;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-header-right {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-nav-right {
+            width: 280px;
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            bottom: 20px;
+            background: rgba(250, 250, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border-left: 3px solid #9b59b6;
+        }
+
+        .sidebar-nav-right .nav-link {
+            background: #9b59b6;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .sidebar-nav-right .nav-link:hover {
+            background: #8e44ad;
+            transform: translateX(-5px);
+        }
+
+        .sidebar-nav-right .nav-link.active {
+            background: #2c3e50;
+            font-weight: 600;
+        }
+
+        .sidebar-nav-right h3 {
+            color: #8e44ad;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            border-bottom: 2px solid #e8daef;
+            padding-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            margin-left: 320px;
+            margin-right: 320px;
+            flex: 1;
+        }
+
+        .nav-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .nav-section h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-link {
+            background: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .nav-link:hover {
+            background: #2980b9;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: #2c3e50;
+            font-weight: 600;
+        }
+
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .tier-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+        }
+
+        .tier-1 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .tier-2 { background: linear-gradient(135deg, #f39c12, #d68910); }
+        .tier-3 { background: linear-gradient(135deg, #27ae60, #229954); }
+
+        .index-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #3498db;
+            transition: all 0.3s ease;
+        }
+
+        .index-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .index-title {
+            color: #2c3e50;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rating {
+            color: #f39c12;
+            font-size: 1rem;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .concept-box, .performance-box, .interview-points {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .concept-box h4, .performance-box h4, .interview-points h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .perf-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .pros, .cons {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .pros {
+            border-left: 4px solid #27ae60;
+        }
+
+        .cons {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .pros h5, .cons h5 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .pros li {
+            color: #27ae60;
+        }
+
+        .cons li {
+            color: #e74c3c;
+        }
+
+        .db-tags {
+            margin-top: 15px;
+        }
+
+        .db-tag {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+
+        .use-cases {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .interview-tip {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .comparison-table th {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-to-top:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+
+        .dual-nav-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            z-index: 1002;
+            display: none;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 1400px) {
+            .sidebar-nav {
+                width: 250px;
+            }
+            
+            .sidebar-nav-right {
+                width: 250px;
+            }
+            
+            .main-content {
+                margin-left: 280px;
+                margin-right: 280px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar-nav {
+                width: 220px;
+            }
+            
+            .sidebar-nav-right {
+                width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 250px;
+                margin-right: 250px;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .sidebar-nav-right {
+                position: relative;
+                width: 100%;
+                right: auto;
+                top: auto;
+                bottom: auto;
+                margin-bottom: 20px;
+                order: 2;
+            }
+            
+            .main-content {
+                margin-right: 0;
+                order: 1;
+            }
+            
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-nav {
+                position: relative;
+                width: 100%;
+                left: auto;
+                top: auto;
+                bottom: auto;
+                margin-bottom: 20px;
+                order: 0;
+            }
+            
+            .sidebar-nav-right {
+                position: relative;
+                width: 100%;
+                right: auto;
+                top: auto;
+                bottom: auto;
+                margin-bottom: 20px;
+                order: 2;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-right: 0;
+                order: 1;
+            }
+            
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+            
+            .performance-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Interview Tips Section Specific Styling */
+        #interview-tips {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        #interview-tips h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 25px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #interview-tips h3 {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        #interview-tips ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #interview-tips ul li {
+            background: #f8f9fa;
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-left: 4px solid #3498db;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        #interview-tips ul li:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        #interview-tips img {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-nav {
+                position: relative;
+                width: 100%;
+                left: auto;
+                top: auto;
+                bottom: auto;
+                margin-bottom: 20px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-right: 0;
+            }
+            
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+            
+            .performance-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Interview Tips Section Specific Styling */
+        #interview-tips {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        #interview-tips h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 25px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #interview-tips h3 {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        #interview-tips ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #interview-tips ul li {
+            background: #f8f9fa;
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-left: 4px solid #3498db;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        #interview-tips ul li:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        #interview-tips img {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- <div class="scroll-progress" id="scrollProgress"></div>
+        <div class="dual-nav-indicator" id="dualNavIndicator">
+            📚 Left: Database Types & Fundamentals | 🎯 Right: Analysis & Interview Prep
+        </div> -->
+        <div class="header">
+            <h1>⛁ Database Indexing Strategies ⛁</h1>
+            <p>Comprehensive Reference Guide - From Fundamentals to Advanced Techniques</p>
+        </div>
+        <div class="main-content-wrapper">
+            <nav class="sidebar-nav">
+                <div class="sidebar-header">
+                    📚 Database Types & Index Fundamentals
+                </div>
+                <div class="nav-sections">
+                    <div>
+                        <h3>📍 Index Types</h3>
+                        <div class="nav-links">
+                            <a href="#btree" class="nav-link">B+ Tree</a>
+                            <a href="#hash" class="nav-link">Hash Index</a>
+                            <a href="#clustered" class="nav-link">Clustered vs Non-Clustered</a>
+                            <a href="#lsm" class="nav-link">LSM Tree</a>
+                            <a href="#bitmap" class="nav-link">Bitmap</a>
+                            <a href="#brin" class="nav-link">BRIN</a>
+                            <a href="#covering" class="nav-link">Covering</a>
+                            <a href="#gin" class="nav-link">GIN</a>
+                            <a href="#spatial" class="nav-link">R-Tree Spatial</a>
+                            <a href="#bloom" class="nav-link">Bloom Filter</a>
+                            <a href="#expression" class="nav-link">Expression</a>
+                            <a href="#partial" class="nav-link">Partial</a>
+                            <a href="#adaptive" class="nav-link">Learned/Adaptive</a>
+                            <a href="#compression" class="nav-link">Compression</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>🏛️ SQL Databases</h3>
+                        <div class="nav-links">
+                            <a href="#mysql" class="nav-link">MySQL</a>
+                            <a href="#postgresql" class="nav-link">PostgreSQL</a>
+                            <a href="#oracle" class="nav-link">Oracle</a>
+                            <a href="#sqlserver" class="nav-link">SQL Server</a>
+                            <a href="#sqlite" class="nav-link">SQLite</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>🌐 NoSQL Systems</h3>
+                        <div class="nav-links">
+                            <a href="#cassandra" class="nav-link">Cassandra</a>
+                            <a href="#mongodb" class="nav-link">MongoDB</a>
+                            <a href="#dynamodb" class="nav-link">DynamoDB</a>
+                            <a href="#redis" class="nav-link">Redis</a>
+                            <a href="#rocksdb" class="nav-link">RocksDB</a>
+                            <a href="#elasticsearch" class="nav-link">Elasticsearch</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>🔄 NewSQL Systems</h3>
+                        <div class="nav-links">
+                            <a href="#cockroachdb" class="nav-link">CockroachDB</a>
+                            <a href="#tidb" class="nav-link">TiDB</a>
+                            <a href="#spanner" class="nav-link">Google Spanner</a>
+                            <a href="#foundationdb" class="nav-link">FoundationDB</a>
+                            <a href="#yugabytedb" class="nav-link">YugabyteDB</a>
+                            <a href="#voltdb" class="nav-link">VoltDB</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>📊 Specialized</h3>
+                        <div class="nav-links">
+                            <a href="#timeseries" class="nav-link">Time-Series</a>
+                            <a href="#columnar" class="nav-link">Columnar</a>
+                            <a href="#graph" class="nav-link">Graph DB</a>
+                            <a href="#analytics" class="nav-link">Analytics</a>
+                            <a href="#consistent-hash" class="nav-link">Consistent Hash</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            
+            <nav class="sidebar-nav-right">
+                <div class="sidebar-header-right">
+                    🎯 Analysis & Prep
+                </div>
+                <div class="nav-sections">
+                    <div>
+                        <h3>⚖️ Analysis</h3>
+                        <div class="nav-links">
+                            <a href="#tradeoffs" class="nav-link">Trade-offs</a>
+                            <a href="#monitoring" class="nav-link">Monitoring</a>
+                            <a href="#optimization" class="nav-link">Optimization</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>📊 Comparison Tables</h3>
+                        <div class="nav-links">
+                            <a href="#comparison" class="nav-link">Quick Comparison</a>
+                            <a href="#newsql-index-comparison" class="nav-link">NewSQL Index Comparison</a>
+                            <a href="#write-performance" class="nav-link">Write Performance</a>
+                            <a href="#memory-usage" class="nav-link">Memory Usage</a>
+                            <a href="#vendor-performance" class="nav-link">Vendor Performance</a>
+                            <a href="#maintenance-performance" class="nav-link">Maintenance Cost</a>
+                            <a href="#newsql-comparison" class="nav-link">NewSQL Comparison</a>
+                            <a href="#concurrency-comparison" class="nav-link">Concurrency & Locking</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>🛠️ Operations</h3>
+                        <div class="nav-links">
+                            <a href="#troubleshooting" class="nav-link">Troubleshooting</a>
+                            <a href="#memory-management" class="nav-link">Memory Management</a>
+                            <a href="#anti-patterns" class="nav-link">Anti-Patterns</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>🎯 Quick Access</h3>
+                        <div class="nav-links">
+                            <a href="#interview-tips" class="nav-link">Interview Tips</a>
+                            <a href="#common-questions" class="nav-link">Common Questions</a>
+                            <a href="#advanced-design" class="nav-link">Advanced Design</a>
+                            <a href="#case-studies" class="nav-link">Case Studies</a>
+                            <a href="#decision-tree" class="nav-link">Decision Tree</a>
+                            <a href="#performance" class="nav-link">Performance Guide</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            
+            <main class="main-content">
+                <!-- <section id="timeseries" class="content-section">
+                    <div class="index-card">
+                        <h3>Time-Series Database Indexes</h3>
+                        <div class="concept-box">
+                            <h4>Optimized for Temporal Data</h4>
+                            <p><strong>Time-Partitioned:</strong> Data split by time intervals<br>
+                            <strong>BRIN:</strong> Block range for time correlation<br>
+                            <strong>LSM Tree:</strong> Write-optimized for high ingest<br>
+                            <strong>Downsampling:</strong> Pre-aggregated indexes for fast queries<br>
+                            <strong>Tag/Label Indexes:</strong> Fast filtering by metadata</p>
+                        </div>
+                        <div class="interview-tip">
+                            <h4>💡 Time-Series Interview Points</h4>
+                            <p><strong>Retention Policy:</strong> Automatic data expiry. <strong>Chunking:</strong> Improves query speed for recent data. <strong>Popular DBs:</strong> TimescaleDB, InfluxDB, Prometheus.</p>
+                        </div>
+                        <div class="db-tags">
+                            <span class="db-tag">TimescaleDB</span>
+                            <span class="db-tag">InfluxDB</span>
+                            <span class="db-tag">Prometheus</span>
+                            <span class="db-tag">ClickHouse</span>
+                        </div>
+                    </div>
+                </section> -->
+                <section id="tier1" class="content-section">
+                    <div class="tier-header tier-1">
+                        <h2>🔥 Tier 1: Must Know</h2>
+                        <p>Core concepts tested in 90% of database questions</p>
+                    </div>
+
+                    <div id="btree" class="index-card">
+                        <h3 class="index-title">B+ Tree Index <span class="rating">⭐⭐⭐⭐⭐</span></h3>
+                        <p class="subtitle">The gold standard - Default index in most modern databases</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p><strong>Internal nodes:</strong> Only store keys for navigation<br>
+                            <strong>Leaf nodes:</strong> Store actual data + linked together for sequential access<br>
+                            <strong>Balanced:</strong> All leaves at same level for guaranteed O(log n) performance</p>
+                        </div>
+
+                        <div class="performance-box">
+                            <h4>⚡ Performance Characteristics</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Search:</strong> O(log n)</div>
+                                <div class="perf-item"><strong>Insert/Delete:</strong> O(log n)</div>
+                                <div class="perf-item"><strong>Range Scans:</strong> O(log n + k)</div>
+                                <div class="perf-item"><strong>Storage Overhead:</strong> 15-25%</div>
+                            </div>
+                        </div>
+
+                        <div class="pros-cons">
+                            <div class="pros">
+                                <h5>✅ Advantages</h5>
+                                <ul>
+                                    <li>Faster range scans than B-Tree</li>
+                                    <li>Better cache locality</li>
+                                    <li>Leaf nodes are linked → excellent for ORDER BY</li>
+                                    <li>More keys per internal node → shorter tree</li>
+                                    <li>Supports both clustered and non-clustered</li>
+                                </ul>
+                            </div>
+                            <div class="cons">
+                                <h5>❌ Disadvantages</h5>
+                                <ul>
+                                    <li>Higher storage overhead than hash</li>
+                                    <li>Page splits can be expensive</li>
+                                    <li>Not optimal for pure equality lookups</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="use-cases">
+                            <h4>🎯 Perfect Use Cases</h4>
+                            <p>Primary keys, foreign keys, range queries (BETWEEN, >, <), sorting operations (ORDER BY), general OLTP workloads</p>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Goldmine</h4>
+                            <p><strong>Why B+ over B-Tree?</strong> Leaf linking enables efficient range scans and sequential access. Internal nodes can hold more keys (no data), reducing tree height and improving cache performance.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">MySQL (InnoDB)</span>
+                            <span class="db-tag">PostgreSQL</span>
+                            <span class="db-tag">Oracle</span>
+                            <span class="db-tag">SQL Server</span>
+                            <span class="db-tag">SQLite</span>
+                        </div>
+                    </div>
+
+                    <div id="hash" class="index-card">
+                        <h3 class="index-title">Hash Index <span class="rating">⭐⭐⭐⭐</span></h3>
+                        <p class="subtitle">Speed demon for exact matches - O(1) lookups when you need them</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Hash function maps keys to bucket locations. Collision handling via chaining or open addressing. No ordering maintained - pure speed for equality.</p>
+                        </div>
+
+                        <div class="performance-box">
+                            <h4>⚡ Performance Characteristics</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Equality Search:</strong> O(1) avg</div>
+                                <div class="perf-item"><strong>Range Queries:</strong> ❌ Not supported</div>
+                                <div class="perf-item"><strong>Storage Overhead:</strong> 10-25%</div>
+                                <div class="perf-item"><strong>Worst Case:</strong> O(n) if many collisions, O(1) average case</div>
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Key Point</h4>
+                            <p><strong>Hash Collision Strategy:</strong> Chaining (linked lists) vs Open Addressing (linear probing). Chaining handles high load factors better, open addressing has better cache locality.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">PostgreSQL</span>
+                            <span class="db-tag">MySQL (MEMORY)</span>
+                            <span class="db-tag">SQL Server (Memory-Optimized)</span>
+                            <span class="db-tag">Redis</span>
+                        </div>
+                    </div>
+
+                    <div id="clustered" class="index-card">
+                        <h3 class="index-title">Clustered vs Non-Clustered <span class="rating">⭐⭐⭐⭐⭐</span></h3>
+                        <p class="subtitle">Physical vs Logical organization - Most critical concept</p>
+                        
+                        <div class="pros-cons">
+                            <div class="pros">
+                                <h5>🏆 Clustered Index</h5>
+                                <ul>
+                                    <li><strong>Index IS the table</strong> - data stored in index order</li>
+                                    <li>Only ONE per table (data sorted one way)</li>
+                                    <li>Zero storage overhead</li>
+                                    <li>Fastest access for clustered key</li>
+                                    <li>Excellent range query performance</li>
+                                </ul>
+                            </div>
+                            <div class="cons">
+                                <h5>📋 Non-Clustered Index</h5>
+                                <ul>
+                                    <li><strong>Separate structure</strong> pointing to rows</li>
+                                    <li>Multiple indexes allowed per table</li>
+                                    <li>15-30% storage overhead</li>
+                                    <li>Requires extra I/O for data lookup</li>
+                                    <li>Covering indexes eliminate lookups</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Goldmine</h4>
+                            <p><strong>Page Splits:</strong> Random inserts in clustered index cause expensive page splits. Solution: Use GUID sequential generation or partition by time. <strong>Covering Index:</strong> Include all query columns to avoid key lookups.</p>
+                        </div>
+                    </div>
+
+                    <div id="lsm" class="index-card">
+                        <h3 class="index-title">LSM Tree (Log-Structured Merge Tree) <span class="rating">⭐⭐⭐⭐</span></h3>
+                        <p class="subtitle">Write-optimized architecture powering modern NoSQL</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p><strong>Write Path:</strong> Writes → In-memory MemTable → Immutable SSTable on disk<br>
+                            <strong>Background Process:</strong> Compaction merges SSTables, maintaining sorted order<br>
+                            <strong>Read Path:</strong> Check MemTable → Recent SSTables → Older levels</p>
+                        </div>
+
+                        <div class="performance-box">
+                            <h4>⚡ Performance & Trade-offs</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Writes:</strong> O(1) amortized</div>
+                                <div class="perf-item"><strong>Reads:</strong> O(log n) levels to check</div>
+                                <div class="perf-item"><strong>Space Amplification:</strong> 10-30% (normal), up to 200% (during compaction)</div>
+                                <div class="perf-item"><strong>Write Amplification:</strong> 10-50x during compaction</div>
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Deep Dive</h4>
+                            <p><strong>Amplification Triangle:</strong> Read amplification (check multiple levels) vs Write amplification (compaction overhead) vs Space amplification (temporary storage). Tune compaction strategy based on workload: Size-tiered (write-heavy) vs Leveled (read-heavy).</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">Cassandra</span>
+                            <span class="db-tag">ScyllaDB</span>
+                            <span class="db-tag">RocksDB</span>
+                            <span class="db-tag">HBase</span>
+                            <span class="db-tag">DynamoDB</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tier2" class="content-section">
+                    <div class="tier-header tier-2">
+                        <h2>⚡ Tier 2: High Priority for Senior Roles</h2>
+                        <p>Advanced topics that separate senior candidates</p>
+                    </div>
+
+                    <div id="bitmap" class="index-card">
+                        <h3 class="index-title">Bitmap Index <span class="rating">⭐⭐⭐⭐</span></h3>
+                        <p class="subtitle">OLAP powerhouse - Extremely efficient for analytical queries</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Each distinct value gets a bitmap. Each bit represents a row (1 = has value, 0 = doesn't). Bitwise operations (AND, OR, NOT) for lightning-fast query processing.</p>
+                        </div>
+
+                        <div class="cons">
+    <h5>❌ Critical Limitations</h5>
+    <ul>
+        <li>Becomes inefficient beyond 1000-10000 distinct values</li>
+        <li>Lock contention on updates in OLTP systems</li>
+        <li>Storage explosion: O(rows × cardinality)</li>
+    </ul>
+</div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Insight</h4>
+                            <p><strong>Cardinality Sweet Spot:</strong> Perfect for 2-1000 distinct values. Storage formula: (rows × cardinality) ÷ 8 bytes uncompressed. Becomes inefficient beyond 10,000 distinct values due to storage explosion.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">Oracle</span>
+                            <span class="db-tag">ClickHouse</span>
+                            <span class="db-tag">Vertica</span>
+                            <span class="db-tag">Apache Pinot</span>
+                        </div>
+                    </div>
+
+                    <div id="brin" class="index-card">
+                        <h3 class="index-title">BRIN (Block Range Index) <span class="rating">⭐⭐⭐</span></h3>
+                        <p class="subtitle">Space-efficient for correlated data - PostgreSQL's innovation</p>
+                        <p><strong>BRIN Limitation:</strong> Only effective with correlation coefficient > 0.1 between column values and physical storage order. Use pg_stats.correlation to verify.</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Stores min/max/null_count for consecutive page ranges. Extremely small index size (0.1-2% of table). Works only with naturally ordered/correlated data.</p>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Gold</h4>
+                            <p><strong>Correlation Dependency:</strong> Only effective when data has natural correlation with physical storage order. Perfect for time-series (timestamps), append-only tables, or geographically sorted data.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">PostgreSQL</span>
+                            <span class="db-tag">TimescaleDB</span>
+                        </div>
+                    </div>
+
+                    <div id="covering" class="index-card">
+                        <h3 class="index-title">Covering Index <span class="rating">⭐⭐⭐⭐</span></h3>
+                        <p class="subtitle">Query optimization technique - Include everything needed</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Non-clustered index that includes all columns needed by query. Eliminates table lookup → Index-only scan possible.</p>
+                            <pre>-- Instead of: INDEX(user_id)
+-- Create: INDEX(user_id) INCLUDE(name, email, status)
+-- Query satisfied entirely from index</pre>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Strategy</h4>
+                            <p><strong>Trade-off Analysis:</strong> Dramatically faster reads vs larger index size and slower writes. Perfect for read-heavy OLAP workloads, avoid for write-heavy OLTP.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">PostgreSQL</span>
+                            <span class="db-tag">SQL Server</span>
+                            <span class="db-tag">MySQL 8.0+</span>
+                        </div>
+
+                    </div>
+
+                    <div id="consistent-hash" class="index-card">
+                        <h3 class="index-title">Consistent Hash Index <span class="rating">⭐⭐⭐⭐</span></h3>
+                        <p class="subtitle">Distributed systems essential - Minimal data movement</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Keys and nodes placed on virtual ring. Hash function maps to ring positions. Adding/removing nodes requires minimal data redistribution.</p>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Deep Dive</h4>
+                            <p><strong>Virtual Nodes:</strong> Each physical node gets multiple positions on ring to ensure better load distribution. <strong>Replication:</strong> Data stored on N successive nodes clockwise for fault tolerance.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">DynamoDB</span>
+                            <span class="db-tag">Cassandra</span>
+                            <span class="db-tag">MongoDB Sharding</span>
+                            <span class="db-tag">Redis Cluster</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tier3" class="content-section">
+                    <div class="tier-header tier-3">
+                        <h2>🎯 Tier 3: Specialized Knowledge</h2>
+                        <p>Domain-specific and cutting-edge techniques</p>
+                    </div>
+
+                    <div id="gin" class="index-card">
+                        <h3 class="index-title">GIN (Generalized Inverted Index) <span class="rating">⭐⭐⭐</span></h3>
+                        <p class="subtitle">PostgreSQL specialty for complex data types</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Creates index entry for each component of composite values. Maps elements to rows containing them. Optimized for containment queries.</p>
+                            <pre>-- JSONB queries
+WHERE data @> '{"type": "premium"}'
+-- Array operations  
+WHERE tags @> ARRAY['urgent']</pre>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Insight</h4>
+                            <p><strong>Inverted Structure:</strong> Perfect for "contains" queries on arrays and JSONB. <strong>Performance:</strong> Excellent for sparse data, slower for dense arrays. <strong>Maintenance:</strong> Updates can be expensive due to posting list modifications.</p>
+                        </div>
+                        <div class="performance-box">
+                            <h4>⚡ Performance Characteristics</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Search:</strong> O(log n) + posting list</div>
+                                <div class="perf-item"><strong>Insert:</strong> O(log n) per element</div>
+                                <div class="perf-item"><strong>Storage:</strong> Variable (sparse data)</div>
+                                <div class="perf-item"><strong>Maintenance:</strong> Expensive updates</div>
+                            </div>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">PostgreSQL</span>
+                        </div>
+                    </div>
+
+                    <div id="spatial" class="index-card">
+                        <h3 class="index-title">R-Tree Index <span class="rating">⭐⭐⭐</span></h3>
+                        <p class="subtitle">Spatial data specialist - Industry standard for GIS</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Minimum Bounding Rectangles (MBR) group nearby objects. Tree structure for multi-dimensional data. Supports geometric operations (intersects, contains, within).</p>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Insight</h4>
+                            <p><strong>Curse of Dimensionality:</strong> R-Tree performance degrades beyond 3-4 dimensions. Alternative: High-dimensional indexing like LSH (Locality Sensitive Hashing).</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">PostGIS</span>
+                            <span class="db-tag">Oracle Spatial</span>
+                            <span class="db-tag">SQL Server Spatial</span>
+                            <span class="db-tag">MongoDB</span>
+                        </div>
+                    </div>
+
+                    <div id="bloom" class="index-card">
+                        <h3 class="index-title">Bloom Filter Index <span class="rating">⭐⭐⭐</span></h3>
+                        <p class="subtitle">Probabilistic membership testing - Fast negative lookups</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Bit array with multiple hash functions. Guarantees: No false negatives, possible false positives. Used as first-level filter to avoid expensive disk I/O.</p>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Math</h4>
+                            <p><strong>False Positive Rate:</strong> (1 - e^(-kn/m))^k where k=hash functions, n=elements, m=bit array size. <strong>Optimal k:</strong> (m/n) × ln(2) ≈ 0.693 × m/n</p>
+                        </div>
+
+                        <div class="performance-box">
+                            <h4>⚡ Performance Characteristics</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Space:</strong> ~10 bits per element</div>
+                                <div class="perf-item"><strong>False Positive:</strong> Configurable (1-10%)</div>
+                                <div class="perf-item"><strong>False Negative:</strong> Never (0%)</div>
+                                <div class="perf-item"><strong>Insert/Query:</strong> O(k) where k=hash functions</div>
+                            </div>
+                        </div>
+
+                        <div class="use-cases">
+                            <h4>🎯 Use Cases</h4>
+                            <p>LSM tree optimization, distributed cache misses, web crawling, database query optimization</p>
+                        </div>
+                        <div class="use-cases">
+                            <h4>🎯 Real-World Applications</h4>
+                            <p>BigTable/HBase negative lookups, Cassandra/ScyllaDB SSTable filtering, Chrome browser safe browsing, distributed cache systems, web crawling duplicate detection</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">Cassandra</span>
+                            <span class="db-tag">HBase</span>
+                            <span class="db-tag">RocksDB</span>
+                            <span class="db-tag">ScyllaDB</span>
+                            <span class="db-tag">Redis</span>
+                        </div>
+                    </div>
+
+                    <div id="expression" class="index-card">
+                        <h3 class="index-title">Expression Index <span class="rating">⭐⭐⭐</span></h3>
+                        <p class="subtitle">Function-based indexing - Index computed expressions</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Index on result of expression/function. Enables fast queries on computed values.</p>
+                            <pre>-- Case-insensitive email searches
+CREATE INDEX idx_email_lower ON users (LOWER(email));
+
+-- Date part queries
+CREATE INDEX idx_order_month ON orders (EXTRACT(MONTH FROM order_date));
+
+-- Computed columns
+CREATE INDEX idx_full_name ON users (first_name || ' ' || last_name);</pre>
+                        </div>
+
+                        <div class="use-cases">
+                            <h4>🎯 Perfect Use Cases</h4>
+                            <p>Case-insensitive searches, date part filtering, computed columns, JSON field extraction, trigonometric calculations</p>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Insight</h4>
+                            <p><strong>Deterministic Functions Only:</strong> Function must return same result for same input. <strong>Performance Trade-off:</strong> Faster queries vs overhead on every insert/update.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">PostgreSQL</span>
+                            <span class="db-tag">Oracle</span>
+                            <span class="db-tag">SQL Server</span>
+                            <span class="db-tag">MySQL 8.0+</span>
+                        </div>
+                    </div>
+
+                    <div id="partial" class="index-card">
+                        <h3 class="index-title">Partial Index <span class="rating">⭐⭐⭐</span></h3>
+                        <p class="subtitle">Selective indexing - Index only subset of rows</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Core Concept</h4>
+                            <p>Index includes only rows meeting specific condition. Smaller, more efficient indexes.</p>
+                            <pre>-- Only index active users
+CREATE INDEX idx_active_users ON users (email) WHERE status = 'active';
+
+-- Only index recent orders
+CREATE INDEX idx_recent_orders ON orders (order_date) 
+WHERE order_date > '2024-01-01';
+
+-- Only index non-null values
+CREATE INDEX idx_optional_field ON table (optional_field) 
+WHERE optional_field IS NOT NULL;</pre>
+                        </div>
+
+                        <div class="performance-box">
+                            <h4>⚡ Benefits</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Storage:</strong> 50-90% smaller</div>
+                                <div class="perf-item"><strong>Maintenance:</strong> Faster updates</div>
+                                <div class="perf-item"><strong>Cache:</strong> Better hit ratio</div>
+                                <div class="perf-item"><strong>I/O:</strong> Reduced disk access</div>
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Interview Strategy</h4>
+                            <p><strong>Selectivity Matters:</strong> Most effective when filtering condition has high selectivity (excludes large portion of data). Perfect for soft-deleted records, active/inactive status, recent data.</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">PostgreSQL</span>
+                            <span class="db-tag">SQLite</span>
+                            <span class="db-tag">SQL Server (Filtered)</span>
+                        </div>
+                    </div>
+
+                    <div id="adaptive" class="index-card">
+                        <h3 class="index-title">Learned & Adaptive Indexes <span class="rating">⭐⭐⭐</span></h3>
+                        <p class="subtitle">AI-powered indexing - The future of database optimization</p>
+                        
+                        <div class="concept-box">
+                            <h4>🧠 Machine Learning Approach</h4>
+                            <p><strong>Learned Index:</strong> ML model predicts data location instead of tree traversal<br>
+                            <strong>Adaptive Index:</strong> Self-tuning based on query patterns<br>
+                            <strong>Automatic Tuning:</strong> AI-driven index recommendations<br>
+                            <strong>Workload-Aware:</strong> Dynamic structure based on access patterns<br>
+                            <strong>Recursive Model:</strong> Hierarchy of models for different data ranges</p>
+                        </div>
+
+                        <div class="performance-box">
+                            <h4>⚡ Learned Index Performance</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Lookup:</strong> 70% faster than B+ trees (sorted data)</div>
+                                <div class="perf-item"><strong>Space:</strong> Up to 99% smaller than traditional indexes</div>
+                                <div class="perf-item"><strong>Training Cost:</strong> One-time model building overhead</div>
+                                <div class="perf-item"><strong>Adaptation:</strong> Continuous learning from queries</div>
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Future of Indexing Interview Gold</h4>
+                            <p><strong>Google Research:</strong> Learned indexes can outperform B+ trees by 70% for sorted data. <strong>Challenges:</strong> Model training overhead, data distribution changes, worst-case guarantees. <strong>Applications:</strong> Azure SQL Auto-tuning, Amazon RDS Performance Insights, Oracle Autonomous Database.</p>
+                        </div>
+
+                        <div class="use-cases">
+                            <h4>🎯 Current Applications</h4>
+                            <p>Time-series data (predictable patterns), read-heavy analytical workloads, cloud database auto-tuning, index recommendation systems</p>
+                        </div>
+
+                        <div class="db-tags">
+                            <span class="db-tag">Research</span>
+                            <span class="db-tag">Azure SQL</span>
+                            <span class="db-tag">Amazon RDS</span>
+                            <span class="db-tag">Oracle Autonomous</span>
+                            <span class="db-tag">AI/ML</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="mongodb" class="content-section">
+                    <div class="index-card">
+                        <h3>MongoDB Index Features</h3>
+                        <div class="concept-box">
+                            <h4>Flexible Document Indexing</h4>
+                            <p><strong>B-Tree:</strong> Default for all fields<br>
+                            <strong>Compound:</strong> Multi-field indexes<br>
+                            <strong>Text:</strong> Inverted index for text search<br>
+                            <strong>Geospatial:</strong> 2dsphere, 2d, and geoHaystack<br>
+                            <strong>Hashed:</strong> Sharding key distribution<br>
+                            <strong>Partial/Unique:</strong> Indexes with filters and uniqueness</p>
+                        </div>
+                        <div class="interview-tip">
+                            <h4>💡 MongoDB Interview Points</h4>
+                            <p><strong>Multikey:</strong> Indexes array fields for each element. <strong>Covered Query:</strong> All fields in index, no document fetch. <strong>TTL Index:</strong> Automatic expiry for time-based data.</p>
+                        </div>
+                        <div class="db-tags">
+                            <span class="db-tag">MongoDB</span>
+                            <span class="db-tag">Atlas</span>
+                            <span class="db-tag">Compass</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NewSQL Database Systems Section -->
+                <section id="newsql" class="content-section">
+                    <h2>🔄 NewSQL Database Systems</h2>
+                    <p class="section-intro">NewSQL databases combine ACID guarantees of traditional SQL systems with the horizontal scalability of NoSQL. They use sophisticated distributed indexing strategies and consensus algorithms.</p>
+
+                    <div class="index-card">
+                        <h3 id="cockroachdb">CockroachDB Index Strategy</h3>
+                        <div class="concept-box">
+                            <h4>Geo-Distributed ACID</h4>
+                            <p><strong>LSM Trees:</strong> Write-optimized storage engine<br>
+                            <strong>Distributed Range:</strong> Auto-sharding with range splitting<br>
+                            <strong>Inverted Index:</strong> JSON and array indexing<br>
+                            <strong>Partial Index:</strong> WHERE clause filtering<br>
+                            <strong>Covering Index:</strong> STORING clause for included columns<br>
+                            <strong>Geo-Partitioned:</strong> Locality-optimized placement</p>
+                        </div>
+                        
+                        <div class="performance-grid">
+                            <div class="perf-metric">
+                                <strong>Read Performance:</strong> Excellent (distributed reads)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Write Performance:</strong> Good (consensus overhead)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Consistency:</strong> Strong (Raft consensus)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Scalability:</strong> Horizontal (auto-sharding)
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 CockroachDB Interview Excellence</h4>
+                            <p><strong>Range Splitting:</strong> Automatic when 512MB reached (default), configurable via zone configs. <strong>Zone Configs:</strong> Control replica placement for compliance. <strong>Follower Reads:</strong> Read from nearest replica for reduced latency. <strong>Multi-Region:</strong> Locality-aware query planning.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">Distributed</span>
+                            <span class="db-tag">ACID</span>
+                            <span class="db-tag">Geo-Replicated</span>
+                            <span class="db-tag">Auto-Sharding</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="tidb">TiDB Index Architecture</h3>
+                        <div class="concept-box">
+                            <h4>MySQL-Compatible Distributed</h4>
+                            <p><strong>TiKV (LSM):</strong> RocksDB-based distributed storage<br>
+                            <strong>Region-Based:</strong> 96MB range partitions<br>
+                            <strong>Secondary Index:</strong> Global distributed indexes<br>
+                            <strong>Expression Index:</strong> Computed column indexing<br>
+                            <strong>Invisible Index:</strong> Testing without affecting optimizer<br>
+                            <strong>Clustered Index:</strong> Primary key as row identity</p>
+                        </div>
+                        
+                        <div class="performance-grid">
+                            <div class="perf-metric">
+                                <strong>OLTP:</strong> Excellent (TiKV optimized)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>OLAP:</strong> Good (TiFlash columnar)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Availability:</strong> High (Raft replication)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>MySQL Compat:</strong> 99% compatible
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 TiDB Interview Points</h4>
+                            <p><strong>HTAP:</strong> Hybrid transactional/analytical processing with TiFlash. <strong>Auto-Balancing:</strong> PD (Placement Driver) manages region distribution. <strong>Hotspot Handling:</strong> Region splitting and scattering. <strong>Global Index:</strong> Cross-region secondary indexes.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">MySQL Compatible</span>
+                            <span class="db-tag">HTAP</span>
+                            <span class="db-tag">Auto-Scaling</span>
+                            <span class="db-tag">Cloud Native</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="spanner">Google Spanner Indexing</h3>
+                        <div class="concept-box">
+                            <h4>Globally Consistent</h4>
+                            <p><strong>Interleaved Tables:</strong> Parent-child co-location<br>
+                            <strong>Secondary Index:</strong> Global and local variants<br>
+                            <strong>Null Filtered:</strong> Exclude NULL values<br>
+                            <strong>Storing Clause:</strong> Include non-key columns<br>
+                            <strong>Force Index:</strong> Query hint for index selection<br>
+                            <strong>TrueTime:</strong> External consistency with atomic clocks</p>
+                        </div>
+                        
+                        <div class="performance-grid">
+                            <div class="perf-metric">
+                                <strong>Global Consistency:</strong> External consistency
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Latency:</strong> 5-10ms (commit latency)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Availability:</strong> 99.999% SLA
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Scale:</strong> Petabyte+ databases
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 Spanner Interview Excellence</h4>
+                            <p><strong>Interleaving:</strong> Store child rows physically near parent for performance. <strong>Hot-spotting:</strong> Avoid monotonic keys, use UUID prefixes. <strong>Read-Only Transactions:</strong> No locks, uses snapshot isolation. <strong>External Consistency:</strong> Stronger than linearizability.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">Google Cloud</span>
+                            <span class="db-tag">External Consistency</span>
+                            <span class="db-tag">TrueTime</span>
+                            <span class="db-tag">Interleaved</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="foundationdb">FoundationDB Index Design</h3>
+                        <div class="concept-box">
+                            <h4>ACID Key-Value Foundation</h4>
+                            <p><strong>Key-Value Store:</strong> Ordered key-value with ACID<br>
+                            <strong>Layer Architecture:</strong> SQL/Document layers on top<br>
+                            <strong>Range Partitioning:</strong> Automatic key range distribution<br>
+                            <strong>Secondary Index:</strong> Built as additional key-value mappings<br>
+                            <strong>Multi-Version:</strong> MVCC for concurrent reads<br>
+                            <strong>Deterministic:</strong> Simulation testing for correctness</p>
+                        </div>
+                        
+                        <div class="performance-grid">
+                            <div class="perf-metric">
+                                <strong>ACID:</strong> Full ACID on distributed system
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Throughput:</strong> 10M+ ops/sec per cluster
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Latency:</strong> Low (optimized storage)
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Testing:</strong> Deterministic simulation
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 FoundationDB Interview Points</h4>
+                            <p><strong>Layers:</strong> Record Layer (Apple), Document Layer (MongoDB API). <strong>Simulation:</strong> Deterministic testing finds bugs before production. <strong>Recovery:</strong> Fast recovery with no single point of failure. <strong>Apple Scale:</strong> Powers iCloud and other Apple services.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">Key-Value</span>
+                            <span class="db-tag">Layered</span>
+                            <span class="db-tag">Deterministic</span>
+                            <span class="db-tag">Apple</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="yugabytedb">YugabyteDB Index Strategy</h3>
+                        <div class="concept-box">
+                            <h4>Postgres-Compatible Distributed</h4>
+                            <p><strong>LSM + B+ Tree:</strong> DocDB storage with PostgreSQL layer<br>
+                            <strong>Tablet Splitting:</strong> Automatic range partitioning<br>
+                            <strong>Global Index:</strong> Cross-tablet secondary indexes<br>
+                            <strong>Partial Index:</strong> PostgreSQL-compatible WHERE clauses<br>
+                            <strong>GIN Index:</strong> Generalized inverted index support<br>
+                            <strong>Colocated Tables:</strong> Performance optimization for related data</p>
+                        </div>
+                        
+                        <div class="performance-grid">
+                            <div class="perf-metric">
+                                <strong>PostgreSQL Compat:</strong> Binary compatible
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Multi-Cloud:</strong> Cloud agnostic deployment
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Geo-Distribution:</strong> Multi-region support
+                            </div>
+                            <div class="perf-metric">
+                                <strong>CDC:</strong> Change data capture
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 YugabyteDB Interview Excellence</h4>
+                            <p><strong>DocDB:</strong> Distributed document store beneath SQL layer. <strong>Colocation:</strong> Keep related tables on same tablet for performance. <strong>Read Replicas:</strong> Timeline consistency for read scaling. <strong>Geo-Partitioning:</strong> Row-level placement for compliance.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">PostgreSQL</span>
+                            <span class="db-tag">Multi-Cloud</span>
+                            <span class="db-tag">Geo-Distributed</span>
+                            <span class="db-tag">DocDB</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="voltdb">VoltDB Index Architecture</h3>
+                        <div class="concept-box">
+                            <h4>In-Memory OLTP</h4>
+                            <p><strong>Hash Index:</strong> Primary key equality lookups<br>
+                            <strong>Tree Index:</strong> Range queries and ordering<br>
+                            <strong>Partitioned:</strong> Single-partition transactions preferred<br>
+                            <strong>Materialized Views:</strong> Pre-computed aggregations<br>
+                            <strong>Export Connectors:</strong> Stream changes to external systems<br>
+                            <strong>K-Safety:</strong> Replica count for fault tolerance</p>
+                        </div>
+                        
+                        <div class="performance-grid">
+                            <div class="perf-metric">
+                                <strong>Throughput:</strong> 100K-1M TPS (depends on complexity)</div>
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Latency:</strong> Sub-millisecond
+                            </div>
+                            <div class="perf-metric">
+                                <strong>ACID:</strong> Full ACID compliance
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Use Case:</strong> Real-time analytics
+                            </div>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 VoltDB Interview Points</h4>
+                            <p><strong>Single-Partition:</strong> Avoid distributed transactions for best performance. <strong>Command Logging:</strong> Durability without traditional WAL. <strong>Export:</strong> Stream processing integration. <strong>Elastic:</strong> Add nodes without downtime.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">In-Memory</span>
+                            <span class="db-tag">Real-Time</span>
+                            <span class="db-tag">High Throughput</span>
+                            <span class="db-tag">OLTP</span>
+                        </div>
+                    </div>
+
+                <section id="timeseries" class="content-section">
+                    <div class="index-card">
+                        <h3>Time-Series Database Indexes</h3>
+                        <div class="concept-box">
+                            <h4>Optimized for Temporal Data</h4>
+                            <p><strong>Time-Partitioned:</strong> Data split by time intervals<br>
+                            <strong>BRIN:</strong> Block range for time correlation<br>
+                            <strong>LSM Tree:</strong> Write-optimized for high ingest<br>
+                            <strong>Downsampling:</strong> Pre-aggregated indexes for fast queries<br>
+                            <strong>Tag/Label Indexes:</strong> Fast filtering by metadata</p>
+                        </div>
+                        <div class="interview-tip">
+                            <h4>💡 Time-Series Interview Points</h4>
+                            <p><strong>Retention Policy:</strong> Automatic data expiry. <strong>Chunking:</strong> Improves query speed for recent data. <strong>Popular DBs:</strong> TimescaleDB, InfluxDB, Prometheus.</p>
+                        </div>
+                        <div class="db-tags">
+                            <span class="db-tag">TimescaleDB</span>
+                            <span class="db-tag">InfluxDB</span>
+                            <span class="db-tag">Prometheus</span>
+                            <span class="db-tag">ClickHouse</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="analytics" class="content-section">
+                    <div class="index-card">
+                        <h3>Analytical Database Indexes</h3>
+                        <div class="concept-box">
+                            <h4>OLAP-Optimized Indexing</h4>
+                            <p><strong>Bitmap:</strong> Fast bitwise filtering<br>
+                            <strong>Zone Maps:</strong> Min/max per block for skipping<br>
+                            <strong>Columnar:</strong> Indexes on columns, not rows<br>
+                            <strong>Materialized Views:</strong> Precomputed aggregates<br>
+                            <strong>Star Schema:</strong> Join and dimension indexes</p>
+                        </div>
+                        <div class="interview-tip">
+                            <h4>💡 Analytics Interview Points</h4>
+                            <p><strong>Segment Elimination:</strong> Skip irrelevant data blocks. <strong>Popular DBs:</strong> ClickHouse, Vertica, Snowflake, BigQuery.</p>
+                        </div>
+                        <div class="db-tags">
+                            <span class="db-tag">ClickHouse</span>
+                            <span class="db-tag">Vertica</span>
+                            <span class="db-tag">Snowflake</span>
+                            <span class="db-tag">BigQuery</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="columnar" class="content-section">
+                    <div class="index-card">
+                        <h3>Columnar Database Indexes</h3>
+                        <div class="concept-box">
+                            <h4>Column-Oriented Storage</h4>
+                            <p><strong>Column Index:</strong> Each column indexed separately<br>
+                            <strong>Dictionary Encoding:</strong> Fast value lookup<br>
+                            <strong>Zone Maps:</strong> Min/max for block skipping<br>
+                            <strong>Bitmap:</strong> Efficient for low-cardinality columns<br>
+                            <strong>Compression:</strong> Improves scan speed and reduces I/O</p>
+                        </div>
+                        <div class="interview-tip">
+                            <h4>💡 Columnar Interview Points</h4>
+                            <p><strong>OLAP:</strong> Suited for analytical queries, not OLTP. <strong>Popular DBs:</strong> Redshift, Snowflake, ClickHouse, Vertica.</p>
+                        </div>
+                        <div class="db-tags">
+                            <span class="db-tag">Redshift</span>
+                            <span class="db-tag">Snowflake</span>
+                            <span class="db-tag">ClickHouse</span>
+                            <span class="db-tag">Vertica</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="graph" class="content-section">
+                    <div class="index-card">
+                        <h3>Graph Database Indexes</h3>
+                        <div class="concept-box">
+                            <h4>Relationship-Centric Indexing</h4>
+                            <p><strong>Node/Edge Indexes:</strong> Fast lookup by ID or property<br>
+                            <strong>Full-Text:</strong> Search on node/edge properties<br>
+                            <strong>Path Indexes:</strong> Accelerate traversals<br>
+                            <strong>Label Indexes:</strong> Filter by node/edge type</p>
+                        </div>
+                        <div class="interview-tip">
+                            <h4>💡 Graph Interview Points</h4>
+                            <p><strong>Traversal:</strong> Indexes speed up shortest path and pattern matching. <strong>Popular DBs:</strong> Neo4j, JanusGraph, TigerGraph.</p>
+                        </div>
+                        <div class="db-tags">
+                            <span class="db-tag">Neo4j</span>
+                            <span class="db-tag">JanusGraph</span>
+                            <span class="db-tag">TigerGraph</span>
+                            <span class="db-tag">ArangoDB</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="db-specific" class="content-section">
+                    <h2>🏗️ Database-Specific Index Support</h2>
+                    
+                    <div class="index-card">
+                        <h3 id="mysql">MySQL Index Features</h3>
+                        <div class="concept-box">
+                            <h4>InnoDB (Default)</h4>
+                            <p><strong>Clustered:</strong> B+ Tree on PRIMARY KEY<br>
+                            <strong>Secondary:</strong> B+ Tree indexes<br>
+                            <strong>Full-Text:</strong> Inverted index for text search<br>
+                            <strong>Spatial:</strong> R-Tree for geometry types</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 MySQL Interview Points</h4>
+                            <p><strong>Index Merge:</strong> MySQL can combine multiple indexes in single query. <strong>Covering Index:</strong> Include all columns in SELECT to avoid table lookup.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="postgresql">PostgreSQL Index Features</h3>
+                        <div class="concept-box">
+                            <h4>Rich Index Ecosystem</h4>
+                            <p><strong>B-Tree:</strong> Default, supports most data types<br>
+                            <strong>GIN:</strong> JSONB, arrays, full-text search<br>
+                            <strong>GiST:</strong> Extensible, spatial data<br>
+                            <strong>BRIN:</strong> Block range for correlated data<br>
+                            <strong>Hash:</strong> Equality-only operations</p>
+                        </div>
+
+                        <div class="interview-tip">
+                            <h4>💡 PostgreSQL Interview Excellence</h4>
+                            <p><strong>JSONB Performance:</strong> GIN indexes on JSONB columns support fast containment queries (@>, ?, ?&). <strong>Partial Indexes:</strong> PostgreSQL pioneered conditional indexing. <strong>Index-Only Scans:</strong> VACUUM updates visibility map for covering queries.</p>
+                        </div>
+                    </div>
+                        
+                    <div class="index-card">
+                        <h3 id="oracle">Oracle Database Index Features</h3>
+                        <div class="concept-box">
+                            <h4>Enterprise Index Arsenal</h4>
+                            <p><strong>B-Tree:</strong> Standard for most queries<br>
+                            <strong>Bitmap:</strong> Data warehouse star schema optimization<br>
+                            <strong>Function-Based:</strong> Index expressions and function results<br>
+                            <strong>Domain:</strong> Spatial (R-Tree), Text (Inverted)<br>
+                            <strong>IOT:</strong> Index-Organized Tables (clustered)</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Oracle Interview Gold</h4>
+                            <p><strong>Bitmap Join Index:</strong> Pre-computed joins between fact and dimension tables. <strong>Reverse Key Index:</strong> Reduces hot blocks in RAC environments by reversing key bytes.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="sqlserver">SQL Server Index Features</h3>
+                        <div class="concept-box">
+                            <h4>Microsoft's Index Ecosystem</h4>
+                            <p><strong>Clustered:</strong> B+ Tree with data at leaf level<br>
+                            <strong>Non-Clustered:</strong> Separate structure with key lookups<br>
+                            <strong>Columnstore:</strong> Columnar storage for analytics<br>
+                            <strong>Memory-Optimized:</strong> Hash and Range indexes<br>
+                            <strong>Spatial:</strong> Geography and Geometry types</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 SQL Server Interview Points</h4>
+                            <p><strong>Columnstore:</strong> Segment elimination and batch mode processing. <strong>In-Memory OLTP:</strong> Lock-free hash indexes with bucket count tuning critical for performance.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="sqlite">SQLite Index Features</h3>
+                        <div class="concept-box">
+                            <h4>Lightweight Yet Powerful</h4>
+                            <p><strong>B+ Tree:</strong> Only index type available<br>
+                            <strong>Without ROWID:</strong> Table as clustered index<br>
+                            <strong>Partial:</strong> WHERE clause filtering<br>
+                            <strong>Expression:</strong> Function-based indexing<br>
+                            <strong>FTS:</strong> Full-text search with separate engine</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 SQLite Interview Insights</h4>
+                            <p><strong>Covering Index:</strong> SQLITE_INDEX_SCAN_UNIQUE optimization. <strong>Query Planner:</strong> Uses cost-based optimization with index intersection for multiple column queries.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="cassandra">Cassandra Index Strategies</h3>
+                        <div class="concept-box">
+                            <h4>Distributed LSM Architecture</h4>
+                            <p><strong>Primary Key:</strong> Partition key (hash) + Clustering key (sorted)<br>
+                            <strong>Secondary Index:</strong> Local indexes per node<br>
+                            <strong>SASI:</strong> SSTable Attached Secondary Index<br>
+                            <strong>Materialized Views:</strong> Automatic table denormalization</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Cassandra Interview Critical</h4>
+                            <p><strong>Anti-Pattern:</strong> Secondary indexes on high-cardinality data cause scatter-gather queries. <strong>Solution:</strong> Materialized views or application-level denormalization.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="dynamodb">DynamoDB Index Architecture</h3>
+                        <div class="concept-box">
+                            <h4>AWS Managed NoSQL</h4>
+                            <p><strong>Hash Key:</strong> Partition distribution across nodes<br>
+                            <strong>Range Key:</strong> Sorted within partition<br>
+                            <strong>GSI:</strong> Global Secondary Index (eventual consistency)<br>
+                            <strong>LSI:</strong> Local Secondary Index (strong consistency)<br>
+                            <strong>Sparse Index:</strong> Only items with index key</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 DynamoDB Interview Gold</h4>
+                            <p><strong>Hot Partitions:</strong> Avoid sequential keys (timestamps, counters). Use composite keys or add random suffix. <strong>GSI Projection:</strong> KEYS_ONLY vs INCLUDE vs ALL trade-off between storage cost and query flexibility.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="redis">Redis Index Patterns</h3>
+                        <div class="concept-box">
+                            <h4>In-Memory Data Structure Store</h4>
+                            <p><strong>Hash Tables:</strong> O(1) key lookups<br>
+                            <strong>Sorted Sets:</strong> Range queries with scores<br>
+                            <strong>RediSearch:</strong> Full-text and secondary indexes<br>
+                            <strong>RedisJSON:</strong> JSON path indexing<br>
+                            <strong>Bloom Filters:</strong> Probabilistic membership</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Redis Interview Insights</h4>
+                            <p><strong>Index Patterns:</strong> Use sorted sets for range queries, hash tags for data locality in cluster mode. <strong>Memory Optimization:</strong> Consider encoding settings and expiration policies.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="rocksdb">RocksDB Index Implementation</h3>
+                        <div class="concept-box">
+                            <h4>Embedded LSM Engine</h4>
+                            <p><strong>LSM Tree:</strong> Multiple levels with different compaction strategies<br>
+                            <strong>Block-Based Index:</strong> Index blocks for data blocks<br>
+                            <strong>Bloom Filters:</strong> Per SST file for negative lookups<br>
+                            <strong>Prefix Bloom:</strong> Optimize prefix scans<br>
+                            <strong>Partitioned Index:</strong> Reduce memory usage</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 RocksDB Interview Deep Dive</h4>
+                            <p><strong>Compaction Strategies:</strong> Universal (write-heavy) vs Level (read-heavy). <strong>Tuning:</strong> Block cache, write buffer size, and bloom filter bits per key critical for performance.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="elasticsearch">Elasticsearch Index Design</h3>
+                        <div class="concept-box">
+                            <h4>Search Engine Powerhouse</h4>
+                            <p><strong>Inverted Index:</strong> Term → Document mapping<br>
+                            <strong>Doc Values:</strong> Columnar storage for aggregations<br>
+                            <strong>Field Data:</strong> In-memory field values<br>
+                            <strong>BKD Tree:</strong> Numeric and geo-point indexing<br>
+                            <strong>Completion Suggester:</strong> Prefix-based autocomplete</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Elasticsearch Interview Excellence</h4>
+                            <p><strong>Index Template:</strong> Dynamic mapping and settings. <strong>Routing:</strong> Control document placement for query optimization. <strong>Force Merge:</strong> Optimize read-only indices by reducing segment count.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tradeoffs" class="content-section">
+                    <h2>⚖️ Index Trade-off Analysis</h2>
+                    
+                    <div class="index-card">
+                        <h3>The Index Triangle: Pick Two</h3>
+                        <div class="pros-cons">
+                            <div class="pros">
+                                <h5>🚀 Fast Reads</h5>
+                                <ul>
+                                    <li>B+ Tree for range queries</li>
+                                    <li>Hash for equality</li>
+                                    <li>Covering indexes</li>
+                                    <li>Trade-off: More storage, slower writes</li>
+                                </ul>
+                            </div>
+                            <div class="cons">
+                                <h5>✍️ Fast Writes</h5>
+                                <ul>
+                                    <li>LSM Trees</li>
+                                    <li>Minimal indexing</li>
+                                    <li>Append-only structures</li>
+                                    <li>Trade-off: Slower reads, compaction overhead</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="concept-box">
+                            <h4>💾 Low Storage Overhead</h4>
+                            <p>BRIN indexes, partial indexes, expression indexes on computed columns<br>
+                            <strong>Trade-off:</strong> Limited query patterns, correlation dependency</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="monitoring" class="content-section">
+                    <h2>🔍 Index Performance Monitoring</h2>
+                    
+                    <div class="index-card">
+                        <h3>Key Metrics to Track</h3>
+                        <div class="concept-box">
+                            <h4>Essential Performance Indicators</h4>
+                            <p><strong>Index Usage:</strong> Query frequency, scan vs seek ratio<br>
+                            <strong>Maintenance Cost:</strong> Insert/update/delete impact<br>
+                            <strong>Storage Overhead:</strong> Index size vs table size<br>
+                            <strong>Fragmentation:</strong> Page splits, fill factor optimization</p>
+                        </div>
+                        
+                        <div class="performance-box">
+                            <h4>Database-Specific Tools</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>MySQL:</strong> SHOW INDEX, sys schema</div>
+                                <div class="perf-item"><strong>PostgreSQL:</strong> pg_stat_user_indexes</div>
+                                <div class="perf-item"><strong>SQL Server:</strong> DMVs, Query Store</div>
+                                <div class="perf-item"><strong>Oracle:</strong> AWR, V$SQL_PLAN</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section id="optimization" class="content-section">
+                    <h2>⚡ Index Optimization Strategies</h2>
+                    
+                    <div class="index-card">
+                        <h3>Performance Optimization Checklist</h3>
+                        <div class="interview-points">
+                            <h4>🎯 Quick Wins</h4>
+                            <ul>
+                                <li>Drop unused indexes (check pg_stat_user_indexes)</li>
+                                <li>Consolidate similar indexes into composite ones</li>
+                                <li>Use partial indexes for filtered queries</li>
+                                <li>Consider covering indexes for read-heavy workloads</li>
+                                <li>Analyze query patterns with EXPLAIN plans</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="interview-points">
+                            <h4>🔧 Advanced Techniques</h4>
+                            <ul>
+                                <li>Fill factor tuning for write-heavy tables</li>
+                                <li>Index compression for large tables</li>
+                                <li>Parallel index builds for faster creation</li>
+                                <li>Online index rebuilds for zero downtime</li>
+                                <li>Partitioned indexes for very large tables</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="compression" class="content-section">
+                    <h2>🗜️ Index Compression Techniques</h2>
+                    
+                    <div class="index-card">
+                        <h3>Space Optimization Strategies</h3>
+                        <div class="concept-box">
+                            <h4>Core Compression Methods</h4>
+                            <p><strong>Dictionary Encoding:</strong> Replace repeated values with smaller keys (50-90% savings)<br>
+                            <strong>Delta Encoding:</strong> Store differences between consecutive values<br>
+                            <strong>Run-Length Encoding:</strong> Compress consecutive identical values<br>
+                            <strong>Bit Packing:</strong> Store multiple small values in single word<br>
+                            <strong>Prefix Compression:</strong> Eliminate common prefixes in sorted data<br>
+                            <strong>Null Suppression:</strong> Skip NULL values entirely</p>
+                        </div>
+                        
+                        <div class="performance-box">
+                            <h4>⚡ Compression Performance Impact</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Space Savings:</strong> 50-90% typical</div>
+                                <div class="perf-item"><strong>CPU Overhead:</strong> 5-15% for decompression</div>
+                                <div class="perf-item"><strong>Cache Efficiency:</strong> Improved (more data fits)</div>
+                                <div class="perf-item"><strong>I/O Reduction:</strong> 3-10x fewer disk reads</div>
+                            </div>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Compression Interview Points</h4>
+                            <p><strong>Trade-offs:</strong> 50-90% space savings vs CPU overhead for decompression. <strong>Best for:</strong> Read-heavy analytical workloads. <strong>Oracle:</strong> Advanced Index Compression (AIC). <strong>SQL Server:</strong> Page/row compression on indexes. <strong>ClickHouse:</strong> LZ4/ZSTD compression built-in.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">Oracle</span>
+                            <span class="db-tag">SQL Server</span>
+                            <span class="db-tag">ClickHouse</span>
+                            <span class="db-tag">Vertica</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="comparison" class="content-section">
+            <h2>📊 Quick Comparison Table</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Index Type</th>
+                        <th>Search</th>
+                        <th>Range Query</th>
+                        <th>Storage</th>
+                        <th>Best For</th>
+                        <th>Avoid For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>B+ Tree</strong></td>
+                        <td>O(log n)</td>
+                        <td>Excellent</td>
+                        <td>15-25%</td>
+                        <td>General purpose, OLTP</td>
+                        <td>Pure equality lookups</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hash</strong></td>
+                        <td>O(1)</td>
+                        <td>Not supported</td>
+                        <td>10-25%</td>
+                        <td>Equality lookups, in-memory</td>
+                        <td>Range queries, sorting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LSM Tree</strong></td>
+                        <td>O(log levels)</td>
+                        <td>Good</td>
+                        <td>10-30% (normal), up to 200% (during compaction)</td>
+                        <td>Write-heavy workloads</td>
+                        <td>Read-heavy, low latency</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bitmap</strong></td>
+                        <td>O(n/w)</td>
+                        <td>Excellent</td>
+                        <td>Variable</td>
+                        <td>Low-cardinality, OLAP</td>
+                        <td>High-cardinality, OLTP</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BRIN</strong></td>
+                        <td>O(pages)</td>
+                        <td>Good</td>
+                        <td>0.1-2%</td>
+                        <td>Correlated data, time-series</td>
+                        <td>Random data, small tables</td>
+                    </tr>
+                    <tr>
+                        <td><strong>R-Tree</strong></td>
+                        <td>O(log n)</td>
+                        <td>Spatial</td>
+                        <td>30-60%</td>
+                        <td>Spatial queries, GIS</td>
+                        <td>High dimensions (>4)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><small>* During compaction. Normal overhead 10-30%</small></p>
+        </section>
+        <section id="newsql-index-comparison" class="content-section">
+                        <h2>NewSQL Index Comparison</h3>
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Database</th>
+                                        <th>Storage Engine</th>
+                                        <th>Consensus</th>
+                                        <th>Sharding</th>
+                                        <th>Best For</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>CockroachDB</strong></td>
+                                        <td>LSM Tree</td>
+                                        <td>Raft</td>
+                                        <td>Range-based</td>
+                                        <td>Geo-distributed apps</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>TiDB</strong></td>
+                                        <td>LSM + Columnar</td>
+                                        <td>Raft</td>
+                                        <td>Region-based</td>
+                                        <td>HTAP workloads</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Spanner</strong></td>
+                                        <td>B+ Tree</td>
+                                        <td>Paxos</td>
+                                        <td>Range + Hash</td>
+                                        <td>Global consistency</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>FoundationDB</strong></td>
+                                        <td>B+ Tree</td>
+                                        <td>Custom</td>
+                                        <td>Key-range</td>
+                                        <td>Layered architectures</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>YugabyteDB</strong></td>
+                                        <td>LSM (DocDB)</td>
+                                        <td>Raft</td>
+                                        <td>Tablet-based</td>
+                                        <td>PostgreSQL migration</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>VoltDB</strong></td>
+                                        <td>In-Memory</td>
+                                        <td>Command Log</td>
+                                        <td>Hash-based</td>
+                                        <td>Real-time OLTP</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        <div class="interview-tip">
+                            <h4>💡 NewSQL Selection Criteria</h4>
+                            <p><strong>Global Apps:</strong> CockroachDB or Spanner for geo-distribution. <strong>MySQL Migration:</strong> TiDB for compatibility. <strong>PostgreSQL Migration:</strong> YugabyteDB for API compatibility. <strong>High Throughput:</strong> VoltDB for in-memory performance. <strong>Flexible:</strong> FoundationDB for custom layers.</p>
+                        </div>
+                    
+                    </section>
+        <section id="write-performance" class="content-section">
+                    <h2>✍️ Write Performance Comparison</h2>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Index Type</th>
+                                <th>Insert Speed</th>
+                                <th>Update Speed</th>
+                                <th>Delete Speed</th>
+                                <th>Write Amplification</th>
+                                <th>Best Write Scenario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>LSM Tree</strong></td>
+                                <td>Excellent</td>
+                                <td>Good</td>
+                                <td>Good</td>
+                                <td>10-50x</td>
+                                <td>Sequential writes, time-series</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hash</strong></td>
+                                <td>Excellent</td>
+                                <td>Excellent</td>
+                                <td>Excellent</td>
+                                <td>1x</td>
+                                <td>In-memory, no ordering needed</td>
+                            </tr>
+                            <tr>
+                                <td><strong>B+ Tree</strong></td>
+                                <td>Good</td>
+                                <td>Good</td>
+                                <td>Good</td>
+                                <td>2-3x</td>
+                                <td>Balanced read/write workloads</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bitmap</strong></td>
+                                <td>Poor</td>
+                                <td>Very Poor</td>
+                                <td>Poor</td>
+                                <td>High</td>
+                                <td>Read-only or batch updates</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BRIN</strong></td>
+                                <td>Excellent</td>
+                                <td>Good</td>
+                                <td>Good</td>
+                                <td>1x</td>
+                                <td>Append-only, correlated data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                <section id="memory-usage" class="content-section">
+                    <h2>💾 Memory Usage & Storage Overhead</h2>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Index Type</th>
+                                <th>Memory Overhead</th>
+                                <th>Disk Storage</th>
+                                <th>Cache Efficiency</th>
+                                <th>Typical Size Ratio</th>
+                                <th>Memory Pattern</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>B+ Tree</strong></td>
+                                <td>15-25%</td>
+                                <td>15-25% of table</td>
+                                <td>Excellent</td>
+                                <td>1:4 to 1:6</td>
+                                <td>Page-based, good locality</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hash</strong></td>
+                                <td>10-25%</td>
+                                <td>10-25% of table</td>
+                                <td>Good</td>
+                                <td>1:4 to 1:5</td>
+                                <td>Scattered access pattern</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bitmap</strong></td>
+                                <td>Variable</td>
+                                <td>(rows × cardinality) ÷ 8 bytes (uncompressed)</td>
+                                <td>Excellent</td>
+                                <td>1:100 to 10:1</td>
+                                <td>Dense, compressible</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BRIN</strong></td>
+                                <td>0.1-2%</td>
+                                <td>0.1-2% of table</td>
+                                <td>Excellent</td>
+                                <td>1:50 to 1:500</td>
+                                <td>Minimal memory footprint</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Covering</strong></td>
+                                <td>50-200%</td>
+                                <td>50-200% of table</td>
+                                <td>Excellent</td>
+                                <td>1:2 to 2:1</td>
+                                <td>Large but eliminates lookups</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                 <section id="vendor-performance" class="content-section">
+                    <h2>🏛️ Database Vendor Index Performance</h2>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Database</th>
+                                <th>Best Read Performance</th>
+                                <th>Best Write Performance</th>
+                                <th>Specialty Strength</th>
+                                <th>Performance Monitoring</th>
+                                <th>Tuning Complexity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>PostgreSQL</strong></td>
+                                <td>B+ Tree, Covering</td>
+                                <td>BRIN, Hash</td>
+                                <td>JSONB with GIN</td>
+                                <td>pg_stat_user_indexes</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MySQL</strong></td>
+                                <td>Clustered B+ Tree</td>
+                                <td>Primary Key inserts</td>
+                                <td>InnoDB clustered index</td>
+                                <td>sys schema, EXPLAIN</td>
+                                <td>Low</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Oracle</strong></td>
+                                <td>Bitmap Join, IOT</td>
+                                <td>Reverse Key, IOT</td>
+                                <td>Enterprise analytics</td>
+                                <td>AWR, V$ views</td>
+                                <td>High</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cassandra</strong></td>
+                                <td>Primary Key</td>
+                                <td>LSM Tree append</td>
+                                <td>Write-heavy distributed</td>
+                                <td>nodetool, metrics</td>
+                                <td>High</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Redis</strong></td>
+                                <td>Hash, Sorted Sets</td>
+                                <td>All operations</td>
+                                <td>In-memory speed</td>
+                                <td>INFO, SLOWLOG</td>
+                                <td>Low</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Elasticsearch</strong></td>
+                                <td>Inverted Index</td>
+                                <td>Bulk indexing</td>
+                                <td>Full-text search</td>
+                                <td>_cat APIs, monitoring</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CockroachDB</strong></td>
+                                <td>Distributed B+ Tree</td>
+                                <td>Range-based writes</td>
+                                <td>Global ACID transactions</td>
+                                <td>Admin UI, SQL metrics</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TiDB</strong></td>
+                                <td>Global Secondary</td>
+                                <td>LSM append</td>
+                                <td>HTAP workloads</td>
+                                <td>TiDB Dashboard, Grafana</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MongoDB</strong></td>
+                                <td>B-Tree, Text Index</td>
+                                <td>Sharded writes</td>
+                                <td>Document indexing</td>
+                                <td>MongoDB Compass, Atlas</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DynamoDB</strong></td>
+                                <td>Hash + Range</td>
+                                <td>Auto-scaling writes</td>
+                                <td>Serverless NoSQL</td>
+                                <td>CloudWatch, X-Ray</td>
+                                <td>Low</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                <section id="maintenance-performance" class="content-section">
+                    <h2>🔧 Index Maintenance Performance</h2>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Index Type</th>
+                                <th>Rebuild Time</th>
+                                <th>Online Rebuild</th>
+                                <th>Fragmentation Risk</th>
+                                <th>Maintenance Frequency</th>
+                                <th>Impact During Maintenance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>B+ Tree</strong></td>
+                                <td>O(n log n)</td>
+                                <td>Yes (most DBs)</td>
+                                <td>Medium</td>
+                                <td>Monthly/Quarterly</td>
+                                <td>Low (online ops)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>LSM Tree</strong></td>
+                                <td>Background</td>
+                                <td>Continuous</td>
+                                <td>Low</td>
+                                <td>Automatic compaction</td>
+                                <td>Medium (compaction storms)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hash</strong></td>
+                                <td>O(n)</td>
+                                <td>Limited</td>
+                                <td>High (collisions)</td>
+                                <td>As needed</td>
+                                <td>High (rebuild required)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bitmap</strong></td>
+                                <td>O(n)</td>
+                                <td>No</td>
+                                <td>Low</td>
+                                <td>Rarely needed</td>
+                                <td>Very High (offline)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BRIN</strong></td>
+                                <td>O(pages)</td>
+                                <td>Yes</td>
+                                <td>Low</td>
+                                <td>Rarely needed</td>
+                                <td>Very Low</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="newsql-comparison" class="content-section">
+                    <h2>🔄 NewSQL Database Comparison</h2>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Database</th>
+                                <th>Consensus Algorithm</th>
+                                <th>Storage Engine</th>
+                                <th>SQL Compatibility</th>
+                                <th>Global Transactions</th>
+                                <th>Best Use Case</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>CockroachDB</strong></td>
+                                <td>Raft</td>
+                                <td>LSM Tree (RocksDB)</td>
+                                <td>PostgreSQL-like</td>
+                                <td>Yes (Serializable)</td>
+                                <td>Geo-distributed apps</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TiDB</strong></td>
+                                <td>Raft</td>
+                                <td>LSM + Columnar</td>
+                                <td>MySQL (99%)</td>
+                                <td>Yes (Snapshot Isolation)</td>
+                                <td>HTAP workloads</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Google Spanner</strong></td>
+                                <td>Paxos</td>
+                                <td>B+ Tree + LSM (hybrid)</td>
+                                <td>ANSI SQL</td>
+                                <td>Yes (External Consistency)</td>
+                                <td>Global mission-critical</td>
+                            </tr>
+                            <tr>
+                                <td><strong>FoundationDB</strong></td>
+                                <td>Deterministic Simulation</td>
+                                <td>B+ Tree</td>
+                                <td>Layer-dependent</td>
+                                <td>Yes (ACID)</td>
+                                <td>Custom data models</td>
+                            </tr>
+                            <tr>
+                                <td><strong>YugabyteDB</strong></td>
+                                <td>Raft</td>
+                                <td>LSM (DocDB)</td>
+                                <td>PostgreSQL (binary)</td>
+                                <td>Yes (ACID)</td>
+                                <td>PostgreSQL migration</td>
+                            </tr>
+                            <tr>
+                                <td><strong>VoltDB</strong></td>
+                                <td>Command Log</td>
+                                <td>In-Memory</td>
+                                <td>ANSI SQL</td>
+                                <td>Yes (ACID)</td>
+                                <td>Real-time OLTP</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="index-card">
+                        <h3>🎯 NewSQL Selection Criteria</h3>
+                        <div class="performance-grid">
+                            <div class="perf-metric">
+                                <strong>Multi-Cloud:</strong> CockroachDB, YugabyteDB
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Cloud-Native:</strong> TiDB, Google Spanner
+                            </div>
+                            <div class="perf-metric">
+                                <strong>High Throughput:</strong> VoltDB, FoundationDB
+                            </div>
+                            <div class="perf-metric">
+                                <strong>Easy Migration:</strong> TiDB (MySQL), YugabyteDB (PostgreSQL)
+                            </div>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 NewSQL Interview Strategy</h4>
+                            <p><strong>When to choose NewSQL:</strong> Need ACID + horizontal scale + complex queries. <strong>Trade-offs:</strong> Higher latency than NoSQL due to consensus, but strong consistency. <strong>Key differentiator:</strong> Global transactions across regions with serializable isolation.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="concurrency-comparison" class="content-section">
+                    <h2>🔒 Concurrency & Locking Comparison</h2>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Index Type</th>
+                                <th>Lock Granularity</th>
+                                <th>Deadlock Risk</th>
+                                <th>MVCC Support</th>
+                                <th>Reader Blocking</th>
+                                <th>Writer Blocking</th>
+                                <th>Best Concurrency Scenario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>B+ Tree</strong></td>
+                                <td>Page/Row Level</td>
+                                <td>Medium</td>
+                                <td>Yes</td>
+                                <td>No (MVCC)</td>
+                                <td>Yes (Writes)</td>
+                                <td>Mixed read/write OLTP</td>
+                            </tr>
+                            <tr>
+                                <td><strong>LSM Tree</strong></td>
+                                <td>SSTable Level</td>
+                                <td>Low</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>No (Append-only)</td>
+                                <td>Write-heavy, time-series</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hash</strong></td>
+                                <td>Bucket Level</td>
+                                <td>Medium</td>
+                                <td>Limited</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>In-memory, partitioned access</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bitmap</strong></td>
+                                <td>Bitmap Segment</td>
+                                <td>Low</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes (Updates)</td>
+                                <td>Read-heavy analytics</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BRIN</strong></td>
+                                <td>Page Range</td>
+                                <td>Low</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Minimal</td>
+                                <td>Sequential insert patterns</td>
+                            </tr>
+                            <tr>
+                                <td><strong>R-Tree</strong></td>
+                                <td>MBR Level</td>
+                                <td>Medium</td>
+                                <td>Limited</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Spatial queries, low contention</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="index-card">
+                        <h3>🎯 Concurrency Best Practices</h3>
+                        <div class="concept-box">
+                            <h4>Lock Escalation Prevention</h4>
+                            <p><strong>Row-level locking:</strong> Enable for high-concurrency OLTP<br>
+                            <strong>Lock timeout:</strong> Set appropriate timeouts (5-30 seconds)<br>
+                            <strong>Isolation levels:</strong> Use READ COMMITTED for better concurrency<br>
+                            <strong>Lock hints:</strong> NOLOCK/WITH (NOLOCK) for reporting queries<br>
+                            <strong>Partitioning:</strong> Reduce lock contention across partitions</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Concurrency Interview Points</h4>
+                            <p><strong>MVCC Benefits:</strong> Readers never block writers, consistent snapshots. <strong>Deadlock Detection:</strong> Graph-based cycle detection, automatic victim selection. <strong>Lock Hierarchies:</strong> Intention locks prevent escalation conflicts. <strong>Hot Spotting:</strong> Use sequence caching, UUID primary keys, or hash partitioning.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="troubleshooting" class="content-section">
+                    <h2>🔧 Advanced Troubleshooting Scenarios</h2>
+                    
+                    <div class="index-card">
+                        <h3>Scenario 1: Sudden Query Performance Degradation</h3>
+                        <div class="concept-box">
+                            <h4>🚨 Symptoms</h4>
+                            <p>Previously fast queries now taking 10x longer, no recent schema changes</p>
+                            
+                            <h4>🔍 Investigation Steps</h4>
+                            <p><strong>1. Statistics Staleness:</strong> Check last stats update with SHOW TABLE STATUS or pg_stat_user_tables<br>
+                            <strong>2. Index Fragmentation:</strong> Check fragmentation with sys.dm_db_index_physical_stats or VACUUM VERBOSE<br>
+                            <strong>3. Plan Changes:</strong> Compare execution plans using EXPLAIN or Query Store<br>
+                            <strong>4. Data Growth:</strong> Check row count changes - selectivity may have shifted<br>
+                            <strong>5. Concurrent Load:</strong> Monitor active connections, blocking sessions</p>
+                            
+                            <h4>💊 Solutions</h4>
+                            <p><strong>UPDATE STATISTICS:</strong> Refresh query optimizer statistics<br>
+                            <strong>REBUILD INDEX:</strong> Eliminate fragmentation<br>
+                            <strong>ANALYZE TABLE:</strong> PostgreSQL histogram updates<br>
+                            <strong>Force Recompilation:</strong> Clear plan cache to get new execution plan</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3>Scenario 2: Index Not Being Used</h3>
+                        <div class="concept-box">
+                            <h4>🚨 Symptoms</h4>
+                            <p>Created index but query still doing table scan</p>
+                            
+                            <h4>🔍 Root Causes & Solutions</h4>
+                            <p><strong>Function Wrapping:</strong> WHERE UPPER(name) = 'JOHN' → Create expression index or rewrite query<br>
+                            <strong>Type Mismatch:</strong> WHERE varchar_col = 123 → Explicit casting or proper data types<br>
+                            <strong>Leading Wildcards:</strong> WHERE name LIKE '%john%' → Use full-text search or reverse indexes<br>
+                            <strong>OR Conditions:</strong> WHERE a = 1 OR b = 2 → Create separate indexes or use UNION<br>
+                            <strong>Column Order:</strong> Wrong order in composite index → Reorder or create covering index<br>
+                            <strong>Low Selectivity:</strong> Optimizer chooses scan → Force index hints or partial indexes</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3>Scenario 3: Write Performance Cliff</h3>
+                        <div class="concept-box">
+                            <h4>🚨 Symptoms</h4>
+                            <p>Insert/update throughput suddenly drops by 80%+</p>
+                            
+                            <h4>🔍 Investigation & Solutions</h4>
+                            <p><strong>Too Many Indexes:</strong> Each index adds write overhead → Drop unused indexes<br>
+                            <strong>Page Splits:</strong> Random UUID inserts → Use sequential IDs or partition by time<br>
+                            <strong>Lock Contention:</strong> Hot spotting on sequences → Use sequence caching or GUIDs<br>
+                            <strong>Log File Growth:</strong> Transaction log full → Increase log size or backup frequency<br>
+                            <strong>Memory Pressure:</strong> Buffer pool thrashing → Increase memory or optimize queries<br>
+                            <strong>Compaction Storms:</strong> LSM trees during peak writes → Tune compaction scheduling</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="memory-management" class="content-section">
+                    <h2>🧠 Memory Management Deep Dive</h2>
+                    
+                    <div class="index-card">
+                        <h3>Buffer Pool Optimization</h3>
+                        <div class="concept-box">
+                            <h4>Memory Hierarchy Strategy</h4>
+                            <p><strong>L1 Cache (KB):</strong> CPU cache optimization for hot index pages<br>
+                            <strong>L2/L3 Cache (MB):</strong> Keep index root pages resident<br>
+                            <strong>Buffer Pool (GB):</strong> 70-80% of available RAM for database engines<br>
+                            <strong>OS Cache (GB):</strong> Remaining RAM for file system cache<br>
+                            <strong>SSD Cache (TB):</strong> Tiered storage for warm data<br>
+                            <strong>Disk Storage (PB):</strong> Cold data and archival</p>
+                        </div>
+                        
+                        <div class="performance-box">
+                            <h4>⚡ Memory Sizing Guidelines</h4>
+                            <div class="performance-grid">
+                                <div class="perf-item"><strong>Index Pages:</strong> Keep top 2-3 B+ tree levels in memory</div>
+                                <div class="perf-item"><strong>Working Set:</strong> Size buffer pool for 90%+ hit ratio</div>
+                                <div class="perf-item"><strong>Sort Memory:</strong> 1-4GB per sort operation</div>
+                                <div class="perf-item"><strong>Connection Pool:</strong> 8MB per connection (default)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Memory Management Interview Gold</h4>
+                            <p><strong>LRU vs Clock:</strong> Clock sweep more efficient for buffer replacement. <strong>Dirty Pages:</strong> Background writer keeps checkpoint distance low. <strong>Memory Pressure:</strong> OOM killer vs graceful degradation strategies. <strong>NUMA Awareness:</strong> Pin processes to specific memory nodes.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3>Index-Specific Memory Patterns</h3>
+                        <div class="concept-box">
+                            <h4>Memory Usage by Index Type</h4>
+                            <p><strong>B+ Tree:</strong> Keep internal nodes cached, leaf pages for working set<br>
+                            <strong>Hash:</strong> Entire hash table in memory for optimal performance<br>
+                            <strong>LSM Tree:</strong> MemTable + BlockCache for recent data<br>
+                            <strong>Bitmap:</strong> Compressed bitmaps, expand on access<br>
+                            <strong>BRIN:</strong> Minimal memory, just summary ranges<br>
+                            <strong>Covering:</strong> Higher memory usage but eliminates key lookups</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="anti-patterns" class="content-section">
+                    <h2>❌ Performance Anti-Patterns</h2>
+                    
+                    <div class="index-card">
+                        <h3>Common Indexing Mistakes</h3>
+                        <div class="concept-box">
+                            <h4>🚫 What NOT to Do</h4>
+                            <p><strong>Over-Indexing:</strong> Creating index on every column → Analyze query patterns first<br>
+                            <strong>Wrong Column Order:</strong> (last_name, first_name) for first_name queries → Match query selectivity<br>
+                            <strong>Missing Covering:</strong> Separate index + key lookup → Add INCLUDE columns<br>
+                            <strong>Function Wrapping:</strong> WHERE YEAR(date) = 2024 → Use range: date >= '2024-01-01'<br>
+                            <strong>Leading Wildcards:</strong> LIKE '%pattern%' on B+ tree → Use full-text search<br>
+                            <strong>Implicit Conversions:</strong> WHERE int_col = '123' → Use proper data types<br>
+                            <strong>OR Conditions:</strong> WHERE a = 1 OR b = 2 → Use UNION or bitmap indexes<br>
+                            <strong>Unused Indexes:</strong> Indexes never used in queries → Monitor and drop</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3>Architecture Anti-Patterns</h3>
+                        <div class="concept-box">
+                            <h4>🚫 Design Mistakes</h4>
+                            <p><strong>UUID Primary Keys:</strong> Random inserts cause page splits → Use time-ordered UUIDs<br>
+                            <strong>Natural Keys:</strong> Customer name as primary key → Use surrogate keys<br>
+                            <strong>Wide Indexes:</strong> 10+ columns in composite → Use covering or partial indexes<br>
+                            <strong>Duplicate Indexes:</strong> (a,b) and (a,b,c) → Drop redundant shorter index<br>
+                            <strong>Wrong Partitioning:</strong> Partition by random GUID → Use time or range partitioning<br>
+                            <strong>Ignoring Cardinality:</strong> Index on gender (2 values) → Use bitmap or skip indexing<br>
+                            <strong>Manual Statistics:</strong> Never updating statistics → Enable auto-update<br>
+                            <strong>No Maintenance:</strong> Never rebuilding fragmented indexes → Schedule maintenance</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Anti-Pattern Interview Strategy</h4>
+                            <p><strong>Recognition:</strong> Identify symptoms like poor performance, high CPU, excessive I/O. <strong>Analysis:</strong> Use execution plans, index usage stats, fragmentation reports. <strong>Solution:</strong> Propose specific fixes with measurable improvements. <strong>Prevention:</strong> Establish monitoring, code reviews, and maintenance schedules.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="interview-tips" class="content-section">
+                    <h2>💡 Interview Tips & Decision Tree</h2>
+                    <ul>
+                        <li>Always ask about query patterns before suggesting an index.</li>
+                        <li>For range queries, prefer B+ Tree or BRIN (if data is correlated).</li>
+                        <li>For pure equality, hash or bitmap (if low cardinality).</li>
+                        <li>For write-heavy, LSM or BRIN (if possible).</li>
+                        <li>For analytics, bitmap, columnar, or zone maps.</li>
+                        <li>For spatial, R-Tree or GiST.</li>
+                        <li>For text, inverted or GIN.</li>
+                        <li>For time-series, BRIN, LSM, or time-partitioned.</li>
+                        <li>For distributed, consistent hash or partitioned indexes.</li>
+                    </ul>
+                    <h3 id="common-questions">Common Interview Questions</h3>
+                    <div class="index-card">
+                    <h4>Question 1: "Explain the difference between clustered and non-clustered indexes"</h4>
+                    <p><strong>Perfect Answer:</strong> "Clustered index determines physical storage order - the index IS the table. Only one per table since data can only be physically ordered one way. Non-clustered is a separate structure with pointers to data rows. You can have multiple non-clustered indexes. Trade-off: Clustered gives fastest access for the clustered key but expensive random inserts due to page splits."</p>
+                </div>
+
+                <div class="index-card">
+                    <h4>Question 2: "When would you use a hash index vs B+ tree?"</h4>
+                    <p><strong>Perfect Answer:</strong> "Hash index for pure equality lookups - O(1) vs O(log n). But hash cannot do range queries, sorting, or partial matches. B+ tree is more versatile - supports all operations hash does plus ranges and ordering. Hash is perfect for in-memory scenarios or distributed hash tables for sharding."</p>
+                </div>
+
+                <div class="index-card">
+                    <h4>Question 3: "Explain LSM trees and their trade-offs"</h4>
+                    <p><strong>Perfect Answer:</strong> "LSM trees optimize for writes by using sequential disk writes. Writes go to in-memory MemTable, then immutable SSTables. Background compaction merges SSTables. Trade-offs: Fast writes (O(1) amortized) but read amplification (check multiple levels), write amplification (compaction overhead), and space amplification (temporary storage during compaction)."</p>
+                </div>
+
+                <div class="index-card">
+                    <h4>Question 4: "How do bitmap indexes work and when to use them?"</h4>
+                    <p><strong>Perfect Answer:</strong> "Each distinct value gets a bitmap where each bit represents a row. Perfect for low-cardinality data (gender, status, department) in OLAP. Bitwise operations (AND, OR) make aggregations blazing fast. But terrible for high-cardinality or OLTP - updates require modifying entire bitmap."</p>
+                </div>
+
+                <div class="index-card">
+                    <h4>Question 5: "Compare NewSQL vs NoSQL indexing strategies"</h4>
+                    <p><strong>Perfect Answer:</strong> "NewSQL like CockroachDB uses LSM trees with distributed range partitioning for global ACID transactions. NoSQL like Cassandra sacrifices consistency for availability. NewSQL provides strong consistency across regions using consensus (Raft/Paxos) but has higher latency. NoSQL offers eventual consistency with lower latency. Choose NewSQL for banking, NoSQL for social media."</p>
+                </div>
+
+                <div class="index-card">
+                    <h4>Question 6: "How does Google Spanner achieve external consistency?"</h4>
+                    <p><strong>Perfect Answer:</strong> "Spanner uses TrueTime API with atomic clocks and GPS to bound clock uncertainty. Transactions wait for uncertainty window before committing, ensuring external consistency - if T1 commits before T2 starts, T1's timestamp is less than T2's. This is stronger than linearizability and enables globally consistent reads without coordination."</p>
+                </div>
+                <div class="index-card">
+                    <h4>Question 7: "How does distributed consensus affect index performance in NewSQL?"</h4>
+                    <p><strong>Perfect Answer:</strong> "Consensus protocols like Raft add latency (1-2 RTTs) to writes affecting index maintenance. However, they enable consistent secondary indexes across nodes. Trade-off: Strong consistency vs performance. Optimizations: Batching, pipeline commits, and follower reads for read-heavy workloads."</p>
+                </div>
+
+                <div class="index-card">
+                    <h4>Question 8: "Compare CockroachDB vs TiDB indexing strategies"</h4>
+                    <p><strong>Perfect Answer:</strong> "CockroachDB uses LSM trees with range-based auto-sharding and PostgreSQL-compatible indexes. TiDB separates OLTP (TiKV/LSM) from OLAP (TiFlash/columnar) with MySQL compatibility. CockroachDB optimizes for geo-distribution, TiDB for HTAP workloads. Both use Raft consensus but different storage engines."</p>
+                </div>
+                    <ul>
+                        <li>Explain the difference between clustered and non-clustered indexes.</li>
+                        <li>When would you use a hash index over a B+ Tree?</li>
+                        <li>What is a covering index and when is it useful?</li>
+                        <li>How do LSM trees optimize for write-heavy workloads?</li>
+                        <li>What are the trade-offs of using bitmap indexes?</li>
+                        <li>How do you choose an index for a time-series database?</li>
+                        <li>What is a partial index and when would you use it?</li>
+                        <li>How do you monitor and tune index performance?</li>
+                        <li>What are the risks of over-indexing a table?</li>
+                    </ul>
+                    <h3 id="advanced-design">Advanced Design Questions</h3>
+                    <div class="index-card">
+                    <h4>"Design indexes for a social media feed system"</h4>
+                    <p><strong>Approach:</strong><br>
+                    • User timeline: Clustered on (user_id, timestamp DESC)<br>
+                    • Global feed: LSM tree for write-heavy inserts<br>
+                    • Hashtag search: GIN index on hashtag arrays<br>
+                    • Location search: R-tree for geospatial queries<br>
+                    • Mention lookup: Hash index on user_id for O(1) access</p>
+                </div>
+
+                <div class="index-card">
+                    <h4>"How would you optimize a time-series database?"</h4>
+                    <p><strong>Approach:</strong><br>
+                    • Partition by time (daily/weekly chunks)<br>
+                    • BRIN indexes on timestamp columns<br>
+                    • Bitmap indexes on low-cardinality dimensions<br>
+                    • Skip indexes for high-cardinality metrics<br>
+                    • Compression: Delta encoding, dictionary compression</p>
+                </div>
+                    <ul>
+                        <li>Design an indexing strategy for a multi-tenant SaaS application with millions of users and high write throughput.</li>
+                        <li>How would you index a JSONB column in PostgreSQL for flexible querying?</li>
+                        <li>What indexing approach would you use for a distributed log analytics system?</li>
+                        <li>How do you handle hot partitions in DynamoDB or Cassandra?</li>
+                        <li>Describe the impact of index maintenance on OLTP vs OLAP workloads.</li>
+                        <li>How would you design indexes for a graph database supporting shortest path queries?</li>
+                    </ul>
+                    <h3 id="case-studies">🏢 Real-World Case Studies</h3>
+                    <div class="index-card">
+                        <h4>📱 WhatsApp: Billion-Scale Messaging</h4>
+                        <div class="concept-box">
+                            <p><strong>Challenge:</strong> Store 65 billion messages/day with sub-100ms retrieval<br>
+                            <strong>Solution:</strong> Cassandra LSM trees + compound primary key (user_id, timestamp)<br>
+                            <strong>Key Insight:</strong> Write-optimized LSM handles massive ingestion, time-based partitioning enables efficient cleanup</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>💰 Stripe: Financial Transaction Processing</h4>
+                        <div class="concept-box">
+                            <p><strong>Challenge:</strong> Complex queries across merchants, time, amounts with ACID guarantees<br>
+                            <strong>Solution:</strong> PostgreSQL with partial indexes on active transactions + BRIN on timestamp<br>
+                            <strong>Key Insight:</strong> 99% of queries target recent data, partial indexes dramatically reduce maintenance overhead</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>🛒 Amazon: Product Search & Recommendations</h4>
+                        <div class="concept-box">
+                            <p><strong>Challenge:</strong> Full-text search + faceted filtering across 500M+ products<br>
+                            <strong>Solution:</strong> Elasticsearch inverted indexes + bitmap aggregations for real-time facets<br>
+                            <strong>Key Insight:</strong> Hybrid approach combines text relevance with structured filtering for optimal UX</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>🏦 JPMorgan Chase: Global Banking with CockroachDB</h4>
+                        <div class="concept-box">
+                            <p><strong>Challenge:</strong> Multi-region ACID transactions with regulatory compliance across 60+ countries<br>
+                            <strong>Solution:</strong> CockroachDB with geo-partitioned indexes using zone configs for data locality<br>
+                            <strong>Key Insight:</strong> NewSQL enables global consistency while meeting regional data residency requirements through intelligent partitioning</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>📺 TikTok: Real-time Analytics with TiDB</h4>
+                        <div class="concept-box">
+                            <p><strong>Challenge:</strong> HTAP workload - real-time user interactions + complex analytics on billions of records<br>
+                            <strong>Solution:</strong> TiDB with TiKV (LSM) for OLTP + TiFlash (columnar) for OLAP queries<br>
+                            <strong>Key Insight:</strong> HTAP architecture eliminates ETL latency by serving both workloads from same dataset with optimized storage engines</p>
+                        </div>
+                    </div>
+                    
+            <h3 id="decision-tree">Index Selection Decision Tree</h3>
+                    
+                    <div class="index-card">
+                        <h4>🎯 Strategic Framework for Index Selection</h4>
+                        <div class="concept-box">
+                            <p>This three-step framework ensures you make <strong>data-driven, query-aware, database-appropriate</strong> index choices by filtering from general constraints to specific implementations.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>1️⃣ Data Characteristics Analysis</h4>
+                        <div class="interview-tip">
+                            <h4>💡 What it conveys:</h4>
+                            <p><strong>Physical properties of your data determine which index types are viable.</strong><br>
+                            <strong>Key insight:</strong> The nature of your data constrains your options. You can't use bitmap indexes on high-cardinality data, or BRIN on randomly ordered data.</p>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 14px; line-height: 1.8;">
+                            <strong>📊 Data Characteristics Decision Tree</strong><br>
+                            ├── <strong>High cardinality</strong> (unique values)<br>
+                            │   ├── Equality queries only → <strong>Hash Index</strong><br>
+                            │   └── Range/sorting needed → <strong>B+ Tree</strong><br>
+                            ├── <strong>Low cardinality</strong> (few distinct values)<br>
+                            │   ├── OLAP workload → <strong>Bitmap Index</strong><br>
+                            │   └── OLTP workload → <strong>B+ Tree</strong><br>
+                            ├── <strong>Correlated with storage order</strong><br>
+                            │   ├── Time-series data → <strong>BRIN Index</strong><br>
+                            │   └── Append-only tables → <strong>BRIN Index</strong><br>
+                            ├── <strong>Complex data types</strong><br>
+                            │   ├── JSON/Arrays → <strong>GIN Index</strong><br>
+                            │   ├── Spatial data → <strong>R-Tree Index</strong><br>
+                            │   └── Full-text search → <strong>Inverted Index</strong><br>
+                            ├── <strong>Write-heavy workload</strong><br>
+                            │   ├── Distributed system → <strong>LSM Tree</strong><br>
+                            │   └── Single node → <strong>B+ Tree</strong><br>
+                            └── <strong>Read optimization</strong><br>
+                                ├── Specific queries → <strong>Covering Index</strong><br>
+                                ├── Subset of data → <strong>Partial Index</strong><br>
+                                └── Computed values → <strong>Expression Index</strong>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>2️⃣ Query Pattern Analysis</h4>
+                        <div class="interview-tip">
+                            <h4>💡 What it conveys:</h4>
+                            <p><strong>How your application queries data should drive index selection.</strong><br>
+                            <strong>Key insight:</strong> Query patterns trump everything else. A hash index is useless if you need range queries, no matter how fast equality lookups are.</p>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 14px; line-height: 1.8;">
+                            <strong>📊 Query Pattern Analysis</strong><br>
+                            ├── <strong>Equality Queries (WHERE col = value)</strong><br>
+                            │   ├── High frequency → <strong>Hash Index</strong> (O(1))<br>
+                            │   ├── Low frequency → <strong>B+ Tree</strong> (versatile)<br>
+                            │   └── Memory-only → <strong>Hash Table</strong> (Redis)<br>
+                            ├── <strong>Range Queries (WHERE col BETWEEN x AND y)</strong><br>
+                            │   ├── Frequent ranges → <strong>B+ Tree</strong><br>
+                            │   ├── Correlated data → <strong>BRIN</strong> (space efficient)<br>
+                            │   └── Analytics → <strong>Bitmap + Zone Maps</strong><br>
+                            ├── <strong>Prefix Searches (WHERE col LIKE 'abc%')</strong><br>
+                            │   ├── Text search → <strong>Inverted Index</strong><br>
+                            │   ├── Short prefixes → <strong>B+ Tree</strong><br>
+                            │   └── Autocomplete → <strong>Trie/Completion</strong><br>
+                            ├── <strong>Multi-Column Queries</strong><br>
+                            │   ├── Fixed order → <strong>Composite B+ Tree</strong><br>
+                            │   ├── Any column → <strong>Multiple Single Indexes</strong><br>
+                            │   └── All columns → <strong>Covering Index</strong><br>
+                            └── <strong>Aggregation Queries (COUNT, SUM, AVG)</strong><br>
+                                ├── OLAP → <strong>Bitmap/Columnar</strong><br>
+                                ├── Pre-computed → <strong>Materialized Views</strong><br>
+                                └── Real-time → <strong>Skip Lists</strong>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>3️⃣ Database-Specific Recommendations</h4>
+                        <div class="interview-tip">
+                            <h4>💡 What it conveys:</h4>
+                            <p><strong>Each database excels at different index types - choose the database that matches your needs.</strong><br>
+                            <strong>Key insight:</strong> Don't fight your database's strengths. If you need advanced JSON indexing, PostgreSQL is better than MySQL. For time-series, specialized databases outperform general-purpose ones.</p>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 14px; line-height: 1.8;">
+                            <strong>📊 Choose Database by Index Needs</strong><br>
+                            ├── <strong>Rich Index Ecosystem</strong> → <strong>PostgreSQL</strong> (GIN, GiST, BRIN, Partial)<br>
+                            ├── <strong>Enterprise Features</strong> → <strong>Oracle</strong> (Bitmap Join, Function-based)<br>
+                            ├── <strong>Columnar Analytics</strong> → <strong>ClickHouse, Vertica</strong><br>
+                            ├── <strong>Document Indexing</strong> → <strong>MongoDB, Elasticsearch</strong><br>
+                            ├── <strong>Time-Series</strong> → <strong>TimescaleDB, InfluxDB</strong><br>
+                            ├── <strong>Write-Heavy Distributed</strong> → <strong>Cassandra, ScyllaDB</strong><br>
+                            ├── <strong>In-Memory Speed</strong> → <strong>Redis, Memcached</strong><br>
+                            ├── <strong>Global ACID</strong> → <strong>NewSQL</strong> (CockroachDB, Spanner, TiDB)<br>
+                            │   ├── Geo-distributed apps → <strong>CockroachDB, Spanner</strong><br>
+                            │   ├── MySQL compatibility → <strong>TiDB</strong><br>
+                            │   ├── PostgreSQL compatibility → <strong>YugabyteDB</strong><br>
+                            │   ├── Real-time OLTP → <strong>VoltDB</strong><br>
+                            │   └── Custom layers → <strong>FoundationDB</strong><br>
+                            └── <strong>Simple & Fast</strong> → <strong>SQLite, MySQL</strong>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h4>🎯 The Decision Framework in Action</h4>
+                        <div class="concept-box">
+                            <h4>Step-by-Step Process</h4>
+                            <p><strong>1. Start with Data Characteristics</strong> → Eliminate impossible options<br>
+                            <strong>2. Apply Query Patterns</strong> → Choose optimal index type<br>
+                            <strong>3. Use Database Recommendations</strong> → Pick the right database/implementation</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Real Example:</h4>
+                            <p><strong>Data:</strong> Time-series sensor data (correlated, write-heavy)<br>
+                            <strong>Queries:</strong> Recent data ranges, aggregations by time windows<br>
+                            <strong>Decision:</strong> TimescaleDB with BRIN indexes on timestamps + bitmap on categorical sensor types</p>
+                        </div>
+                        
+                        <div class="use-cases">
+                            <h4>🚫 Common Mistakes This Framework Prevents:</h4>
+                            <p>❌ Using bitmap indexes on user IDs (high cardinality)<br>
+                            ❌ Choosing MySQL for complex JSON queries (limited JSON indexing)<br>
+                            ❌ Using hash indexes when you need ORDER BY (no ordering support)</p>
+                        </div>
+                    </div>
+                    <h3 id="performance">Performance Guide</h3>
+                    <ul>
+                        <li>Monitor index usage with EXPLAIN/ANALYZE tools.</li>
+                        <li>Drop unused or redundant indexes to improve write speed.</li>
+                        <li>Keep index size &lt; 25% of table for OLTP, &lt; 10% for OLAP.</li>
+                        <li>Test with realistic data and query patterns.</li>
+                        <li>Balance read/write/space amplification for LSM/BRIN.</li>
+                    </ul>
+                </section>
+                <button class="back-to-top" id="backToTop" title="Back to Top">↑</button>
+            </main>
+        </div>
+    </div>
+    <script>
+        // Sidebar navigation active state and smooth scroll
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.getBoundingClientRect().top + window.scrollY - 30,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        window.addEventListener('scroll', function() {
+            let fromTop = window.scrollY + 40;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                let section = document.querySelector(link.getAttribute('href'));
+                if (section && section.offsetTop <= fromTop && section.offsetTop + section.offsetHeight > fromTop) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            
+            // Back to top button
+            const backToTop = document.getElementById('backToTop');
+            if (window.scrollY > 300) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+            
+            // Scroll progress bar
+            const scrollProgress = document.getElementById('scrollProgress');
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.scrollY;
+            const scrollPercent = (scrollTop / (docHeight - winHeight)) * 100;
+            scrollProgress.style.width = scrollPercent + '%';
+        });
+        
+        // Back to top button click handler
+        document.getElementById('backToTop').addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        
+        // Show dual navigation indicator on first load
+        document.addEventListener('DOMContentLoaded', function() {
+            const indicator = document.getElementById('dualNavIndicator');
+            if (window.innerWidth > 1000) {
+                indicator.style.display = 'block';
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
