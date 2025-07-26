@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Patterns Cheatsheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab:hover, .tab.active {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .patterns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .pattern-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pattern-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+        }
+
+        .pattern-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .pattern-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .pattern-type {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .pattern-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .pattern-purpose {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .pattern-description {
+            color: #34495e;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .use-cases {
+            margin-top: 15px;
+        }
+
+        .use-cases h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .use-cases ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .use-cases li {
+            background: rgba(52, 152, 219, 0.1);
+            padding: 5px 10px;
+            margin: 3px 0;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .use-cases li::before {
+            content: '▸';
+            position: absolute;
+            left: 8px;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .code-example {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+
+        .toggle-code {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-code:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 15px 20px;
+            margin: 0 auto 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .search-box:focus {
+            outline: none;
+            background: rgba(255,255,255,0.3);
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .patterns-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Design Patterns Cheatsheet</h1>
+            <p class="subtitle">Quick reference for the 23 Gang of Four patterns</p>
+        </header>
+
+        <input type="text" class="search-box" placeholder="Search patterns..." id="searchBox">
+
+        <div class="filter-tabs">
+            <button class="tab active" data-category="all">All Patterns</button>
+            <button class="tab" data-category="creational">Creational</button>
+            <button class="tab" data-category="structural">Structural</button>
+            <button class="tab" data-category="behavioral">Behavioral</button>
+        </div>
+
+        <div class="patterns-grid" id="patternsGrid">
+            <!-- Creational Patterns -->
+            <div class="pattern-card" data-category="creational">
+                <div class="pattern-header">
+                    <span class="pattern-type">Creational</span>
+                    <h3 class="pattern-name">Singleton</h3>
+                </div>
+                <p class="pattern-purpose">Ensures a class has only one instance and provides global access to it</p>
+                <p class="pattern-description">
+                    The Singleton pattern restricts instantiation of a class to a single instance and provides a global point of access to that instance. It's useful when exactly one object is needed to coordinate actions across the system.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Database connections</li>
+                        <li>Logging services</li>
+                        <li>Configuration settings</li>
+                        <li>Thread pools</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class Singleton {
+    private static instance: Singleton;
+    private constructor() {}
+    
+    static getInstance(): Singleton {
+        if (!Singleton.instance) {
+            Singleton.instance = new Singleton();
+        }
+        return Singleton.instance;
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="creational">
+                <div class="pattern-header">
+                    <span class="pattern-type">Creational</span>
+                    <h3 class="pattern-name">Factory Method</h3>
+                </div>
+                <p class="pattern-purpose">Creates objects without specifying exact classes</p>
+                <p class="pattern-description">
+                    Provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created. It promotes loose coupling by eliminating the need to bind application-specific classes into the code.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>UI element creation</li>
+                        <li>Database drivers</li>
+                        <li>File parsers</li>
+                        <li>Plugin systems</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+abstract class Creator {
+    abstract factoryMethod(): Product;
+    
+    someOperation(): string {
+        const product = this.factoryMethod();
+        return product.operation();
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="creational">
+                <div class="pattern-header">
+                    <span class="pattern-type">Creational</span>
+                    <h3 class="pattern-name">Abstract Factory</h3>
+                </div>
+                <p class="pattern-purpose">Creates families of related objects</p>
+                <p class="pattern-description">
+                    Provides an interface for creating families of related or dependent objects without specifying their concrete classes. It's particularly useful when the system needs to be independent of how its products are created.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Cross-platform UI components</li>
+                        <li>Different database engines</li>
+                        <li>Operating system APIs</li>
+                        <li>Theme systems</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+interface AbstractFactory {
+    createProductA(): ProductA;
+    createProductB(): ProductB;
+}
+
+class ConcreteFactory implements AbstractFactory {
+    createProductA(): ProductA {
+        return new ConcreteProductA();
+    }
+    createProductB(): ProductB {
+        return new ConcreteProductB();
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="creational">
+                <div class="pattern-header">
+                    <span class="pattern-type">Creational</span>
+                    <h3 class="pattern-name">Builder</h3>
+                </div>
+                <p class="pattern-purpose">Constructs complex objects step by step</p>
+                <p class="pattern-description">
+                    Separates the construction of a complex object from its representation, allowing the same construction process to create various representations. It's especially useful for objects with many optional parameters.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>SQL query builders</li>
+                        <li>Configuration objects</li>
+                        <li>Document generators</li>
+                        <li>Complex form builders</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class ProductBuilder {
+    private product = new Product();
+    
+    setPartA(value: string): this {
+        this.product.partA = value;
+        return this;
+    }
+    
+    setPartB(value: string): this {
+        this.product.partB = value;
+        return this;
+    }
+    
+    build(): Product {
+        return this.product;
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="creational">
+                <div class="pattern-header">
+                    <span class="pattern-type">Creational</span>
+                    <h3 class="pattern-name">Prototype</h3>
+                </div>
+                <p class="pattern-purpose">Creates objects by cloning existing instances</p>
+                <p class="pattern-description">
+                    Specifies the kinds of objects to create using a prototypical instance, and creates new objects by copying this prototype. It's useful when object creation is expensive or complex.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Game object spawning</li>
+                        <li>Configuration templates</li>
+                        <li>Complex object copying</li>
+                        <li>Undo/Redo systems</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+interface Prototype {
+    clone(): Prototype;
+}
+
+class ConcretePrototype implements Prototype {
+    constructor(private value: string) {}
+    
+    clone(): ConcretePrototype {
+        return new ConcretePrototype(this.value);
+    }
+}</div>
+            </div>
+
+            <!-- Structural Patterns -->
+            <div class="pattern-card" data-category="structural">
+                <div class="pattern-header">
+                    <span class="pattern-type">Structural</span>
+                    <h3 class="pattern-name">Adapter</h3>
+                </div>
+                <p class="pattern-purpose">Makes incompatible interfaces work together</p>
+                <p class="pattern-description">
+                    Allows objects with incompatible interfaces to collaborate. It acts as a wrapper between two objects, converting the interface of one class into another interface that clients expect.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Third-party library integration</li>
+                        <li>Legacy system compatibility</li>
+                        <li>API wrappers</li>
+                        <li>Data format conversion</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class Adapter implements Target {
+    constructor(private adaptee: Adaptee) {}
+    
+    request(): string {
+        return this.adaptee.specificRequest()
+            .split('').reverse().join('');
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="structural">
+                <div class="pattern-header">
+                    <span class="pattern-type">Structural</span>
+                    <h3 class="pattern-name">Decorator</h3>
+                </div>
+                <p class="pattern-purpose">Adds behavior to objects dynamically</p>
+                <p class="pattern-description">
+                    Attaches new behaviors to objects by placing these objects inside special wrapper objects that contain the behaviors. It provides a flexible alternative to subclassing for extending functionality.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Adding features to UI components</li>
+                        <li>Middleware in web frameworks</li>
+                        <li>Stream processing</li>
+                        <li>Adding responsibilities to objects</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class ConcreteDecorator extends BaseDecorator {
+    operation(): string {
+        return `ConcreteDecorator(${super.operation()})`;
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="structural">
+                <div class="pattern-header">
+                    <span class="pattern-type">Structural</span>
+                    <h3 class="pattern-name">Facade</h3>
+                </div>
+                <p class="pattern-purpose">Provides a simplified interface to a complex subsystem</p>
+                <p class="pattern-description">
+                    Provides a unified interface to a set of interfaces in a subsystem. It defines a higher-level interface that makes the subsystem easier to use by hiding its complexity.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>API gateways</li>
+                        <li>Library interfaces</li>
+                        <li>System integration</li>
+                        <li>Complex operation simplification</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class Facade {
+    constructor(
+        private subsystem1: Subsystem1,
+        private subsystem2: Subsystem2
+    ) {}
+    
+    operation(): string {
+        return this.subsystem1.operation1() + 
+               this.subsystem2.operation2();
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="structural">
+                <div class="pattern-header">
+                    <span class="pattern-type">Structural</span>
+                    <h3 class="pattern-name">Proxy</h3>
+                </div>
+                <p class="pattern-purpose">Provides a placeholder or surrogate for another object</p>
+                <p class="pattern-description">
+                    Provides a substitute or placeholder for another object to control access to it. The proxy handles requests and may perform additional operations before or after forwarding them.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Lazy loading</li>
+                        <li>Access control</li>
+                        <li>Caching</li>
+                        <li>Remote object access</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class Proxy implements Subject {
+    constructor(private realSubject: RealSubject) {}
+    
+    request(): void {
+        if (this.checkAccess()) {
+            this.realSubject.request();
+            this.logAccess();
+        }
+    }
+}</div>
+            </div>
+
+            <!-- Behavioral Patterns -->
+            <div class="pattern-card" data-category="behavioral">
+                <div class="pattern-header">
+                    <span class="pattern-type">Behavioral</span>
+                    <h3 class="pattern-name">Observer</h3>
+                </div>
+                <p class="pattern-purpose">Notifies multiple objects about events</p>
+                <p class="pattern-description">
+                    Defines a subscription mechanism to notify multiple objects about any events that happen to the object they're observing. It establishes a one-to-many dependency between objects.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Event handling systems</li>
+                        <li>Model-View architectures</li>
+                        <li>Notification systems</li>
+                        <li>Real-time updates</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class ConcreteSubject implements Subject {
+    private observers: Observer[] = [];
+    
+    attach(observer: Observer): void {
+        this.observers.push(observer);
+    }
+    
+    notify(): void {
+        this.observers.forEach(o => o.update(this));
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="behavioral">
+                <div class="pattern-header">
+                    <span class="pattern-type">Behavioral</span>
+                    <h3 class="pattern-name">Strategy</h3>
+                </div>
+                <p class="pattern-purpose">Defines a family of algorithms and makes them interchangeable</p>
+                <p class="pattern-description">
+                    Defines a family of algorithms, encapsulates each one, and makes them interchangeable. Strategy lets the algorithm vary independently from clients that use it.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Payment processing</li>
+                        <li>Sorting algorithms</li>
+                        <li>Validation strategies</li>
+                        <li>Compression algorithms</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class Context {
+    constructor(private strategy: Strategy) {}
+    
+    setStrategy(strategy: Strategy): void {
+        this.strategy = strategy;
+    }
+    
+    executeStrategy(data: string[]): string[] {
+        return this.strategy.doAlgorithm(data);
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="behavioral">
+                <div class="pattern-header">
+                    <span class="pattern-type">Behavioral</span>
+                    <h3 class="pattern-name">Command</h3>
+                </div>
+                <p class="pattern-purpose">Encapsulates requests as objects</p>
+                <p class="pattern-description">
+                    Turns a request into a stand-alone object that contains all information about the request. This transformation lets you parameterize methods with different requests, delay or queue operations, and support undo operations.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>Undo/Redo functionality</li>
+                        <li>GUI buttons and menus</li>
+                        <li>Macro recording</li>
+                        <li>Queuing operations</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class ConcreteCommand implements Command {
+    constructor(
+        private receiver: Receiver,
+        private payload: string
+    ) {}
+    
+    execute(): void {
+        this.receiver.doSomething(this.payload);
+    }
+}</div>
+            </div>
+
+            <div class="pattern-card" data-category="behavioral">
+                <div class="pattern-header">
+                    <span class="pattern-type">Behavioral</span>
+                    <h3 class="pattern-name">State</h3>
+                </div>
+                <p class="pattern-purpose">Changes object behavior based on internal state</p>
+                <p class="pattern-description">
+                    Allows an object to alter its behavior when its internal state changes. The object will appear to change its class by delegating behavior to different state objects.
+                </p>
+                <div class="use-cases">
+                    <h4>Use Cases</h4>
+                    <ul>
+                        <li>State machines</li>
+                        <li>Game character states</li>
+                        <li>Connection states</li>
+                        <li>Document workflows</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+class Context {
+    constructor(state: State) {
+        this.transitionTo(state);
+    }
+    
+    transitionTo(state: State): void {
+        this.state = state;
+        this.state.setContext(this);
+    }
+}</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Filter functionality
+        const tabs = document.querySelectorAll('.tab');
+        const cards = document.querySelectorAll('.pattern-card');
+        const searchBox = document.getElementById('searchBox');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const category = tab.dataset.category;
+                filterCards(category, searchBox.value);
+            });
+        });
+
+        // Search functionality
+        searchBox.addEventListener('input', (e) => {
+            const activeTab = document.querySelector('.tab.active');
+            const category = activeTab.dataset.category;
+            filterCards(category, e.target.value);
+        });
+
+        function filterCards(category, searchTerm) {
+            cards.forEach(card => {
+                const cardCategory = card.dataset.category;
+                const cardText = card.textContent.toLowerCase();
+                const matchesCategory = category === 'all' || cardCategory === category;
+                const matchesSearch = searchTerm === '' || cardText.includes(searchTerm.toLowerCase());
+                
+                if (matchesCategory && matchesSearch) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeIn 0.3s ease';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle code examples
+        function toggleCode(button) {
+            const codeExample = button.nextElementSibling;
+            const isHidden = codeExample.classList.contains('hidden');
+            
+            if (isHidden) {
+                codeExample.classList.remove('hidden');
+                button.textContent = 'Hide Code Example';
+            } else {
+                codeExample.classList.add('hidden');
+                button.textContent = 'Show Code Example';
+            }
+        }
+
+        // Add fade-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize with fade-in animation for all cards
+        cards.forEach((card, index) => {
+            card.style.animation = `fadeIn 0.5s ease ${index * 0.1}s both`;
+        });
+    </script>
+</body>
+</html>
