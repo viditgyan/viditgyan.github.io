@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Design Principles Cheatsheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            font-weight: 800;
+            background: linear-gradient(45deg, #fff, #f0f8ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-size: 1rem;
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 500px;
+            padding: 18px 25px;
+            padding-left: 50px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .search-box:focus {
+            outline: none;
+            background: rgba(255,255,255,0.25);
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+            transform: scale(1.02);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 1.2rem;
+        }
+
+        .search-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .tab {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 15px 30px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .tab:hover::before {
+            left: 100%;
+        }
+
+        .tab:hover, .tab.active {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .tab.active {
+            background: rgba(255,255,255,0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .principle-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .principle-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+        }
+
+        .principle-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .principle-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .principle-category {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .principle-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .principle-acronym {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .principle-tagline {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .principle-description {
+            color: #34495e;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .benefits-section, .examples-section, .violations-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .benefits-list, .examples-list, .violations-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .benefits-list li, .examples-list li, .violations-list li {
+            padding: 8px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            position: relative;
+            padding-left: 35px;
+            transition: transform 0.2s ease;
+        }
+
+        .benefits-list li {
+            background: rgba(46, 204, 113, 0.1);
+            border-left: 3px solid #2ecc71;
+        }
+
+        .benefits-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 12px;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .examples-list li {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+        }
+
+        .examples-list li::before {
+            content: '→';
+            position: absolute;
+            left: 12px;
+            color: #2980b9;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .violations-list li {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 3px solid #e74c3c;
+        }
+
+        .violations-list li::before {
+            content: '⚠';
+            position: absolute;
+            left: 12px;
+            color: #c0392b;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .benefits-list li:hover, .examples-list li:hover, .violations-list li:hover {
+            transform: translateX(5px);
+        }
+
+        .code-example {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .code-example::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            width: 12px;
+            height: 12px;
+            background: #ff5f56;
+            border-radius: 50%;
+            box-shadow: 20px 0 #ffbd2e, 40px 0 #27ca3f;
+        }
+
+        .toggle-code {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toggle-code::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .toggle-code:hover::before {
+            left: 100%;
+        }
+
+        .toggle-code:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            display: block;
+            background: linear-gradient(45deg, #fff, #f0f8ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .principles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .stats-bar {
+                gap: 20px;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .principle-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Software Design Principles</h1>
+            <p class="subtitle">Essential principles for writing maintainable, scalable code</p>
+            <p class="description">Master these fundamental concepts to create better software architecture and cleaner codebases</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-number" id="totalPrinciples">15</span>
+                <span class="stat-label">Principles</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="visiblePrinciples">15</span>
+                <span class="stat-label">Visible</span>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-box" placeholder="Search principles..." id="searchBox">
+        </div>
+
+        <div class="filter-tabs">
+            <button class="tab active" data-category="all">All Principles</button>
+            <button class="tab" data-category="solid">SOLID</button>
+            <button class="tab" data-category="general">General</button>
+            <button class="tab" data-category="design">Design</button>
+            <button class="tab" data-category="architecture">Architecture</button>
+        </div>
+
+        <div class="principles-grid" id="principlesGrid">
+            <!-- SOLID Principles -->
+            <div class="principle-card" data-category="solid">
+                <div class="principle-header">
+                    <span class="principle-category">SOLID</span>
+                    <h3 class="principle-name">Single Responsibility</h3>
+                    <span class="principle-acronym">S</span>
+                </div>
+                <p class="principle-tagline">A class should have only one reason to change</p>
+                <p class="principle-description">
+                    Each class should have only one job or responsibility. When a class has multiple responsibilities, changes to one responsibility may affect the other, leading to fragile code.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Easier to understand and maintain</li>
+                        <li>Reduced coupling between components</li>
+                        <li>Changes are isolated and predictable</li>
+                        <li>Better testability</li>
+                    </ul>
+                </div>
+                <div class="violations-section">
+                    <h4 class="section-title">Common Violations</h4>
+                    <ul class="violations-list">
+                        <li>God classes that do everything</li>
+                        <li>Mixing business logic with UI code</li>
+                        <li>Classes handling both data and presentation</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Multiple responsibilities
+class User {
+    constructor(name, email) {
+        this.name = name;
+        this.email = email;
+    }
+    
+    save() { /* database logic */ }
+    sendEmail() { /* email logic */ }
+    validateEmail() { /* validation logic */ }
+}
+
+// Good: Single responsibility
+class User {
+    constructor(name, email) {
+        this.name = name;
+        this.email = email;
+    }
+}
+
+class UserRepository {
+    save(user) { /* database logic */ }
+}
+
+class EmailService {
+    send(user, message) { /* email logic */ }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="solid">
+                <div class="principle-header">
+                    <span class="principle-category">SOLID</span>
+                    <h3 class="principle-name">Open/Closed</h3>
+                    <span class="principle-acronym">O</span>
+                </div>
+                <p class="principle-tagline">Open for extension, closed for modification</p>
+                <p class="principle-description">
+                    Software entities should be open for extension but closed for modification. You should be able to add new functionality without changing existing code.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Reduces risk of breaking existing code</li>
+                        <li>Promotes code reusability</li>
+                        <li>Enables polymorphism</li>
+                        <li>Supports plugin architectures</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">Implementation Strategies</h4>
+                    <ul class="examples-list">
+                        <li>Use inheritance and polymorphism</li>
+                        <li>Implement strategy pattern</li>
+                        <li>Use composition over inheritance</li>
+                        <li>Apply dependency injection</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Modification needed for new shapes
+class AreaCalculator {
+    calculate(shapes) {
+        return shapes.reduce((total, shape) => {
+            if (shape.type === 'rectangle') {
+                return total + shape.width * shape.height;
+            } else if (shape.type === 'circle') {
+                return total + Math.PI * shape.radius ** 2;
+            }
+            // Need to modify for new shapes
+        }, 0);
+    }
+}
+
+// Good: Open for extension
+interface Shape {
+    area(): number;
+}
+
+class Rectangle implements Shape {
+    area() { return this.width * this.height; }
+}
+
+class Circle implements Shape {
+    area() { return Math.PI * this.radius ** 2; }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="solid">
+                <div class="principle-header">
+                    <span class="principle-category">SOLID</span>
+                    <h3 class="principle-name">Liskov Substitution</h3>
+                    <span class="principle-acronym">L</span>
+                </div>
+                <p class="principle-tagline">Subtypes must be substitutable for their base types</p>
+                <p class="principle-description">
+                    Objects of a superclass should be replaceable with objects of its subclasses without breaking the application. Derived classes must be substitutable for their base classes.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Ensures proper inheritance hierarchy</li>
+                        <li>Enables polymorphism</li>
+                        <li>Maintains behavioral consistency</li>
+                        <li>Reduces unexpected side effects</li>
+                    </ul>
+                </div>
+                <div class="violations-section">
+                    <h4 class="section-title">Common Violations</h4>
+                    <ul class="violations-list">
+                        <li>Subclass throws unexpected exceptions</li>
+                        <li>Subclass has stricter preconditions</li>
+                        <li>Subclass weakens postconditions</li>
+                        <li>Square-Rectangle problem</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Violates LSP
+class Rectangle {
+    setWidth(width) { this.width = width; }
+    setHeight(height) { this.height = height; }
+    area() { return this.width * this.height; }
+}
+
+class Square extends Rectangle {
+    setWidth(width) {
+        this.width = width;
+        this.height = width; // Unexpected behavior
+    }
+    setHeight(height) {
+        this.width = height;
+        this.height = height; // Unexpected behavior
+    }
+}
+
+// Good: Proper abstraction
+interface Shape {
+    area(): number;
+}
+
+class Rectangle implements Shape {
+    area() { return this.width * this.height; }
+}
+
+class Square implements Shape {
+    area() { return this.side * this.side; }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="solid">
+                <div class="principle-header">
+                    <span class="principle-category">SOLID</span>
+                    <h3 class="principle-name">Interface Segregation</h3>
+                    <span class="principle-acronym">I</span>
+                </div>
+                <p class="principle-tagline">Many specific interfaces are better than one general interface</p>
+                <p class="principle-description">
+                    Clients should not be forced to depend on interfaces they don't use. Split large interfaces into smaller, more specific ones so that clients only need to know about methods that are of interest to them.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Reduces coupling between classes</li>
+                        <li>Prevents unnecessary dependencies</li>
+                        <li>Makes code more modular</li>
+                        <li>Easier to implement and test</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">Implementation</h4>
+                    <ul class="examples-list">
+                        <li>Create role-specific interfaces</li>
+                        <li>Use composition to combine interfaces</li>
+                        <li>Apply the principle of least knowledge</li>
+                        <li>Separate read and write operations</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Fat interface
+interface Worker {
+    work(): void;
+    eat(): void;
+    sleep(): void;
+    program(): void;
+    design(): void;
+}
+
+// Good: Segregated interfaces
+interface Workable {
+    work(): void;
+}
+
+interface Eatable {
+    eat(): void;
+}
+
+interface Programmable {
+    program(): void;
+}
+
+class Developer implements Workable, Eatable, Programmable {
+    work() { /* work */ }
+    eat() { /* eat */ }
+    program() { /* program */ }
+}
+
+class Designer implements Workable, Eatable {
+    work() { /* work */ }
+    eat() { /* eat */ }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="solid">
+                <div class="principle-header">
+                    <span class="principle-category">SOLID</span>
+                    <h3 class="principle-name">Dependency Inversion</h3>
+                    <span class="principle-acronym">D</span>
+                </div>
+                <p class="principle-tagline">Depend on abstractions, not concretions</p>
+                <p class="principle-description">
+                    High-level modules should not depend on low-level modules. Both should depend on abstractions. Abstractions should not depend on details; details should depend on abstractions.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Reduces coupling between modules</li>
+                        <li>Makes code more testable</li>
+                        <li>Enables dependency injection</li>
+                        <li>Facilitates mocking and stubbing</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">Techniques</h4>
+                    <ul class="examples-list">
+                        <li>Use dependency injection containers</li>
+                        <li>Define interfaces for dependencies</li>
+                        <li>Use factory patterns</li>
+                        <li>Apply inversion of control</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: High-level depends on low-level
+class MySQLDatabase {
+    save(data) { /* MySQL specific code */ }
+}
+
+class UserService {
+    constructor() {
+        this.database = new MySQLDatabase(); // Tight coupling
+    }
+}
+
+// Good: Both depend on abstraction
+interface Database {
+    save(data): void;
+}
+
+class MySQLDatabase implements Database {
+    save(data) { /* MySQL specific code */ }
+}
+
+class UserService {
+    constructor(private database: Database) {}
+    
+    saveUser(user) {
+        this.database.save(user);
+    }
+}</div>
+            </div>
+
+            <!-- General Principles -->
+            <div class="principle-card" data-category="general">
+                <div class="principle-header">
+                    <span class="principle-category">General</span>
+                    <h3 class="principle-name">DRY</h3>
+                    <span class="principle-acronym">DRY</span>
+                </div>
+                <p class="principle-tagline">Don't Repeat Yourself</p>
+                <p class="principle-description">
+                    Every piece of knowledge must have a single, unambiguous, authoritative representation within a system. Avoid duplication of code, data, or logic.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Reduces maintenance overhead</li>
+                        <li>Improves consistency</li>
+                        <li>Makes changes easier</li>
+                        <li>Reduces bugs from inconsistent updates</li>
+                    </ul>
+                </div>
+                <div class="violations-section">
+                    <h4 class="section-title">Common Violations</h4>
+                    <ul class="violations-list">
+                        <li>Copy-paste programming</li>
+                        <li>Duplicate validation logic</li>
+                        <li>Repeated configuration values</li>
+                        <li>Similar algorithms in different places</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Repetition
+function calculateAreaRectangle(width, height) {
+    if (width <= 0 || height <= 0) {
+        throw new Error('Invalid dimensions');
+    }
+    return width * height;
+}
+
+function calculateAreaTriangle(base, height) {
+    if (base <= 0 || height <= 0) {
+        throw new Error('Invalid dimensions');
+    }
+    return 0.5 * base * height;
+}
+
+// Good: Extract common logic
+function validateDimensions(...dimensions) {
+    if (dimensions.some(d => d <= 0)) {
+        throw new Error('Invalid dimensions');
+    }
+}
+
+function calculateAreaRectangle(width, height) {
+    validateDimensions(width, height);
+    return width * height;
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="general">
+                <div class="principle-header">
+                    <span class="principle-category">General</span>
+                    <h3 class="principle-name">KISS</h3>
+                    <span class="principle-acronym">KISS</span>
+                </div>
+                <p class="principle-tagline">Keep It Simple, Stupid</p>
+                <p class="principle-description">
+                    Most systems work best if they are kept simple rather than made complicated. Simplicity should be a key goal in design, and unnecessary complexity should be avoided.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Easier to understand and maintain</li>
+                        <li>Fewer bugs and issues</li>
+                        <li>Faster development</li>
+                        <li>Better performance</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">Application</h4>
+                    <ul class="examples-list">
+                        <li>Choose simple algorithms when possible</li>
+                        <li>Avoid over-engineering</li>
+                        <li>Use clear, descriptive names</li>
+                        <li>Minimize dependencies</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Over-complicated
+class NumberProcessor {
+    process(numbers) {
+        return numbers
+            .filter(n => this.isValid(n))
+            .map(n => this.transform(n))
+            .reduce((acc, n) => this.accumulate(acc, n), 0);
+    }
+    
+    isValid(n) { return typeof n === 'number' && !isNaN(n); }
+    transform(n) { return n * 2; }
+    accumulate(acc, n) { return acc + n; }
+}
+
+// Good: Simple and clear
+function doubleAndSum(numbers) {
+    return numbers
+        .filter(n => typeof n === 'number' && !isNaN(n))
+        .map(n => n * 2)
+        .reduce((sum, n) => sum + n, 0);
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="general">
+                <div class="principle-header">
+                    <span class="principle-category">General</span>
+                    <h3 class="principle-name">YAGNI</h3>
+                    <span class="principle-acronym">YAGNI</span>
+                </div>
+                <p class="principle-tagline">You Aren't Gonna Need It</p>
+                <p class="principle-description">
+                    Don't implement functionality until it is actually needed. Avoid adding features, methods, or complexity based on speculation about future requirements.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Reduces code complexity</li>
+                        <li>Faster delivery times</li>
+                        <li>Less maintenance overhead</li>
+                        <li>Focuses on current requirements</li>
+                    </ul>
+                </div>
+                <div class="violations-section">
+                    <h4 class="section-title">Common Violations</h4>
+                    <ul class="violations-list">
+                        <li>Adding "just in case" features</li>
+                        <li>Over-architecting for scalability</li>
+                        <li>Premature optimization</li>
+                        <li>Gold plating solutions</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Over-engineering for future needs
+class User {
+    constructor(name, email) {
+        this.name = name;
+        this.email = email;
+        this.preferences = {}; // Might need later
+        this.settings = {};    // Might need later
+        this.metadata = {};    // Might need later
+    }
+    
+    // Complex caching system "just in case"
+    getCachedData() { /* complex logic */ }
+    invalidateCache() { /* complex logic */ }
+}
+
+// Good: Only what's needed now
+class User {
+    constructor(name, email) {
+        this.name = name;
+        this.email = email;
+    }
+    
+    // Add features when actually needed
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="design">
+                <div class="principle-header">
+                    <span class="principle-category">Design</span>
+                    <h3 class="principle-name">Composition over Inheritance</h3>
+                </div>
+                <p class="principle-tagline">Favor object composition over class inheritance</p>
+                <p class="principle-description">
+                    Design your objects to be composed of other objects rather than inheriting from base classes. Composition provides more flexibility and avoids the problems of deep inheritance hierarchies.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>More flexible and modular design</li>
+                        <li>Avoids inheritance problems</li>
+                        <li>Better encapsulation</li>
+                        <li>Runtime behavior changes</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">When to Use</h4>
+                    <ul class="examples-list">
+                        <li>When you need multiple inheritance</li>
+                        <li>To avoid fragile base class problem</li>
+                        <li>For strategy pattern implementation</li>
+                        <li>When behavior needs to change at runtime</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Deep inheritance
+class Animal {
+    move() { /* move logic */ }
+}
+
+class Bird extends Animal {
+    fly() { /* fly logic */ }
+}
+
+class FlyingFish extends Bird { // Awkward inheritance
+    swim() { /* swim logic */ }
+}
+
+// Good: Composition
+class Animal {
+    constructor(moveStrategy) {
+        this.moveStrategy = moveStrategy;
+    }
+    
+    move() {
+        return this.moveStrategy.move();
+    }
+}
+
+class FlyStrategy {
+    move() { return "flying"; }
+}
+
+class SwimStrategy {
+    move() { return "swimming"; }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="design">
+                <div class="principle-header">
+                    <span class="principle-category">Design</span>
+                    <h3 class="principle-name">Law of Demeter</h3>
+                    <span class="principle-acronym">LoD</span>
+                </div>
+                <p class="principle-tagline">Don't talk to strangers</p>
+                <p class="principle-description">
+                    A method should only call methods of its own object, its parameters, objects it creates, and its direct component objects. Avoid method chaining through multiple objects.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Reduces coupling between objects</li>
+                        <li>Makes code more maintainable</li>
+                        <li>Prevents ripple effects from changes</li>
+                        <li>Improves encapsulation</li>
+                    </ul>
+                </div>
+                <div class="violations-section">
+                    <h4 class="section-title">Common Violations</h4>
+                    <ul class="violations-list">
+                        <li>Long method chains (train wrecks)</li>
+                        <li>Accessing nested object properties</li>
+                        <li>Calling methods on returned objects</li>
+                        <li>Breaking encapsulation boundaries</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Violates Law of Demeter
+class Order {
+    getCustomerCity() {
+        return this.customer.getAddress().getCity(); // Chain of calls
+    }
+}
+
+// Good: Proper encapsulation
+class Order {
+    getCustomerCity() {
+        return this.customer.getCity(); // Delegate to customer
+    }
+}
+
+class Customer {
+    getCity() {
+        return this.address.getCity(); // Customer handles its own data
+    }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="architecture">
+                <div class="principle-header">
+                    <span class="principle-category">Architecture</span>
+                    <h3 class="principle-name">Separation of Concerns</h3>
+                    <span class="principle-acronym">SoC</span>
+                </div>
+                <p class="principle-tagline">Separate different aspects of the program</p>
+                <p class="principle-description">
+                    Different aspects of functionality should be managed by distinct and minimally overlapping modules. Each module should address a separate concern, making the system more modular and maintainable.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Better code organization</li>
+                        <li>Easier to maintain and test</li>
+                        <li>Promotes reusability</li>
+                        <li>Enables parallel development</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">Common Separations</h4>
+                    <ul class="examples-list">
+                        <li>Business logic from presentation</li>
+                        <li>Data access from business logic</li>
+                        <li>Configuration from implementation</li>
+                        <li>Cross-cutting concerns (logging, security)</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Mixed concerns
+class UserController {
+    createUser(userData) {
+        // Validation logic
+        if (!userData.email || !userData.name) {
+            throw new Error('Invalid data');
+        }
+        
+        // Business logic
+        const user = new User(userData);
+        
+        // Data access logic
+        const query = 'INSERT INTO users...';
+        database.execute(query, user);
+        
+        // Presentation logic
+        return { success: true, user: user };
+    }
+}
+
+// Good: Separated concerns
+class UserController {
+    constructor(userService, validator) {
+        this.userService = userService;
+        this.validator = validator;
+    }
+    
+    createUser(userData) {
+        this.validator.validate(userData);
+        const user = this.userService.create(userData);
+        return { success: true, user: user };
+    }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="architecture">
+                <div class="principle-header">
+                    <span class="principle-category">Architecture</span>
+                    <h3 class="principle-name">Principle of Least Knowledge</h3>
+                    <span class="principle-acronym">PLK</span>
+                </div>
+                <p class="principle-tagline">Each unit should have limited knowledge about other units</p>
+                <p class="principle-description">
+                    A software component should have knowledge only of its immediate neighbors and should not have knowledge of the internal workings of those neighbors. This reduces dependencies and coupling.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Reduces system complexity</li>
+                        <li>Minimizes dependencies</li>
+                        <li>Improves maintainability</li>
+                        <li>Enables better testing</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">Implementation</h4>
+                    <ul class="examples-list">
+                        <li>Use interfaces to hide implementations</li>
+                        <li>Apply dependency injection</li>
+                        <li>Use mediator patterns</li>
+                        <li>Implement facade patterns</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Too much knowledge
+class OrderProcessor {
+    process(order) {
+        // Knows too much about payment internals
+        const paymentGateway = order.customer.paymentMethod.gateway;
+        paymentGateway.authenticate(order.customer.credentials);
+        paymentGateway.charge(order.total);
+        
+        // Knows too much about inventory internals
+        order.items.forEach(item => {
+            const warehouse = item.product.warehouse;
+            warehouse.inventory.reduce(item.quantity);
+        });
+    }
+}
+
+// Good: Limited knowledge
+class OrderProcessor {
+    constructor(paymentService, inventoryService) {
+        this.paymentService = paymentService;
+        this.inventoryService = inventoryService;
+    }
+    
+    process(order) {
+        this.paymentService.charge(order);
+        this.inventoryService.reserve(order.items);
+    }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="general">
+                <div class="principle-header">
+                    <span class="principle-category">General</span>
+                    <h3 class="principle-name">Fail Fast</h3>
+                </div>
+                <p class="principle-tagline">Report problems as soon as they are detected</p>
+                <p class="principle-description">
+                    Systems should be designed to stop normal operation as quickly as possible when they detect problems. This makes bugs easier to find and fix, and prevents cascading failures.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Easier debugging and troubleshooting</li>
+                        <li>Prevents data corruption</li>
+                        <li>Reduces cascading failures</li>
+                        <li>Makes problems visible quickly</li>
+                    </ul>
+                </div>
+                <div class="examples-section">
+                    <h4 class="section-title">Techniques</h4>
+                    <ul class="examples-list">
+                        <li>Validate inputs early</li>
+                        <li>Use assertions for invariants</li>
+                        <li>Throw exceptions for invalid states</li>
+                        <li>Implement circuit breakers</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Silent failure
+class Calculator {
+    divide(a, b) {
+        if (b === 0) {
+            return null; // Silent failure
+        }
+        return a / b;
+    }
+}
+
+// Good: Fail fast
+class Calculator {
+    divide(a, b) {
+        if (typeof a !== 'number' || typeof b !== 'number') {
+            throw new Error('Arguments must be numbers');
+        }
+        if (b === 0) {
+            throw new Error('Division by zero');
+        }
+        return a / b;
+    }
+}</div>
+            </div>
+
+            <div class="principle-card" data-category="design">
+                <div class="principle-header">
+                    <span class="principle-category">Design</span>
+                    <h3 class="principle-name">Tell, Don't Ask</h3>
+                </div>
+                <p class="principle-tagline">Tell objects what to do, don't ask for their state</p>
+                <p class="principle-description">
+                    Instead of asking an object for data and then performing operations on that data, tell the object to perform the operation itself. This promotes better encapsulation and object-oriented design.
+                </p>
+                <div class="benefits-section">
+                    <h4 class="section-title">Benefits</h4>
+                    <ul class="benefits-list">
+                        <li>Better encapsulation</li>
+                        <li>Reduces coupling</li>
+                        <li>More maintainable code</li>
+                        <li>Follows OOP principles</li>
+                    </ul>
+                </div>
+                <div class="violations-section">
+                    <h4 class="section-title">Anti-patterns</h4>
+                    <ul class="violations-list">
+                        <li>Excessive getter usage</li>
+                        <li>Feature envy code smell</li>
+                        <li>Anemic domain models</li>
+                        <li>Data classes without behavior</li>
+                    </ul>
+                </div>
+                <button class="toggle-code" onclick="toggleCode(this)">Show Code Example</button>
+                <div class="code-example hidden">
+// Bad: Asking for state
+class BankAccount {
+    getBalance() { return this.balance; }
+    setBalance(amount) { this.balance = amount; }
+}
+
+class PaymentProcessor {
+    processPayment(account, amount) {
+        if (account.getBalance() >= amount) {
+            account.setBalance(account.getBalance() - amount);
+            return true;
+        }
+        return false;
+    }
+}
+
+// Good: Telling what to do
+class BankAccount {
+    withdraw(amount) {
+        if (this.balance >= amount) {
+            this.balance -= amount;
+            return true;
+        }
+        return false;
+    }
+}
+
+class PaymentProcessor {
+    processPayment(account, amount) {
+        return account.withdraw(amount);
+    }
+}</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Filter functionality
+        const tabs = document.querySelectorAll('.tab');
+        const cards = document.querySelectorAll('.principle-card');
+        const searchBox = document.getElementById('searchBox');
+        const totalPrinciples = document.getElementById('totalPrinciples');
+        const visiblePrinciples = document.getElementById('visiblePrinciples');
+
+        // Initialize stats
+        totalPrinciples.textContent = cards.length;
+        visiblePrinciples.textContent = cards.length;
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const category = tab.dataset.category;
+                filterCards(category, searchBox.value);
+            });
+        });
+
+        // Search functionality
+        searchBox.addEventListener('input', (e) => {
+            const activeTab = document.querySelector('.tab.active');
+            const category = activeTab.dataset.category;
+            filterCards(category, e.target.value);
+        });
+
+        function filterCards(category, searchTerm) {
+            let visibleCount = 0;
+            
+            cards.forEach((card, index) => {
+                const cardCategory = card.dataset.category;
+                const cardText = card.textContent.toLowerCase();
+                const matchesCategory = category === 'all' || cardCategory === category;
+                const matchesSearch = searchTerm === '' || cardText.includes(searchTerm.toLowerCase());
+                
+                if (matchesCategory && matchesSearch) {
+                    card.style.display = 'block';
+                    card.style.animation = `fadeInUp 0.4s ease ${Math.min(index * 0.1, 1)}s both`;
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            visiblePrinciples.textContent = visibleCount;
+            
+            // Add pulsing animation to stats when they change
+            visiblePrinciples.style.animation = 'pulse 0.3s ease';
+            setTimeout(() => {
+                visiblePrinciples.style.animation = '';
+            }, 300);
+        }
+
+        // Toggle code examples
+        function toggleCode(button) {
+            const codeExample = button.nextElementSibling;
+            const isHidden = codeExample.classList.contains('hidden');
+            
+            if (isHidden) {
+                codeExample.classList.remove('hidden');
+                button.textContent = 'Hide Code Example';
+                codeExample.style.animation = 'fadeInUp 0.3s ease';
+            } else {
+                codeExample.classList.add('hidden');
+                button.textContent = 'Show Code Example';
+            }
+        }
+
+        // Add additional animations
+        const additionalStyles = document.createElement('style');
+        additionalStyles.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+            
+            .principle-card:hover .principle-name {
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                transition: all 0.3s ease;
+            }
+        `;
+        document.head.appendChild(additionalStyles);
+
+        // Initialize with staggered animations
+        cards.forEach((card, index) => {
+            card.style.animation = `fadeInUp 0.6s ease ${index * 0.1}s both`;
+        });
+
+        // Add smooth scrolling for long content
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+</body>
+</html>
