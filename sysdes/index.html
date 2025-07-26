@@ -607,6 +607,26 @@
                 </div>
             </div>
 
+            <h4 style="color: #2980b9;">Read-Heavy vs Write-Heavy Optimization:</h4>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <strong>Read-Heavy Systems:</strong><br>
+                    • PostgreSQL with read replicas<br>
+                    • MySQL with master-slave setup<br>
+                    • Redis for caching layer<br>
+                    • Elasticsearch for search<br>
+                    • Consider CQRS pattern
+                </div>
+                <div class="metric-card">
+                    <strong>Write-Heavy Systems:</strong><br>
+                    • Cassandra for high write throughput<br>
+                    • MongoDB with sharding<br>
+                    • DynamoDB for auto-scaling<br>
+                    • InfluxDB for time-series writes<br>
+                    • Event sourcing patterns
+                </div>
+            </div>
+
             <h4 style="color: #2980b9;">Database Types by Use Case:</h4>
             <ul>
                 <li><strong>Document (MongoDB, CouchDB):</strong> User profiles, catalogs, content management</li>
