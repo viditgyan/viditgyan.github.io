@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Networking Basics Playbook</title>
+    <style>
+        :root {
+            --bg1: #f4faff;
+            --bg2: #f2fff7;
+            --card: rgba(255, 255, 255, 0.97);
+            --accent: #1565c0;
+            --accent-soft: rgba(21, 101, 192, 0.12);
+            --shadow: 0 18px 38px rgba(21, 101, 192, 0.14);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #0f1d33;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .header {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, #1565c0, #00897b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: #455a64;
+            font-size: 1.05rem;
+        }
+
+        .layout {
+            display: flex;
+            gap: 22px;
+        }
+
+        nav {
+            width: 260px;
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            background: var(--card);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 22px;
+        }
+
+        nav h3 {
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            background: var(--accent-soft);
+            color: #0f1d33;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #1565c0, #00897b);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        main {
+            flex: 1;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
+
+        section {
+            margin-bottom: 36px;
+        }
+
+        section h2 {
+            font-size: 1.9rem;
+            color: #1565c0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro {
+            color: #546e7a;
+            margin-bottom: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #f7fbff;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid rgba(21, 101, 192, 0.75);
+            box-shadow: 0 12px 28px rgba(21, 101, 192, 0.12);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            color: #0f2d58;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1565c0;
+            background: rgba(21, 101, 192, 0.16);
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        ul.list {
+            padding-left: 20px;
+        }
+
+        ul.list li {
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: rgba(255, 224, 178, 0.92);
+            border-left: 4px solid #fb8c00;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .best-practice {
+            background: rgba(200, 230, 201, 0.92);
+            border-left: 4px solid #2e7d32;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fafafa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 26px rgba(21, 101, 192, 0.12);
+        }
+
+        .table th, .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .table th {
+            background: #1565c0;
+            color: #fff;
+            font-size: 0.96rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #546e7a;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Networking Basics Playbook</h1>
+            <p>Understand foundational networking concepts—from OSI layers to designing reliable, secure, low-latency systems.</p>
+        </div>
+
+        <div class="layout">
+            <nav>
+                <h3>Sections</h3>
+                <div class="nav-links">
+                    <a href="#layers">Networking Layers</a>
+                    <a href="#transport">Transport Protocols</a>
+                    <a href="#http">HTTP & Web Delivery</a>
+                    <a href="#routing">Routing & Load Balancing</a>
+                    <a href="#security">Security & TLS</a>
+                    <a href="#diagnostics">Diagnostics & Tools</a>
+                    <a href="#incidents">Common Failure Modes</a>
+                    <a href="#cheatsheet">Cheat Sheet</a>
+                </div>
+            </nav>
+
+            <main>
+                <section id="layers">
+                    <h2>🧱 Networking Layers Overview</h2>
+                    <p class="intro">Networking stacks abstract communication into layers. The OSI model is conceptual; TCP/IP model maps to real-world protocols.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>OSI Model</h3>
+                            <ul class="list">
+                                <li>Layer 7: Application (HTTP, gRPC, DNS)</li>
+                                <li>Layer 6: Presentation (TLS, encryption)</li>
+                                <li>Layer 5: Session (sockets, RPC sessions)</li>
+                                <li>Layer 4: Transport (TCP, UDP)</li>
+                                <li>Layer 3: Network (IP)</li>
+                                <li>Layer 2: Data Link (Ethernet, Wi-Fi)</li>
+                                <li>Layer 1: Physical (cables, fiber, radio)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>TCP/IP Model</h3>
+                            <ul class="list">
+                                <li>Application</li>
+                                <li>Transport</li>
+                                <li>Internet</li>
+                                <li>Link</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Key Concepts</h3>
+                            <ul class="list">
+                                <li>IP addressing, CIDR notation, IPv4 vs IPv6.</li>
+                                <li>Ports (0-65535), ephemeral ports.</li>
+                                <li>DNS resolution (recursive vs authoritative).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Latency Components</h3>
+                            <ul class="list">
+                                <li>Propagation delay (distance).</li>
+                                <li>Serialization delay (packet size / link speed).</li>
+                                <li>Queuing delay (congestion).</li>
+                                <li>Processing delay (routers, firewalls).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="transport">
+                    <h2>🚚 Transport Protocols</h2>
+                    <p class="intro">Transport protocols define how data is delivered end-to-end.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>TCP (Transmission Control Protocol)</h3>
+                            <span class="tag">Reliable</span>
+                            <ul class="list">
+                                <li>Connection-oriented, reliable delivery.</li>
+                                <li>Three-way handshake, SYN backlog, FIN/ACK.</li>
+                                <li>Flow control: sliding window, congestion control (AIMD, CUBIC, BBR).</li>
+                                <li>Head-of-line blocking (HOLB) due to ordering.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>UDP (User Datagram Protocol)</h3>
+                            <span class="tag">Best Effort</span>
+                            <ul class="list">
+                                <li>Connectionless, unordered, unreliable.</li>
+                                <li>Used for low latency (VoIP, streaming, DNS).</li>
+                                <li>Application implements reliability if needed.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>QUIC</h3>
+                            <span class="tag">Modern</span>
+                            <ul class="list">
+                                <li>Runs over UDP; integrated TLS 1.3.</li>
+                                <li>0-RTT connection resumption, multiplexed streams without HOLB.</li>
+                                <li>Powers HTTP/3, improved performance on lossy networks.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Connection Management</h3>
+                            <ul class="list">
+                                <li>Keep-alive timeouts (prevent idle disconnects).</li>
+                                <li>SYN flood protection (SYN cookies, backlog tuning).</li>
+                                <li>Ephemeral port exhaustion (NAT, high concurrency).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="http">
+                    <h2>🌐 HTTP & Web Delivery</h2>
+                    <p class="intro">Understanding HTTP evolution helps build high-performance APIs and web applications.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>HTTP/1.1</h3>
+                            <ul class="list">
+                                <li>Persistent connections, pipelining (rarely used).</li>
+                                <li>Head-of-line blocking due to sequential requests.</li>
+                                <li>Use keep-alive and connection pooling.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>HTTP/2</h3>
+                            <span class="tag">Multiplexed</span>
+                            <ul class="list">
+                                <li>Binary framing, multiplexed streams over single TCP connection.</li>
+                                <li>Header compression (HPACK).</li>
+                                <li>Server push (optional; often disabled due to complexity).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>HTTP/3 (QUIC)</h3>
+                            <ul class="list">
+                                <li>Runs over QUIC (UDP) to avoid TCP head-of-line blocking.</li>
+                                <li>Faster handshake (1-RTT), improved mobile performance.</li>
+                                <li>Requires proxy/load balancer support.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>API Design</h3>
+                            <ul class="list">
+                                <li>REST vs gRPC vs GraphQL trade-offs.</li>
+                                <li>Pagination strategies, compression, caching headers.</li>
+                                <li>Versioning, retry semantics, idempotency.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Web Performance</h3>
+                            <span class="tag">Frontend</span>
+                            <ul class="list">
+                                <li>CDNs, caching headers, service workers.</li>
+                                <li>Minify assets, preconnect/prefetch, inline critical CSS.</li>
+                                <li>Monitor Core Web Vitals (LCP, FID, CLS).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="routing">
+                    <h2>🚦 Routing & Load Balancing</h2>
+                    <p class="intro">Route traffic across networks and services based on policies, capacity, and health.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Routing Basics</h3>
+                            <ul class="list">
+                                <li>Routers use routing tables, protocols (OSPF, BGP).</li>
+                                <li>Default gateways, static routes, route summarization.</li>
+                                <li>Network Address Translation (NAT) for IPv4 scarcity.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Load Balancing Algorithms</h3>
+                            <span class="tag">Service</span>
+                            <ul class="list">
+                                <li>Round robin, least connections, weighted, IP-hash.</li>
+                                <li>Application-aware (L7) vs connection-level (L4).</li>
+                                <li>Health checks, outlier detection, circuit breakers.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Global Traffic Management</h3>
+                            <ul class="list">
+                                <li>Geo-DNS, Anycast routing.</li>
+                                <li>Primary/secondary regions, active-active vs active-passive.</li>
+                                <li>Failover detection, DNS TTL tuning.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Content Delivery Networks</h3>
+                            <ul class="list">
+                                <li>Edge caching for static/dynamic content.</li>
+                                <li>Origin shield, cache invalidation, signed URLs.</li>
+                                <li>Monitor cache hit ratio, TTFB.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="security">
+                    <h2>🔐 Network Security & TLS</h2>
+                    <p class="intro">Security spans encryption, access control, and protecting against network-based attacks.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>TLS Basics</h3>
+                            <ul class="list">
+                                <li>TLS handshake (1.2 vs 1.3), cipher suites.</li>
+                                <li>Certificates, certificate authorities, OCSP stapling.</li>
+                                <li>Perfect forward secrecy (ECDHE).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Authentication & Authorization</h3>
+                            <ul class="list">
+                                <li>Mutual TLS (mTLS), API keys, OAuth2, JWTs.</li>
+                                <li>Network policies (security groups, firewalls).</li>
+                                <li>Zero trust networking, service mesh sidecars.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Attacks & Mitigation</h3>
+                            <ul class="list">
+                                <li>DDoS – scrubbing, rate limiting, CDN absorption.</li>
+                                <li>Man-in-the-middle – enforce HTTPS, HSTS, certificate pinning.</li>
+                                <li>DNS poisoning – DNSSEC, secure resolvers.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Secure Protocols</h3>
+                            <ul class="list">
+                                <li>SSH for remote access, SFTP for secure file transfer.</li>
+                                <li>IPsec VPNs, WireGuard for site-to-site/workforce access.</li>
+                                <li>Use application-layer encryption when network untrusted.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="diagnostics">
+                    <h2>🛠️ Diagnostics & Tools</h2>
+                    <p class="intro">Diagnose network issues using layered tools and observability.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Foundational Tools</h3>
+                            <ul class="list">
+                                <li><code>ping</code> – reachability & latency.</li>
+                                <li><code>traceroute</code> / <code>mtr</code> – path and hop latency.</li>
+                                <li><code>nslookup</code> / <code>dig</code> – DNS resolution.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Traffic Analysis</h3>
+                            <ul class="list">
+                                <li><code>tcpdump</code>, Wireshark for packet capture.</li>
+                                <li>NetFlow/sFlow for network flow statistics.</li>
+                                <li>Browser DevTools for HTTP trace.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Performance Monitoring</h3>
+                            <ul class="list">
+                                <li>APM tools for service latency (Datadog, New Relic).</li>
+                                <li>Synthetic probes (Pingdom, Catchpoint).</li>
+                                <li>Network telemetry (Prometheus node exporter, cloud metrics).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Observability Practices</h3>
+                            <ul class="list">
+                                <li>Instrument services with distributed tracing (OpenTelemetry).</li>
+                                <li>Log request IDs, correlation IDs to trace across services.</li>
+                                <li>Alert on latency percentiles, error codes, saturation.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="incidents">
+                    <h2>🚨 Common Networking Failure Modes</h2>
+                    <p class="intro">Most production outages stem from a small set of recurring lapses. Build runbooks and guardrails for these scenarios.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Packet Loss & Bufferbloat</h3>
+                            <span class="tag">Latency Surge</span>
+                            <ul class="list">
+                                <li>Congested queues or oversized buffers cause retransmits and multi-second tail latency.</li>
+                                <li><strong>Impact:</strong> Throughput collapse, video/audio glitches, TCP timeouts.</li>
+                                <li><strong>Prevention:</strong> Monitor retransmit %, deploy AQMs (FQ-CoDel), right-size buffers, enable BBR/QUIC where possible.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>MTU & Fragmentation Mismatch</h3>
+                            <span class="tag">Blackhole</span>
+                            <ul class="list">
+                                <li>Path MTU differs across links; ICMP blocked so DF packets vanish.</li>
+                                <li><strong>Impact:</strong> API calls hang, TLS handshake fails, VPN instability.</li>
+                                <li><strong>Prevention:</strong> Enable PMTUD, allow ICMP type&nbsp;3/4, set MSS clamping on tunnels and load balancers.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>DNS & TTL Drift</h3>
+                            <span class="tag">Resolution Failures</span>
+                            <ul class="list">
+                                <li>Stale records, misconfigured split-horizon DNS, or negative caching hide topology changes.</li>
+                                <li><strong>Impact:</strong> Traffic routed to decomissioned hosts, partial outages by geography.</li>
+                                <li><strong>Prevention:</strong> Automate DNS updates, monitor NXDOMAIN/ SERVFAIL, keep low TTLs during migrations.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>TLS & Certificate Expiry</h3>
+                            <span class="tag">Security</span>
+                            <ul class="list">
+                                <li>Forgotten certificates or mismatched SANs break HTTPS/mTLS handshakes.</li>
+                                <li><strong>Impact:</strong> Outages at midnight UTC, mobile app failures, regulatory incidents.</li>
+                                <li><strong>Prevention:</strong> Automate issuance (ACME), alert 30/7/1 days before expiry, centralise inventories.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Route Leaks & BGP Flaps</h3>
+                            <span class="tag">Global Impact</span>
+                            <ul class="list">
+                                <li>Upstream advertises incorrect prefixes or loses redundancy.</li>
+                                <li><strong>Impact:</strong> Regional reachability loss, asymmetric routing, increased latency.</li>
+                                <li><strong>Prevention:</strong> Use RPKI/ROV, multi-homing, route monitors (ThousandEyes, RIPE RIS) with alerting.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Firewall / ACL Drift</h3>
+                            <span class="tag">Change Risk</span>
+                            <ul class="list">
+                                <li>Manual rule edits or policy drift block required ports or health checks.</li>
+                                <li><strong>Impact:</strong> Sudden service isolation, failing load balancer probes.</li>
+                                <li><strong>Prevention:</strong> Use infrastructure-as-code for network policies, run diff + automated tests, log rejects centrally.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="cheatsheet">
+                    <h2>🧭 Networking Cheat Sheet</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Topic</th>
+                                <th>Key Points</th>
+                                <th>Tools</th>
+                                <th>Considerations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Latency Troubleshooting</td>
+                                <td>Identify slow hops, measure RTT, monitor queueing</td>
+                                <td>ping, traceroute, mtr, distributed tracing</td>
+                                <td>Consider CDN, caching, edge compute</td>
+                            </tr>
+                            <tr>
+                                <td>HTTP Optimization</td>
+                                <td>Use HTTP/2/3, compress payloads, cache aggressively</td>
+                                <td>WebPageTest, Lighthouse, DevTools</td>
+                                <td>Balance cache TTL vs freshness, monitor CORS, security headers</td>
+                            </tr>
+                            <tr>
+                                <td>Load Balancing</td>
+                                <td>Select algorithm, health checks, sticky sessions</td>
+                                <td>HAProxy, Nginx, Envoy, cloud LBs</td>
+                                <td>Plan for failover, consistent hashing for caching</td>
+                            </tr>
+                            <tr>
+                                <td>Security</td>
+                                <td>TLS 1.2/1.3, HSTS, WAF, rate limiting</td>
+                                <td>Qualys SSL Labs, OWASP ZAP, Cloudflare</td>
+                                <td>Certificate lifecycle, mTLS for service mesh</td>
+                            </tr>
+                            <tr>
+                                <td>Diagnostics</td>
+                                <td>Layered approach (L1-L7), correlate logs</td>
+                                <td>tcpdump, Wireshark, NetFlow, APM</td>
+                                <td>Check firewall rules, security groups, NAT translation</td>
+                            </tr>
+                            <tr>
+                                <td>Resilience</td>
+                                <td>Redundant paths, failover, chaos testing</td>
+                                <td>Chaos Mesh, Gremlin, Resilience4j</td>
+                                <td>Document runbooks, automate failover, monitor health</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            Networking fundamentals underpin distributed systems—keep learning, experiment in labs, and apply best practices to build robust, low-latency services.
+        </footer>
+    </div>
+</body>
+</html>
+
