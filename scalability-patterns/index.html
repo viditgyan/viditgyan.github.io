@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scalability Patterns Playbook</title>
+    <style>
+        :root {
+            --bg1: #f7f9ff;
+            --bg2: #eefbf7;
+            --card: rgba(255, 255, 255, 0.97);
+            --accent: #1a237e;
+            --accent-soft: rgba(26, 35, 126, 0.12);
+            --shadow: 0 18px 38px rgba(26, 35, 126, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #0d1b2a;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .header {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #283593, #00695c);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: #455a64;
+            font-size: 1.05rem;
+        }
+
+        .layout {
+            display: flex;
+            gap: 22px;
+        }
+
+        nav {
+            width: 260px;
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            background: var(--card);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 22px;
+        }
+
+        nav h3 {
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            background: var(--accent-soft);
+            color: #102a43;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #283593, #00695c);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        main {
+            flex: 1;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
+
+        section {
+            margin-bottom: 36px;
+        }
+
+        section h2 {
+            font-size: 1.9rem;
+            color: #1b5e20;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro {
+            color: #546e7a;
+            margin-bottom: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #f7fbff;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid rgba(40, 53, 147, 0.75);
+            box-shadow: 0 12px 28px rgba(40, 53, 147, 0.12);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            color: #1b3a57;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0d47a1;
+            background: rgba(13, 71, 161, 0.14);
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        ul.list {
+            padding-left: 20px;
+        }
+
+        ul.list li {
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: rgba(255, 224, 178, 0.94);
+            border-left: 4px solid #f57c00;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .best-practice {
+            background: rgba(200, 230, 201, 0.92);
+            border-left: 4px solid #388e3c;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fafafa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 26px rgba(26, 35, 126, 0.15);
+        }
+
+        .table th, .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .table th {
+            background: #283593;
+            color: #fff;
+            font-size: 0.96rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #546e7a;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Scalability Patterns Playbook</h1>
+            <p>Key strategies to scale systems horizontally and vertically—covering compute, data, traffic management, and operations guardrails.</p>
+        </div>
+
+        <div class="layout">
+            <nav>
+                <h3>Sections</h3>
+                <div class="nav-links">
+                    <a href="#principles">Core Principles</a>
+                    <a href="#compute">Compute Scaling</a>
+                    <a href="#data">Data Layer Patterns</a>
+                    <a href="#traffic">Traffic & Delivery</a>
+                    <a href="#resilience">Resilience & Backpressure</a>
+                    <a href="#practices">Operational Practices</a>
+                    <a href="#pitfalls">Scaling Pitfalls</a>
+                    <a href="#matrix">Pattern Matrix</a>
+                </div>
+            </nav>
+
+            <main>
+                <section id="principles">
+                    <h2>🧭 Core Principles</h2>
+                    <p class="intro">Scalability is about sustaining throughput/latency SLOs as load grows. Identify bottlenecks, choose the right scaling axis, and avoid introducing fragility.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Measure First</h3>
+                            <ul class="list">
+                                <li>Baseline current capacity (load testing, capacity planning).</li>
+                                <li>Track utilisation metrics (CPU, memory, network), request latency percentiles, error budgets.</li>
+                                <li>Use queue lengths and saturation metrics as early warning signals.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Scale Both Ways</h3>
+                            <ul class="list">
+                                <li><strong>Vertical scaling:</strong> Larger instances (quick fix, limited by hardware caps).</li>
+                                <li><strong>Horizontal scaling:</strong> More instances; needs coordination (load balancing, consistency).</li>
+                                <li>Consider auto-scaling policies, cluster scheduling, and warm-up time.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Decouple</h3>
+                            <ul class="list">
+                                <li>Split components with queues, event streams, or APIs.</li>
+                                <li>Design with bounded contexts and clear service boundaries.</li>
+                                <li>Pick stateful vs stateless carefully (stateless easier to scale horizontally).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Plan for Growth</h3>
+                            <ul class="list">
+                                <li>Forecast usage (seasonality, marketing events, product launches).</li>
+                                <li>Understand cost curves (cloud billing, network egress, storage).</li>
+                                <li>Prepare runbooks for scaling events (scale out/in, failover).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="compute">
+                    <h2>🖥️ Compute Scaling Patterns</h2>
+                    <p class="intro">How you scale your application layer depends on workload characteristics and state management.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Stateless Services</h3>
+                            <span class="tag">Horizontal Scaling</span>
+                            <ul class="list">
+                                <li>Keep request state external (session stores, tokens).</li>
+                                <li>Use load balancers with health checks, auto-scaling groups.</li>
+                                <li>Blue/green or canary deployments to introduce new instances safely.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Stateful Services</h3>
+                            <span class="tag">Sticky Sessions</span>
+                            <ul class="list">
+                                <li>Use partitioning/sharding to distribute state across nodes.</li>
+                                <li>Implement leader election (Raft, Paxos) for write coordination.</li>
+                                <li>Plan for data rebalancing and failover (Kafka brokers, DB replicas).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Microservices</h3>
+                            <span class="tag">Service Mesh</span>
+                            <ul class="list">
+                                <li>Split along bounded contexts; each service scales independently.</li>
+                                <li>Service mesh for traffic shaping, observability, and retries.</li>
+                                <li>Use async messaging for high fan-out workflows.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Serverless / FaaS</h3>
+                            <span class="tag">Bursty Workloads</span>
+                            <ul class="list">
+                                <li>Automatic scaling per request; pay-per-use.</li>
+                                <li>Mind cold starts, concurrency limits, shared DB connections.</li>
+                                <li>Ideal for event-driven, spiky traffic, glue logic.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Batch vs Streaming</h3>
+                            <ul class="list">
+                                <li>Batch scaling: schedule across distributed compute (Spark, Flink batch).</li>
+                                <li>Streaming: partitioned consumers, checkpointing, backpressure (Kafka Streams, Flink).</li>
+                                <li>Hybrid: lambda architecture (batch + speed layer) used in analytics pipelines.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Async & Queues</h3>
+                            <ul class="list">
+                                <li>Move non-blocking work to async workers (Celery, Sidekiq).</li>
+                                <li>Backpressure via queue length thresholds, rate limiting.</li>
+                                <li>Scale workers horizontally, tune batch processing.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="data">
+                    <h2>🗄️ Data Layer Patterns</h2>
+                    <p class="intro">Data systems often become bottlenecks—choose replication, sharding, caching, and storage types based on access patterns.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Read Replicas</h3>
+                            <span class="tag">Relational</span>
+                            <ul class="list">
+                                <li>Offload reads from primary DB; eventual consistency for reads.</li>
+                                <li>Balance across replicas, detect lag (replication delay).</li>
+                                <li>Separate analytics vs transactional workloads.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Sharding / Partitioning</h3>
+                            <span class="tag">Scale-Out</span>
+                            <ul a class="list">
+                                <li>Split data across shards by key (hash/range/geography).</li>
+                                <li>Resharding strategy: consistent hashing, double writes, or table partitioning.</li>
+                                <li>Plan for hot shards; monitor shard sizes and traffic.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Polyglot Persistence</h3>
+                            <span class="tag">Best Fit</span>
+                            <ul class="list">
+                                <li>Use the right storage for workload (SQL, NoSQL, time-series, graph).</li>
+                                <li>Maintain event log or CDC to populate downstream stores.</li>
+                                <li>Keep source of truth defined; avoid conflicting data flows.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Write Scaling</h3>
+                            <span class="tag">High Throughput</span>
+                            <ul class="list">
+                                <li>Implement batching, append-only logs, or LSM engines (Cassandra, RocksDB).</li>
+                                <li>Use message queues to absorb bursts (Kafka, Pulsar, Kinesis).</li>
+                                <li>Adopt eventual consistency with compensating transactions when acceptable.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Caching & CDNs</h3>
+                            <ul class="list">
+                                <li>Introduce multi-layer caching (client, edge, service, DB caches).</li>
+                                <li>CDNs for static content; dynamic caching with Varnish, Redis.</li>
+                                <li>Monitor hit ratios and stale cache issues.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Analytics vs OLTP</h3>
+                            <ul class="list">
+                                <li>Split workloads: OLTP for transactions, OLAP for analytics.</li>
+                                <li>Use data pipelines (ETL/ELT, CDC) to keep analytics stores in sync.</li>
+                                <li>Leverage columnar stores for aggregates (Snowflake, BigQuery, ClickHouse).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="traffic">
+                    <h2>🌐 Traffic & Delivery Patterns</h2>
+                    <p class="intro">How you route and shape traffic influences scalability under load spikes and multi-region deployments.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Load Balancing</h3>
+                            <span class="tag">L4 & L7</span>
+                            <ul class="list">
+                                <li>Algorithms: round-robin, least connections, consistent hashing, EWMA.</li>
+                                <li>Layer 4 (TCP/UDP) vs Layer 7 (HTTP) considerations.</li>
+                                <li>Health checks, circuit breakers, outlier detection.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Global Traffic</h3>
+                            <ul class="list">
+                                <li>Geo-DNS, anycast, or global load balancers (GSLB) to route by latency/geography.</li>
+                                <li>Multi-region active-active vs active-passive setup.</li>
+                                <li>Data sovereignty: keep data within region or use edge transformation.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Rate Limiting & Throttling</h3>
+                            <span class="tag">Protection</span>
+                            <ul class="list">
+                                <li>Token bucket, leaky bucket, fixed window, sliding logs.</li>
+                                <li>Protect downstream services, enforce per-tenant quotas.</li>
+                                <li>Return retry-after headers, integrate with API gateways.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Content Delivery</h3>
+                            <ul class="list">
+                                <li>Cache static and dynamic content (CDNs, edge computing).</li>
+                                <li>Use prefetch/push strategies to reduce latency.</li>
+                                <li>Measure TTFB, cache hit ratios, and origin fallbacks.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Multitenancy Isolation</h3>
+                            <ul class="list">
+                                <li>Partition traffic with per-tenant quotas, dedicated resources.</li>
+                                <li>Use circuit breakers per tenant to prevent domino failures.</li>
+                                <li>Tag and monitor per-tenant metrics for fairness.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>API Gateways</h3>
+                            <ul class="list">
+                                <li>Centralise authentication, routing, caching, and transformations.</li>
+                                <li>Provide consistent SLAs, canary release routing.</li>
+                                <li>Implement request shaping, schema enforcement.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="resilience">
+                    <h2>🛡️ Resilience & Backpressure</h2>
+                    <p class="intro">Scaling without resilience leads to catastrophic failures. Build safety nets and absorption layers.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Backpressure</h3>
+                            <ul class="list">
+                                <li>Use bounded queues; reject or shed load when downstream saturated.</li>
+                                <li>Apply message TTL, DLQs, or rate adjustments.</li>
+                                <li>Propagate signals upstream (429 responses, grpc RESOURCE_EXHAUSTED).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Circuit Breakers</h3>
+                            <ul class="list">
+                                <li>Open circuit on repeated failures; allow recovery with half-open state.</li>
+                                <li>Combine with retries, exponential backoff, jitter.</li>
+                                <li>Monitor error budgets; enforce budgets in service agreements.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Graceful Degradation</h3>
+                            <ul class="list">
+                                <li>Serve cached or simplified responses under heavy load.</li>
+                                <li>Disable non-critical features to protect core flows.</li>
+                                <li>Design fallback experiences ahead of time.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Chaos Engineering</h3>
+                            <ul class="list">
+                                <li>Inject failures (latency, network partitions) to validate resilience.</li>
+                                <li>Automate chaos experiments as part of scaling readiness.</li>
+                                <li>Use canaries and safety valves to halt experiments.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="practices">
+                    <h2>🛠️ Operational Practices</h2>
+                    <p class="intro">Scalability relies on disciplined operations: observability, runbooks, and continuous improvement.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Observability</h3>
+                            <ul class="list">
+                                <li>Monitor golden signals (latency, traffic, errors, saturation).</li>
+                                <li>Trace distributed requests to spot bottlenecks.</li>
+                                <li>Alert on leading indicators (queue depth, CPU headroom).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Capacity Planning</h3>
+                            <ul class="list">
+                                <li>Maintain capacity models (requests/second vs instance count).</li>
+                                <li>Use predictive scaling for known events; reactive for unexpected spikes.</li>
+                                <li>Keep warm redundancy for failover scenarios.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Deployment Discipline</h3>
+                            <ul class="list">
+                                <li>Automate deploys, rollbacks, and canaries.</li>
+                                <li>Record change events; correlate with incident timelines.</li>
+                                <li>Test at scale (shadow traffic, synthetic load) before release.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Runbooks & Incident Response</h3>
+                            <ul class="list">
+                                <li>Document scaling playbooks (scale out/in, failover, traffic shifting).</li>
+                                <li>Have clear PAGING policies; practice through game days.</li>
+                                <li>Conduct blameless postmortems; feed learnings into backlog.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pitfalls">
+                    <h2>🚨 Scaling Pitfalls & Anti-Patterns</h2>
+                    <p class="intro">Avoid these frequent failure modes when rolling out scaling projects. They surface repeatedly in incident postmortems.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Hot Shards & Imbalanced Keys</h3>
+                            <span class="tag">Data Layer</span>
+                            <ul class="list">
+                                <li>Skewed partition key choices overload a subset of shards or replicas.</li>
+                                <li><strong>Impact:</strong> Tail latency spikes, throttled tenants, uneven costs.</li>
+                                <li><strong>Mitigation:</strong> Use composite/hashed keys, add virtual nodes, monitor per-shard QPS and storage.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Distributed Transactions Everywhere</h3>
+                            <span class="tag">Coupling</span>
+                            <ul class="list">
+                                <li>Cross-service two-phase commit or sync RPC chains block horizontal scaling.</li>
+                                <li><strong>Impact:</strong> Deadlocks, cascading retries, slow releases.</li>
+                                <li><strong>Mitigation:</strong> Embrace eventual consistency, use outbox/CDC patterns, design idempotent compensating actions.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Stateful Singletons</h3>
+                            <span class="tag">Hidden SPOF</span>
+                            <ul class="list">
+                                <li>Background schedulers, cron workers, or leader processes run on a single node.</li>
+                                <li><strong>Impact:</strong> Scale ceilings, failover gaps, manual recovery.</li>
+                                <li><strong>Mitigation:</strong> Externalise coordination (Quartz clusters, Kubernetes CronJobs), implement leader election with health checks.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cross-Region Chatty Calls</h3>
+                            <span class="tag">Latency</span>
+                            <ul class="list">
+                                <li>Services synchronously call counterparts across oceans for every request.</li>
+                                <li><strong>Impact:</strong> 100ms+ added per hop, scaling blocked by RTT.</li>
+                                <li><strong>Mitigation:</strong> Localise data, replicate asynchronously, apply read/write splitting, batch cross-region sync.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Configuration Drift</h3>
+                            <span class="tag">Operations</span>
+                            <ul class="list">
+                                <li>Manual instance tweaks diverge autoscaling groups and make rollbacks risky.</li>
+                                <li><strong>Impact:</strong> Inconsistent performance, surprising incidents on failover.</li>
+                                <li><strong>Mitigation:</strong> Manage infra as code, enforce immutable builds, run config compliance checks.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Underestimating Warm-Up & Capacity</h3>
+                            <span class="tag">Autoscaling</span>
+                            <ul class="list">
+                                <li>Auto-scalers add nodes slower than traffic spikes; caches start cold.</li>
+                                <li><strong>Impact:</strong> Throttling during launches, cascading failures downstream.</li>
+                                <li><strong>Mitigation:</strong> Configure predictive scaling + step policies, pre-warm caches, run load tests for ramp events.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="matrix">
+                    <h2>🗺️ Pattern Decision Matrix</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>Recommended Pattern</th>
+                                <th>Considerations</th>
+                                <th>Examples</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Spiky web traffic</td>
+                                <td>Stateless services + auto-scaling + CDN</td>
+                                <td>Ensure session externalisation, warm-up time, rate limiting</td>
+                                <td>E-commerce flash sale, news site trending article</td>
+                            </tr>
+                            <tr>
+                                <td>Global read-heavy workload</td>
+                                <td>Read replicas + geolocation routing + edge cache</td>
+                                <td>Replication lag tolerances, multi-region failover, eventual consistency</td>
+                                <td>Social feed, public APIs, documentation sites</td>
+                            </tr>
+                            <tr>
+                                <td>High write throughput</td>
+                                <td>Sharding + append-only logs + async replication</td>
+                                <td>Key design, rebalancing strategy, idempotent writers</td>
+                                <td>Telemetry intake, financial transactions, IoT ingestion</td>
+                            </tr>
+                            <tr>
+                                <td>Multi-tenancy isolation</td>
+                                <td>Namespace/tenant partitioning + rate limiting</td>
+                                <td>Separate resource pools, quotas, circuit breakers</td>
+                                <td>SaaS with heavy tenant variance</td>
+                            </tr>
+                            <tr>
+                                <td>Analytics + OLTP combo</td>
+                                <td>Event streaming (CDC) → OLAP store</td>
+                                <td>Data freshness SLA, schema evolution, deduplication</td>
+                                <td>Real-time dashboards, ML feature stores</td>
+                            </tr>
+                            <tr>
+                                <td>Bursting event processing</td>
+                                <td>Serverless functions + queue buffering</td>
+                                <td>Concurrency limits, cold starts, downstream throttling</td>
+                                <td>Notification fan-out, media transcoding</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            Scalability journeys are iterative—measure, adapt, and share patterns with your team to build resilient systems.
+        </footer>
+    </div>
+</body>
+</html>
+
