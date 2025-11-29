@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture & Systems Hub</title>
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #475569;
+            --bg-start: #f3f4ff;
+            --bg-end: #f2fff8;
+            --surface: rgba(255, 255, 255, 0.97);
+            --accent: #2563eb;
+            --accent-soft: rgba(37, 99, 235, 0.12);
+            --accent-strong: #1d4ed8;
+            --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .page-shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 24px 56px;
+        }
+
+        .hero {
+            display: grid;
+            gap: 18px;
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px 44px;
+            box-shadow: var(--shadow);
+            margin-bottom: 36px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.4rem, 3vw, 3rem);
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent), #14b8a6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.08rem;
+            color: var(--muted);
+            max-width: 760px;
+        }
+
+        .quick-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .quick-nav a {
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .quick-nav a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(37, 99, 235, 0.18);
+        }
+
+        .section {
+            margin-bottom: 44px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .section-header h2 {
+            font-size: 1.7rem;
+        }
+
+        .section-header span {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--surface);
+            border-radius: 18px;
+            padding: 22px;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            color: var(--accent-strong);
+        }
+
+        .card p {
+            color: var(--muted);
+            font-size: 0.94rem;
+        }
+
+        .card ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .card ul li {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .card a {
+            margin-top: auto;
+            align-self: flex-start;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), #0ea5e9);
+            color: #fff;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(14, 165, 233, 0.32);
+        }
+
+        .resource-strip {
+            margin-top: 12px;
+            padding: 18px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.06);
+            display: grid;
+            gap: 10px;
+        }
+
+        .resource-strip strong {
+            color: var(--accent-strong);
+        }
+
+        .resource-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .resource-links a {
+            text-decoration: none;
+            color: var(--ink);
+            background: rgba(148, 163, 184, 0.2);
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        footer {
+            margin-top: 48px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 720px) {
+            .hero {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <h1>Architecture & Systems Hub</h1>
+            <p>One place for your system design, performance, security, and infrastructure playbooks. Browse curated guides, checklists, and battle-tested references before architecture reviews or interview prep sessions.</p>
+            <nav class="quick-nav" aria-label="Quick navigation">
+                <a href="#foundations">Design Foundations</a>
+                <a href="#data">Data & Storage</a>
+                <a href="#security">Security & Hashing</a>
+                <a href="#operations">Operations & Performance</a>
+                <a href="#networking">Networking</a>
+                <a href="#library">Reference Library</a>
+            </nav>
+        </header>
+
+        <section class="section" id="foundations">
+            <div class="section-header">
+                <h2>Design Foundations</h2>
+                <span>Frameworks, patterns, and anti-patterns for system thinking.</span>
+            </div>
+            <div class="card-grid">
+                <article class="card">
+                    <div>
+                        <h3>System Design Cheat Sheet</h3>
+                        <p>Design frameworks, platform building blocks, trade-off guides, and interview-ready case studies.</p>
+                        <ul>
+                            <li>Architecture</li>
+                            <li>Patterns</li>
+                            <li>Capacity</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/system-design-cheatsheet/">Open Cheat Sheet</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <h3>Anti-Patterns & Remedies</h3>
+                        <p>Spot performance, data, API, and operational pitfalls early with remediations and guardrails.</p>
+                        <ul>
+                            <li>N+1</li>
+                            <li>Chatty APIs</li>
+                            <li>Runbooks</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/anti-patterns/">Review Anti-Patterns</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <h3>Scalability Patterns</h3>
+                        <p>Horizontal & vertical scale strategies, queueing, resilience, and scaling playbooks.</p>
+                        <ul>
+                            <li>Scale-Out</li>
+                            <li>Resilience</li>
+                            <li>Backpressure</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/scalability-patterns/">Explore Patterns</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="data">
+            <div class="section-header">
+                <h2>Data & Storage</h2>
+                <span>Modeling, indexing, caching, and warehouse considerations.</span>
+            </div>
+            <div class="card-grid">
+                <article class="card">
+                    <div>
+                        <h3>Database Landscape & Indexing</h3>
+                        <p>Compare SQL, NoSQL, vector, and lakehouse systems with indexing strategies and interview-ready cheat sheets.</p>
+                        <ul>
+                            <li>Postgres</li>
+                            <li>Cassandra</li>
+                            <li>Hive</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/db">Browse Database Guide</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <h3>Data Modeling Playbook</h3>
+                        <p>Relational vs NoSQL modeling, polyglot persistence, analytics schemas, and governance.</p>
+                        <ul>
+                            <li>Relational</li>
+                            <li>NoSQL</li>
+                            <li>Analytics</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/data-modeling/">Open Modeling Guide</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <h3>Caching Strategies</h3>
+                        <p>Fundamentals, standard patterns, invalidation, cache failure modes, and observability.</p>
+                        <ul>
+                            <li>Cache-Aside</li>
+                            <li>TTL</li>
+                            <li>Consistency</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/caching-strategies/">View Caching Guide</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="security">
+            <div class="section-header">
+                <h2>Security & Hashing</h2>
+                <span>Integrity, confidentiality, and hashing vs encryption decision trees.</span>
+            </div>
+            <div class="card-grid">
+                <article class="card">
+                    <div>
+                        <h3>Hashing & Encryption Field Guide</h3>
+                        <p>High-speed vs cryptographic hashes, encryption modes, key management, failure modes, and interview prompts.</p>
+                        <ul>
+                            <li>Hashing</li>
+                            <li>AEAD</li>
+                            <li>Password Hashing</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/hash-enc">Launch Security Guide</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="operations">
+            <div class="section-header">
+                <h2>Operations & Performance</h2>
+                <span>Keep systems fast, observable, and cost-aware.</span>
+            </div>
+            <div class="card-grid">
+                <article class="card">
+                    <div>
+                        <h3>Performance Tuning Handbook</h3>
+                        <p>Profiling, CPU & memory tuning, I/O optimization, budgets, and a multi-layer checklist.</p>
+                        <ul>
+                            <li>Profiling</li>
+                            <li>Budgets</li>
+                            <li>Observability</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/performance-tuning/">Open Performance Guide</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="networking">
+            <div class="section-header">
+                <h2>Networking & Delivery</h2>
+                <span>Transport protocols, HTTP evolution, load balancing, and diagnostics.</span>
+            </div>
+            <div class="card-grid">
+                <article class="card">
+                    <div>
+                        <h3>Networking Basics Playbook</h3>
+                        <p>OSI/TCP-IP primer, HTTP/1.1 → HTTP/3 evolution, TLS, routing, and incident diagnostics.</p>
+                        <ul>
+                            <li>OSI</li>
+                            <li>QUIC</li>
+                            <li>Diagnostics</li>
+                        </ul>
+                    </div>
+                    <a href="https://viditgyan.github.io/network-basics/">Read Networking Guide</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="library">
+            <div class="section-header">
+                <h2>Reference Library</h2>
+                <span>Supplemental study material housed in subfolders.</span>
+            </div>
+            <div class="resource-strip">
+                <strong>Browse study packs:</strong>
+                <div class="resource-links">
+                    <a href="https://viditgyan.github.io/books/">Books & Summaries</a>
+                    <a href="https://viditgyan.github.io/dp/">Distributed Systems Notes</a>
+                    <a href="https://viditgyan.github.io/dprinciples/">Design Principles</a>
+                    <a href="https://viditgyan.github.io/hash-enc/">Hash & Encryption Notes</a>
+                    <a href="https://viditgyan.github.io/sysdes/">System Design Decks</a>
+                    <a href="https://viditgyan.github.io/db/">Database Notes</a>
+                </div>
+                <p style="color: var(--muted); font-size: 0.9rem;">Tip: add more folders as you expand your knowledge base—link them here for quick access.</p>
+            </div>
+        </section>
+
+        <footer>
+            Built for rapid revision and architecture deep dives. Keep iterating—your next interview or design review will thank you.
+        </footer>
+    </div>
+</body>
+</html>
+
