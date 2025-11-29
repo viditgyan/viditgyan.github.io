@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Tuning Handbook</title>
+    <style>
+        :root {
+            --bg1: #f7fffb;
+            --bg2: #eef5ff;
+            --card: rgba(255, 255, 255, 0.97);
+            --accent: #1b5e20;
+            --accent-soft: rgba(27, 94, 32, 0.12);
+            --shadow: 0 18px 38px rgba(27, 94, 32, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #0f1c2f;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .header {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #1b5e20, #01579b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: #455a64;
+            font-size: 1.05rem;
+        }
+
+        .layout {
+            display: flex;
+            gap: 22px;
+        }
+
+        nav {
+            width: 260px;
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            background: var(--card);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 22px;
+        }
+
+        nav h3 {
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            background: var(--accent-soft);
+            color: #0f1c2f;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #1b5e20, #01579b);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        main {
+            flex: 1;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
+
+        section {
+            margin-bottom: 36px;
+        }
+
+        section h2 {
+            font-size: 1.9rem;
+            color: #1b5e20;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro {
+            color: #546e7a;
+            margin-bottom: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #f9fffb;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid rgba(27, 94, 32, 0.75);
+            box-shadow: 0 12px 28px rgba(27, 94, 32, 0.12);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            color: #10451d;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1b5e20;
+            background: rgba(27, 94, 32, 0.16);
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        ul.list {
+            padding-left: 20px;
+        }
+
+        ul.list li {
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: rgba(255, 204, 188, 0.92);
+            border-left: 4px solid #e65100;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .best-practice {
+            background: rgba(200, 230, 201, 0.92);
+            border-left: 4px solid #2e7d32;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fafafa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 26px rgba(27, 94, 32, 0.12);
+        }
+
+        .table th, .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .table th {
+            background: #1b5e20;
+            color: #fff;
+            font-size: 0.96rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #546e7a;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Performance Tuning Handbook</h1>
+            <p>Diagnose bottlenecks, tune systems from CPU to network, and keep performance budgets aligned with user experience goals.</p>
+        </div>
+
+        <div class="layout">
+            <nav>
+                <h3>Sections</h3>
+                <div class="nav-links">
+                    <a href="#approach">Performance Approach</a>
+                    <a href="#cpu-memory">CPU & Memory</a>
+                    <a href="#io">I/O & Storage</a>
+                    <a href="#network">Network & Latency</a>
+                    <a href="#app-layer">Application Layer</a>
+                    <a href="#observability">Observability & Tooling</a>
+                    <a href="#budgets">Performance Budgets</a>
+                    <a href="#pitfalls">Common Pitfalls</a>
+                    <a href="#checklist">Checklist</a>
+                </div>
+            </nav>
+
+            <main>
+                <section id="approach">
+                    <h2>🧭 Performance Tuning Approach</h2>
+                    <p class="intro">Follow a disciplined, data-driven loop—avoid premature optimization and focus on biggest wins first.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>1. Define Goals</h3>
+                            <ul class="list">
+                                <li>Identify user-facing metrics (load time, P95 latency, throughput).</li>
+                                <li>Set performance budgets and success criteria.</li>
+                                <li>Understand peak loads, SLAs, and business impact.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>2. Measure & Profile</h3>
+                            <ul class="list">
+                                <li>Collect baseline metrics (APM, profiling tools, flame graphs).</li>
+                                <li>Use tracing to follow request path – locate hotspots.</li>
+                                <li>Benchmark under realistic loads (tools like Locust, k6, JMeter).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>3. Prioritize Bottlenecks</h3>
+                            <ul class="list">
+                                <li>Rank bottlenecks by impact on key metrics.</li>
+                                <li>Estimate effort vs payoff (Pareto principle).</li>
+                                <li>Document hypotheses before implementing fixes.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>4. Optimize & Validate</h3>
+                            <ul class="list">
+                                <li>Apply targeted fixes (code, configuration, architecture).</li>
+                                <li>Re-run benchmarks to confirm improvement.</li>
+                                <li>Watch for regressions; set automated alerts.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="cpu-memory">
+                    <h2>🖥️ CPU & Memory Optimization</h2>
+                    <p class="intro">Optimize compute-bound workloads by understanding CPU utilization patterns and memory behavior.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>CPU Profiling</h3>
+                            <span class="tag">Compute</span>
+                            <ul class="list">
+                                <li>Use profiling tools (perf, eBPF, pprof, VisualVM) to find hot functions.</li>
+                                <li>Identify inefficient loops, excessive logging, expensive regex.</li>
+                                <li>Leverage flame graphs to visualize stack hotspots.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Concurrency & Parallelism</h3>
+                            <ul class="list">
+                                <li>Choose proper concurrency primitives (thread pools, async, coroutines).</li>
+                                <li>Beware contention (locks, critical sections, false sharing).</li>
+                                <li>Use load shedding and backpressure under saturation.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Memory Tuning</h3>
+                            <span class="tag">GC & Allocation</span>
+                            <ul class="list">
+                                <li>Monitor heap size, GC frequency, pauses (JVM, .NET, Go).</li>
+                                <li>Reduce allocations, reuse objects, tune GC settings.</li>
+                                <li>Watch for memory leaks with heap dumps, leak detection tools.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Native & SIMD Optimization</h3>
+                            <ul class="list">
+                                <li>Move critical paths to native modules (C/C++, Rust) when justified.</li>
+                                <li>Use vectorized operations, GPU acceleration if supported (NumPy, SIMD intrinsics).</li>
+                                <li>Reevaluate after each optimization cycle.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="io">
+                    <h2>💾 I/O & Storage Performance</h2>
+                    <p class="intro">Disk and network I/O often dominate response times—address throughput and latency by smart caching and data access patterns.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Database Queries</h3>
+                            <span class="tag">SQL</span>
+                            <ul class="list">
+                                <li>Inspect slow query logs, use EXPLAIN plans.</li>
+                                <li>Add appropriate indexes, rewrite queries, avoid N+1 issues.</li>
+                                <li>Batch operations, chunk long-running queries.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Storage Optimization</h3>
+                            <ul class="list">
+                                <li>Use SSDs or faster storage tiers for hot data.</li>
+                                <li>Compress data (columnar formats, gzip, zstd) to reduce I/O.</li>
+                                <li>Tier data between hot and cold storage.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Caching</h3>
+                            <ul class="list">
+                                <li>Introduce caching layers (L1/L2, CDN, DB caches) to cut origin load.</li>
+                                <li>Tune TTL, invalidation, request coalescing.</li>
+                                <li>Monitor hit rate, stale content impact.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Streaming & Batch</h3>
+                            <ul class="list">
+                                <li>Process large data sets in streams (avoid loading entire file in memory).</li>
+                                <li>Optimize batch sizes for ETL pipelines; use asynchronous I/O.</li>
+                                <li>Leverage off-heap storage or memory-mapped files where appropriate.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="network">
+                    <h2>🌐 Network & Latency</h2>
+                    <p class="intro">Latency adds up across service calls. Minimize round trips, compress payloads, and place services closer to users.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Reduce Round Trips</h3>
+                            <ul class="list">
+                                <li>Use connection pooling, keep-alive, HTTP/2 multiplexing.</li>
+                                <li>Coalesce API calls, use GraphQL or batched requests.</li>
+                                <li>Move repeated data to headers or caches.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Data Compression</h3>
+                            <ul class="list">
+                                <li>Apply gzip/brotli for responses; compress images/files appropriately.</li>
+                                <li>Use binary protocols (gRPC, Protocol Buffers) when I/O heavy.</li>
+                                <li>Optimize JSON payloads (remove unused fields, use pagination).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Edge & CDN</h3>
+                            <ul class="list">
+                                <li>Serve static content from CDN, push compute to edge (workers).</li>
+                                <li>Geographically distribute services to reduce RTT.</li>
+                                <li>Monitor regional latency, failover plans.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Bandwidth & QoS</h3>
+                            <ul class="list">
+                                <li>Monitor bandwidth usage; avoid sending redundant data.</li>
+                                <li>Optimize TLS handshake (session resumption, TLS 1.3).</li>
+                                <li>Implement QoS and rate limiting.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="app-layer">
+                    <h2>🧱 Application Layer Tuning</h2>
+                    <p class="intro">Optimize business logic and frameworks for efficient execution.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Efficient Code</h3>
+                            <ul class="list">
+                                <li>Refactor hot paths, remove unnecessary allocations.</li>
+                                <li>Use efficient data structures (e.g., arrays vs linked lists).</li>
+                                <li>Leverage lazy loading and memoization where appropriate.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Framework Tuning</h3>
+                            <ul class="list">
+                                <li>Configure thread pools, connection pools, ORM settings.</li>
+                                <li>Disable expensive debug logging in production.</li>
+                                <li>Use asynchronous frameworks to handle I/O-bound workloads.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Resource Limits</h3>
+                            <ul class="list">
+                                <li>Set container CPU/memory limits thoughtfully.</li>
+                                <li>Utilize vertical autoscaling; ensure adequate headroom.</li>
+                                <li>Monitor GC, thread counts, file descriptors.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Client-side Performance</h3>
+                            <span class="tag">Web/Mobile</span>
+                            <ul class="list">
+                                <li>Minimize bundle size, lazy load resources, use tree shaking.</li>
+                                <li>Optimize critical rendering path (CSS/JS ordering).</li>
+                                <li>Measure Core Web Vitals (LCP, FID, CLS), use service workers.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="observability">
+                    <h2>📊 Observability & Tooling</h2>
+                    <p class="intro">Tooling reveals bottlenecks and validates improvements—embed observability into the performance lifecycle.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Metrics & Dashboards</h3>
+                            <ul class="list">
+                                <li>Track golden signals (latency, throughput, error rate, saturation).</li>
+                                <li>Establish SLOs/error budgets; create latency heat maps.</li>
+                                <li>Annotate dashboards with deploy events.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Profiling & Tracing Tools</h3>
+                            <ul class="list">
+                                <li>Use APM (New Relic, Datadog, Dynatrace) for top-down view.</li>
+                                <li>Adopt open telemetry for distributed tracing.</li>
+                                <li>Run CPU/memory profilers in staging and production sampling.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Load Testing</h3>
+                            <ul class="list">
+                                <li>Simulate realistic traffic mix (k6, Locust, Gatling).</li>
+                                <li>Design tests for peak, soak, and stress scenarios.</li>
+                                <li>Automate load tests in CI/CD to catch regressions.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Capacity Tools</h3>
+                            <ul class="list">
+                                <li>Use autoscaling metrics, predictive capacity planning tools.</li>
+                                <li>Maintain capacity models in spreadsheets or dedicated tools.</li>
+                                <li>Run chaos/performance drills to validate assumptions.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="budgets">
+                    <h2>💰 Performance Budgets & Governance</h2>
+                    <p class="intro">Tie performance objectives to product and business goals to avoid regressions.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Set Budgets</h3>
+                            <ul class="list">
+                                <li>Front-end: page weight, number of requests, Core Web Vitals targets.</li>
+                                <li>Backend: latency (P95), saturation thresholds, cost per request.</li>
+                                <li>Define budgets per service/team; review regularly.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Automated Enforcement</h3>
+                            <ul class="list">
+                                <li>Integrate performance tests in CI/CD with pass/fail criteria.</li>
+                                <li>Alert on budget breaches; create incident process.</li>
+                                <li>Use feature flags to control feature rollouts impacting performance.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cost vs Performance</h3>
+                            <ul class="list">
+                                <li>Balance faster hardware vs cloud cost; use right-sizing.</li>
+                                <li>Track cost per transaction; identify waste.</li>
+                                <li>Consider multi-cloud/spot instances/flexible scheduling.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Team Collaboration</h3>
+                            <ul class="list">
+                                <li>Share performance dashboards across engineering/product.</li>
+                                <li>Hold performance reviews after major releases.</li>
+                                <li>Document lessons learned in postmortems/design docs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pitfalls">
+                    <h2>🚨 Common Performance Pitfalls</h2>
+                    <p class="intro">Most regressions trace back to predictable anti-patterns. Bake these checks into reviews and playbooks.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>No Baseline</h3>
+                            <span class="tag">Blind Tuning</span>
+                            <ul class="list">
+                                <li>Optimizing without a before/after benchmark or representative workload.</li>
+                                <li><strong>Impact:</strong> Regressions go unnoticed, improvements unproven.</li>
+                                <li><strong>Prevention:</strong> Capture baseline metrics, perf test suites in CI, require dashboards linked in change reviews.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Premature Optimization</h3>
+                            <span class="tag">Opportunity Cost</span>
+                            <ul class="list">
+                                <li>Hand-tuned micro-optimisations on cold paths while systemic bottlenecks remain.</li>
+                                <li><strong>Impact:</strong> Complex code, maintenance burden, minimal user benefit.</li>
+                                <li><strong>Prevention:</strong> Use profiling to rank hotspots, follow 80/20 rule, document ROI for major efforts.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Unbounded Concurrency</h3>
+                            <span class="tag">Resource Exhaustion</span>
+                            <ul class="list">
+                                <li>Async workers, goroutines, or thread pools grow without limits.</li>
+                                <li><strong>Impact:</strong> Memory spikes, context-switch thrash, cascading failures.</li>
+                                <li><strong>Prevention:</strong> Set pool limits, apply backpressure, observe queue depth and saturation alerts.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>GC & Memory Leaks</h3>
+                            <span class="tag">Latency Spikes</span>
+                            <ul class="list">
+                                <li>Forgotten object retention or mis-tuned heaps trigger stop-the-world pauses.</li>
+                                <li><strong>Impact:</strong> P99 blowups, pod restarts, OOM kills.</li>
+                                <li><strong>Prevention:</strong> Run heap profiles, cap cache sizes, tune GC parameters based on live telemetry.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Instrumentation Overhead</h3>
+                            <span class="tag">Observer Effect</span>
+                            <ul class="list">
+                                <li>Verbose logging, synchronous tracing, or heavy debug flags in production.</li>
+                                <li><strong>Impact:</strong> Increased latency/cost, log ingestion saturation.</li>
+                                <li><strong>Prevention:</strong> Sample traces, rate-limit logs, move heavy diagnostics behind feature flags.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Capacity Drift</h3>
+                            <span class="tag">Unexpected Saturation</span>
+                            <ul class="list">
+                                <li>Autoscaling limits, instance types, or kernel tunables change without validation.</li>
+                                <li><strong>Impact:</strong> Rapid exhaustion under peak, throttled dependencies.</li>
+                                <li><strong>Prevention:</strong> Treat infra as code, run load tests after upgrades, monitor saturation + headroom continuously.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="checklist">
+                    <h2>🗂️ Performance Tuning Checklist</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Layer</th>
+                                <th>Key Checks</th>
+                                <th>Tools</th>
+                                <th>Metrics</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Client</td>
+                                <td>Core Web Vitals, bundle size budgets, lazy loading strategy, image formats.</td>
+                                <td>Lighthouse, WebPageTest, Chrome DevTools, RUM dashboards.</td>
+                                <td>LCP, FID, CLS, JS bundle KB, image weight.</td>
+                            </tr>
+                            <tr>
+                                <td>Edge/CDN</td>
+                                <td>Cache hit ratio, TTL policy, regional routing, TLS handshake time.</td>
+                                <td>CDN analytics, Catchpoint, mtr, TLS scanners.</td>
+                                <td>Hit %, TLS handshake ms, origin offload %, regional latency.</td>
+                            </tr>
+                            <tr>
+                                <td>Application</td>
+                                <td>P95/P99 latency, error rate, queue depth, concurrency limits, retry policies.</td>
+                                <td>APM (Datadog, New Relic), tracing, thread dumps, feature flags.</td>
+                                <td>P95/P99, error %, throughput, saturation, retry success %.</td>
+                            </tr>
+                            <tr>
+                                <td>Database/Storage</td>
+                                <td>Slow queries, replication lag, buffer/cache hit ratio, compaction health.</td>
+                                <td>EXPLAIN/ANALYZE, pg_stat_statements, CloudWatch, Prometheus exporters.</td>
+                                <td>Query latency, QPS, lag seconds, storage growth, cache hit %.</td>
+                            </tr>
+                            <tr>
+                                <td>Infrastructure</td>
+                                <td>Host utilization, autoscaling limits, GC pauses, network saturation.</td>
+                                <td>Node exporter, cAdvisor, cloud metrics, eBPF, sar/iostat.</td>
+                                <td>CPU %, memory %, GC pause ms, network Mbps, disk IOPS.</td>
+                            </tr>
+                            <tr>
+                                <td>Process & Governance</td>
+                                <td>Performance budgets in CI/CD, incident reviews, cost guardrails, change tracking.</td>
+                                <td>CI pipelines, SLO tooling, FinOps dashboards, change management logs.</td>
+                                <td>Budget pass/fail, incident MTTR, cost per request, change success rate.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            Sustained performance comes from continuous measurement, disciplined experiments, and tight feedback loops between engineering, product, and operations.
+        </footer>
+    </div>
+</body>
+</html>
+
