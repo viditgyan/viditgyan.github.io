@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hashing Techniques - Practitioner Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 18px;
+            padding: 36px;
+            margin-bottom: 28px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.6rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #5d6d7e;
+            font-size: 1.1rem;
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+        }
+
+        .sidebar-nav,
+        .sidebar-nav-right {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            position: sticky;
+            top: 24px;
+            height: fit-content;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+
+        .sidebar-nav-right {
+            margin-left: auto;
+        }
+
+        .sidebar-header,
+        .sidebar-header-right {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+        }
+
+        .sidebar-header-right {
+            background: linear-gradient(135deg, #43cea2, #185a9d);
+        }
+
+        .nav-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .nav-section-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            color: #34495e;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: rgba(236, 240, 241, 0.8);
+            color: #2c3e50;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            transform: translateX(4px);
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.14);
+        }
+
+        .content-section {
+            margin-bottom: 38px;
+        }
+
+        .content-section h2 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: #1f3a60;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-intro {
+            color: #566573;
+            margin-bottom: 18px;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #ff9a9e;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-right: 6px;
+            margin-bottom: 8px;
+        }
+
+        .list {
+            margin: 12px 0;
+            padding-left: 18px;
+        }
+
+        .list li {
+            margin-bottom: 8px;
+        }
+
+        .code-snippet {
+            background: #1e272e;
+            color: #ecf0f1;
+            padding: 14px;
+            border-radius: 12px;
+            font-family: "Fira Code", "Courier New", monospace;
+            font-size: 0.9rem;
+            margin: 14px 0;
+            overflow-x: auto;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th {
+            background: #1f3a60;
+            color: #f7f9f9;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(230, 244, 241, 0.6);
+        }
+
+        .quick-hit {
+            background: rgba(231, 248, 247, 0.9);
+            border-left: 4px solid #43cea2;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .warning {
+            background: rgba(255, 229, 204, 0.95);
+            border-left: 4px solid #e67e22;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .use-case-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .use-case-list li {
+            margin-bottom: 10px;
+            padding-left: 22px;
+            position: relative;
+        }
+
+        .use-case-list li::before {
+            content: "🔹";
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .tag-group {
+            margin-top: 12px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(142, 68, 173, 0.12);
+            color: #6c3483;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            margin: 4px 6px 0 0;
+            font-weight: 600;
+        }
+
+        .mobile-nav-buttons {
+            display: none;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .mobile-nav-toggle {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #fff;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            box-shadow: 0 6px 20px rgba(255, 117, 140, 0.25);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .mobile-nav-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 117, 140, 0.35);
+        }
+
+        .mobile-nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1400;
+        }
+
+        .mobile-nav-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sidebar-nav,
+        .sidebar-nav-right {
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-nav.open,
+        .sidebar-nav-right.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-nav {
+            transform: translateX(0);
+        }
+
+        .sidebar-nav-right {
+            transform: translateX(0);
+        }
+
+        body.nav-open {
+            overflow: hidden;
+        }
+
+        pre {
+            white-space: pre-wrap;
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar-nav,
+            .sidebar-nav-right {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar-nav,
+            .sidebar-nav-right {
+                position: relative;
+                width: 100%;
+                max-height: none;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            }
+
+            .sidebar-nav-right {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav-buttons {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .sidebar-nav,
+            .sidebar-nav-right {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                width: 80%;
+                max-width: 320px;
+                height: 100vh;
+                margin: 0;
+                padding: 80px 22px 60px 22px;
+                overflow-y: auto;
+                background: rgba(255, 255, 255, 0.98);
+                transform: translateX(-110%);
+                z-index: 1500;
+            }
+
+            .sidebar-nav-right {
+                transform: translateX(110%);
+                right: 0;
+                left: auto;
+            }
+
+            .sidebar-nav.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-nav-right.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                padding: 22px;
+            }
+
+            .container {
+                padding: 20px 16px 60px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Hashing & Encryption Field Guide</h1>
+            <p>Deep dive into hashing and encryption—from high-speed partitioning functions to modern AEAD ciphers—plus the decision frameworks and production deployments behind them.</p>
+        </div>
+
+        <div class="mobile-nav-buttons">
+            <button class="mobile-nav-toggle" data-target="sidebarNavLeft">📚 Browse Topics</button>
+            <button class="mobile-nav-toggle" data-target="sidebarNavRight">🧭 Quick Actions</button>
+        </div>
+        <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+
+        <div class="main-content-wrapper">
+            <nav class="sidebar-nav" id="sidebarNavLeft">
+                <div class="sidebar-header">
+                    Hashing & Encryption Atlas
+                </div>
+                <div class="nav-sections">
+                    <div>
+                        <div class="nav-section-title">Overview</div>
+                        <div class="nav-links">
+                            <a href="#overview" class="nav-link">Hashing Overview</a>
+                            <a href="#encryption-overview" class="nav-link">Encryption Overview</a>
+                            <a href="#hash-vs-encryption" class="nav-link">Hashing vs Encryption</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Hashing Techniques</div>
+                        <div class="nav-links">
+                            <a href="#properties" class="nav-link">Key Hash Properties</a>
+                            <a href="#noncrypto" class="nav-link">High-Speed Hashes</a>
+                            <a href="#rolling" class="nav-link">Rolling & Locality</a>
+                            <a href="#consistent" class="nav-link">Consistent Hashing</a>
+                            <a href="#crypto" class="nav-link">Cryptographic Hashes</a>
+                            <a href="#password" class="nav-link">Password Hashing</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Encryption Techniques</div>
+                        <div class="nav-links">
+                            <a href="#encryption-basics" class="nav-link">Encryption Fundamentals</a>
+                            <a href="#encryption-modes" class="nav-link">Modes & AEAD</a>
+                            <a href="#key-management" class="nav-link">Key Management</a>
+                            <a href="#encryption" class="nav-link">Encryption Techniques in Practice</a>
+                            <a href="#encryption-comparison" class="nav-link">Encryption Selector</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Practitioner Guides</div>
+                        <div class="nav-links">
+                            <a href="#realtime" class="nav-link">Production Scenarios</a>
+                            <a href="#compression" class="nav-link">Compression & Dedup</a>
+                            <a href="#security" class="nav-link">Security Hardening</a>
+                            <a href="#tooling" class="nav-link">Tooling & Hardware</a>
+                            <a href="#quick-cheat" class="nav-link">Technique Selector</a>
+                            <a href="#comparison" class="nav-link">Hash Comparison</a>
+                            <a href="#checklist" class="nav-link">Deployment Checklist</a>
+                            <a href="#troubleshooting" class="nav-link">Troubleshooting</a>
+                            <a href="#interview" class="nav-link">Interview Prep</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="main-content">
+                <section id="overview" class="content-section">
+                    <h2>🧭 Hashing Overview</h2>
+                    <p class="section-intro">Hashing maps variable-length input to fixed-length output. Depending on the algorithm, the goal may be speed, uniform distribution, locality awareness, or resistance to adversarial attacks.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Why Hashing Matters</h3>
+                            <ul class="list">
+                                <li>📦 <strong>Partitioning & Routing:</strong> Evenly map workload (Kafka, Cassandra).</li>
+                                <li>🔒 <strong>Security:</strong> Guarantee integrity, store passwords safely.</li>
+                                <li>🧭 <strong>Locality Preservation:</strong> Rolling/SimHash keeps similar items nearby.</li>
+                                <li>♻️ <strong>Compression & Dedup:</strong> Chunk fingerprints in backup systems.</li>
+                                <li>⚡ <strong>Performance:</strong> Constant-time lookups in hash tables, bloom filters.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hash Function Families</h3>
+                            <div class="tag-group">
+                                <span class="tag">Non-cryptographic</span>
+                                <span class="tag">Cryptographic</span>
+                                <span class="tag">Rolling</span>
+                                <span class="tag">Consistent</span>
+                                <span class="tag">Order-aware</span>
+                            </div>
+                            <p style="margin-top: 12px;">Pick the function that matches your requirements—there is no universal choice.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hash Output Anatomy</h3>
+                            <ul class="list">
+                                <li><strong>Bit-length:</strong> Determines collision risk (32-bit vs 128-bit vs 256-bit).</li>
+                                <li><strong>Endianness:</strong> Some libraries expose little-endian outputs (Kafka uses big-endian Murmur).</li>
+                                <li><strong>Seeding:</strong> Adjustable seed defends against hash-flooding attacks.</li>
+                                <li><strong>Streaming:</strong> Many hashes accept incremental updates for large payloads.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="encryption-overview" class="content-section">
+                    <h2>🔐 Encryption Overview</h2>
+                    <p class="section-intro">Encryption protects data confidentiality while supporting authenticity and integrity when combined with the right constructions. Use this section to orient yourself before choosing specific algorithms.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Core Objectives</h3>
+                            <ul class="list">
+                                <li>🕵️ <strong>Confidentiality:</strong> Only authorised parties can read the data.</li>
+                                <li>🛡️ <strong>Integrity:</strong> Detect tampering with MAC/HMAC or AEAD tags.</li>
+                                <li>✅ <strong>Authenticity:</strong> Digital signatures prove the sender's identity.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Cryptographic Building Blocks</h3>
+                            <ul class="list">
+                                <li>🧱 <strong>Block ciphers:</strong> AES, Camellia, and future candidates like Ascon.</li>
+                                <li>🌊 <strong>Stream ciphers:</strong> ChaCha20, Salsa20 for lightweight performance.</li>
+                                <li>🧬 <strong>KDFs:</strong> HKDF, PBKDF2, scrypt derive keys from passwords or shared secrets.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Protocol Patterns</h3>
+                            <ul class="list">
+                                <li>🔐 <strong>Authenticated encryption:</strong> AEAD is the default choice for new designs.</li>
+                                <li>🔄 <strong>Hybrid encryption:</strong> Public-key exchange + symmetric data encryption.</li>
+                                <li>🧩 <strong>Zero trust:</strong> Encrypt everywhere (in transit, at rest, in use via TEEs).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Operational Checklist</h3>
+                            <ul class="list">
+                                <li>📋 Classify data sensitivity before selecting algorithms and key lengths.</li>
+                                <li>🔁 Plan for rotation, revocation, and incident response.</li>
+                                <li>📜 Align with standards: NIST SP 800-57, PCI DSS, ISO 27001.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="encryption" class="content-section">
+                    <h2>🔒 Encryption Techniques in Practice</h2>
+                    <p class="section-intro">Encryption algorithms come in symmetric, asymmetric and hybrid forms. Modern deployments favour authenticated encryption (AEAD) so confidentiality and integrity are handled together.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>AES-GCM</h3>
+                            <span class="badge">AEAD</span>
+                            <span class="badge">Hardware Accelerated</span>
+                            <ul class="list">
+                                <li>🛜 <strong>TLS 1.3 & HTTP/2:</strong> Default cipher suites in browsers and servers.</li>
+                                <li>☁️ <strong>Cloud KMS:</strong> AWS KMS, Azure Key Vault, GCP CMEK encrypt data keys with AES-GCM.</li>
+                                <li>⚙️ <strong>Why choose:</strong> Widely audited, hardware acceleration via AES-NI.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>ChaCha20-Poly1305</h3>
+                            <span class="badge">AEAD</span>
+                            <span class="badge">SIMD Friendly</span>
+                            <ul class="list">
+                                <li>📶 <strong>QUIC/HTTP3:</strong> Google Chrome, Cloudflare and Firefox use it for mobile clients without AES-NI.</li>
+                                <li>🔐 <strong>WireGuard:</strong> VPN protocol standardises on ChaCha20-Poly1305.</li>
+                                <li>⚙️ <strong>Why choose:</strong> Constant-time, performs well on ARM and embedded CPUs.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>AES-XTS</h3>
+                            <span class="badge">Data at Rest</span>
+                            <ul class="list">
+                                <li>💾 <strong>Disk Encryption:</strong> Microsoft BitLocker, Apple FileVault and Linux LUKS default to AES-XTS.</li>
+                                <li>⚙️ <strong>Why choose:</strong> Handles block devices, resists copy-paste block attacks.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>X25519 (ECDH)</h3>
+                            <span class="badge">Key Exchange</span>
+                            <ul class="list">
+                                <li>🔑 <strong>TLS 1.3:</strong> Mandatory-to-implement key agreement in RFC 8446.</li>
+                                <li>🕶️ <strong>Signal Protocol:</strong> Secure messaging (WhatsApp, Signal) uses X25519 for double ratchet initial keys.</li>
+                                <li>⚙️ <strong>Why choose:</strong> Fast, small keys, safe Montgomery ladder implementation.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Ed25519 (Digital Signatures)</h3>
+                            <span class="badge">Authentication</span>
+                            <ul class="list">
+                                <li>🧾 <strong>OpenSSH:</strong> Default host/user key since OpenSSH 7.0.</li>
+                                <li>📦 <strong>Software signing:</strong> Used by the age file-encryption tool and the TUF update framework.</li>
+                                <li>⚙️ <strong>Why choose:</strong> Deterministic signatures, resistant to timing attacks.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>RSA-OAEP & RSA-PSS</h3>
+                            <span class="badge">Legacy Compatible</span>
+                            <ul class="list">
+                                <li>🏦 <strong>Hardware security modules:</strong> Broad support for 2048/3072-bit RSA keys.</li>
+                                <li>📄 <strong>Code signing:</strong> Windows Authenticode and Java JAR signatures remain RSA-based.</li>
+                                <li>⚠️ <strong>Note:</strong> Prefer OAEP for encryption and PSS for signatures; rotate to elliptic-curve when possible.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Format-Preserving Encryption (FF1/FF3)</h3>
+                            <span class="badge">Tokenisation</span>
+                            <ul class="list">
+                                <li>💳 <strong>Payments:</strong> Card networks (e.g., Visa Token Service) use NIST SP 800-38G algorithms to keep PAN length.</li>
+                                <li>🗃️ <strong>Databases:</strong> Allows encrypting columns without schema changes.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Preparing for Post-Quantum</h3>
+                            <span class="badge">Hybrid</span>
+                            <ul class="list">
+                                <li>🔐 <strong>Kyber + X25519:</strong> Chrome and Cloudflare test hybrid key exchange (TLS 1.3 draft) combining Kyber with classical curves.</li>
+                                <li>🗂️ <strong>NIST Round 3:</strong> Track Kyber (KEM) and Dilithium (signature) for future roll-outs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="encryption-comparison" class="content-section">
+                    <h2>🧭 Encryption Selector</h2>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>Recommended Technique</th>
+                                <th>Why</th>
+                                <th>Real-World Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Transport security</td>
+                                <td>AES-256-GCM or ChaCha20-Poly1305</td>
+                                <td>AEAD protects confidentiality + integrity, supported by TLS 1.3</td>
+                                <td>Browsers ⇄ CDNs, gRPC services</td>
+                            </tr>
+                            <tr>
+                                <td>Mobile / IoT clients</td>
+                                <td>ChaCha20-Poly1305</td>
+                                <td>Excellent performance without AES hardware</td>
+                                <td>QUIC on Android, WireGuard peers</td>
+                            </tr>
+                            <tr>
+                                <td>Disks & backups</td>
+                                <td>AES-XTS (storage) + AES-GCM (object encryption)</td>
+                                <td>Designed for block devices and envelope encryption</td>
+                                <td>BitLocker, AWS S3 SSE-KMS</td>
+                            </tr>
+                            <tr>
+                                <td>Key exchange</td>
+                                <td>X25519 (ECDH)</td>
+                                <td>Small keys, easy to implement safely</td>
+                                <td>TLS 1.3, Signal double ratchet</td>
+                            </tr>
+                            <tr>
+                                <td>Digital signatures</td>
+                                <td>Ed25519 (preferred) / RSA-PSS</td>
+                                <td>Strong authentication with broad tooling support</td>
+                                <td>OpenSSH host keys, package signing</td>
+                            </tr>
+                            <tr>
+                                <td>Tokenisation / structured data</td>
+                                <td>FF3-1 Format-Preserving Encryption</td>
+                                <td>Maintains field format for legacy databases</td>
+                                <td>Payment card token services</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="hash-vs-encryption" class="content-section">
+                    <h2>⚖️ Hashing vs Encryption</h2>
+                    <p class="section-intro">Hashing is a one-way transformation that produces a fixed-length fingerprint. Encryption is reversible with the correct key and is used to keep data confidential. They solve different problems and are often combined (e.g., encrypt data, hash the ciphertext for integrity).</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>One-Way vs Two-Way</h3>
+                            <ul class="list">
+                                <li>🔁 <strong>Hashing:</strong> Deterministic, non-reversible. Collision resistance matters.</li>
+                                <li>🔐 <strong>Encryption:</strong> Reversible with keys. Security depends on key secrecy and algorithm strength.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Integrity vs Confidentiality</h3>
+                            <ul class="list">
+                                <li>✔️ <strong>Hashes verify integrity</strong> (e.g., container image digests).</li>
+                                <li>🕵️ <strong>Encryption keeps data confidential</strong> (e.g., TLS, disk encryption).</li>
+                                <li>🔗 Combine them with HMAC or AEAD modes for authenticated encryption.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Real-World Pairing</h3>
+                            <ul class="list">
+                                <li>📦 TLS 1.3: AES-GCM/ChaCha20-Poly1305 + HKDF (HMAC-SHA256) for key derivation.</li>
+                                <li>💳 Payment tokenisation: Format-preserving encryption for card numbers, hashes for lookup tables.</li>
+                                <li>🔐 Passwords: Hash (Argon2id) + encrypt storage vault with AES-GCM.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <table class="comparison-table" style="margin-top: 24px;">
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>Hashing</th>
+                                <th>Encryption</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Primary Goal</td>
+                                <td>Integrity, deduplication, lookup</td>
+                                <td>Confidentiality (often with integrity via AEAD)</td>
+                            </tr>
+                            <tr>
+                                <td>Key Required</td>
+                                <td>No (except HMAC/KMAC)</td>
+                                <td>Yes (symmetric or asymmetric)</td>
+                            </tr>
+                            <tr>
+                                <td>Example Algorithms</td>
+                                <td>SHA-256, BLAKE3, Murmur3, xxHash</td>
+                                <td>AES-GCM, ChaCha20-Poly1305, RSA-OAEP, X25519</td>
+                            </tr>
+                            <tr>
+                                <td>Typical Uses</td>
+                                <td>Kafka partitioning, Git commits, integrity checks, password storage</td>
+                                <td>TLS, database column encryption, disk encryption, secure messaging</td>
+                            </tr>
+                            <tr>
+                                <td>Output</td>
+                                <td>Fixed-length digest</td>
+                                <td>Same size as input (plus IV/tag for AEAD)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="encryption-basics" class="content-section">
+                    <h2>🔑 Encryption Fundamentals</h2>
+                    <p class="section-intro">Encryption transforms plaintext into ciphertext using keys. Understanding symmetric, asymmetric and hybrid approaches is essential before diving into specific algorithms.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Symmetric Encryption</h3>
+                            <ul class="list">
+                                <li>🧰 <strong>Single shared key:</strong> Same key encrypts and decrypts.</li>
+                                <li>⚡ <strong>Fast &amp; scalable:</strong> Ideal for bulk data (storage, TLS record layer).</li>
+                                <li>🔐 <strong>Examples:</strong> AES, ChaCha20, legacy ciphers (3DES, RC4) now deprecated.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Asymmetric Encryption</h3>
+                            <ul class="list">
+                                <li>🔄 <strong>Key pairs:</strong> Public key encrypts or verifies; private key decrypts or signs.</li>
+                                <li>📬 <strong>Key exchange &amp; signatures:</strong> RSA-OAEP, RSA-PSS, ECC (X25519, Ed25519).</li>
+                                <li>⚠️ <strong>Performance:</strong> Slower than symmetric; commonly used to bootstrap symmetric keys.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hybrid Encryption</h3>
+                            <ul class="list">
+                                <li>🧪 <strong>Best of both:</strong> Use asymmetric algorithm to protect a randomly generated symmetric session key.</li>
+                                <li>🛡️ <strong>Real world:</strong> TLS, OpenPGP, envelope encryption in cloud KMS.</li>
+                                <li>🧭 <strong>Workflow:</strong> Generate data key → encrypt data with AES/ChaCha → encrypt data key with RSA/ECC → store both.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Key Size &amp; Security Levels</h3>
+                            <ul class="list">
+                                <li>🔒 <strong>Symmetric:</strong> 128-bit minimum (AES-128) is standard; 256-bit for long-term archives.</li>
+                                <li>🗝️ <strong>RSA:</strong> 2048-bit baseline, 3072/4096-bit for long-lived certificates.</li>
+                                <li>🧮 <strong>ECC:</strong> 256-bit curves (secp256r1, Curve25519) roughly equal to 3072-bit RSA.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="encryption-modes" class="content-section">
+                    <h2>🔄 Modes, AEAD & Integrity</h2>
+                    <p class="section-intro">Choosing the right mode of operation prevents subtle vulnerabilities such as IV reuse or padding oracles.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>AEAD (Authenticated Encryption)</h3>
+                            <ul class="list">
+                                <li>📦 <strong>AES-GCM, ChaCha20-Poly1305:</strong> Provide confidentiality + integrity in one operation.</li>
+                                <li>🧾 <strong>Additional data:</strong> Protect headers/metadata using Associated Data (AD) without encrypting it.</li>
+                                <li>⚠️ <strong>Nonce discipline:</strong> Never reuse nonce/IV for the same key.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Stream &amp; Counter Modes</h3>
+                            <ul class="list">
+                                <li>⚙️ <strong>CTR, ChaCha20:</strong> Generate keystream, XOR with plaintext; parallelisable.</li>
+                                <li>❗ <strong>Integrity required:</strong> Pair with MAC/HMAC to avoid bit-flip attacks.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Legacy Block Modes</h3>
+                            <ul class="list">
+                                <li>🧊 <strong>CBC:</strong> Historically common; vulnerable without MAC (padding oracle).</li>
+                                <li>🔁 <strong>CFB/OFB:</strong> Turn block cipher into stream cipher; rarely used in new designs.</li>
+                                <li>🚫 <strong>ECB:</strong> Never use—reveals plaintext patterns.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Integrity Checks</h3>
+                            <ul class="list">
+                                <li>🛡️ <strong>HMAC-SHA256:</strong> Pair with encryption when AEAD unavailable.</li>
+                                <li>📥 <strong>Encrypt-then-MAC:</strong> Modern best practice (TLS 1.2+).</li>
+                                <li>📤 <strong>MAC-then-Encrypt:</strong> Deprecated due to oracle attacks.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="key-management" class="content-section">
+                    <h2>🗝️ Key Management & Compliance</h2>
+                    <p class="section-intro">Robust encryption depends on how keys are generated, stored, rotated and audited.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Generation &amp; Rotation</h3>
+                            <ul class="list">
+                                <li>🎲 <strong>Entropy:</strong> Use cryptographically secure RNGs; avoid manual passphrases.</li>
+                                <li>🔁 <strong>Rotation:</strong> Automate via KMIP/KMS policies; track key version in metadata.</li>
+                                <li>📅 <strong>Compliance:</strong> PCI DSS requires annual rotation or post-compromise rekey.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Storage &amp; Access Control</h3>
+                            <ul class="list">
+                                <li>🔐 <strong>Hardware-backed:</strong> HSMs, Cloud KMS, TPM/TEE for high-assurance workloads.</li>
+                                <li>🔑 <strong>Envelope encryption:</strong> Protect data keys with master keys; master keys stay in HSM/KMS.</li>
+                                <li>🧾 <strong>Audit trails:</strong> Log every key access and admin action for compliance.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Secrets Distribution</h3>
+                            <ul class="list">
+                                <li>🚀 <strong>Service Mesh &amp; MDM:</strong> Use Vault, AWS Secrets Manager, Azure Key Vault for dynamic secrets.</li>
+                                <li>🤝 <strong>Zero trust:</strong> Issue short-lived credentials bound to workload identity.</li>
+                                <li>🧭 <strong>Fallback plan:</strong> Document key recovery and incident response procedures.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Regulatory Alignment</h3>
+                            <ul class="list">
+                                <li>📜 <strong>GDPR &amp; HIPAA:</strong> Require encryption in transit &amp; at rest plus breach notification.</li>
+                                <li>💳 <strong>PCI DSS:</strong> Mandates strong cryptography, dual control for key custodians.</li>
+                                <li>⚙️ <strong>FIPS 140-3:</strong> Use validated modules when government or regulated sectors demand it.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="properties" class="content-section">
+                    <h2>🧪 Key Hash Properties</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Uniformity</h3>
+                            <p>Outputs should cover the hash space evenly to minimise collisions and hotspots.</p>
+                            <div class="quick-hit">
+                                <strong>Measure:</strong> Chi-squared or avalanche tests (flip 1 input bit → ~50% output bits flip).
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <h3>Determinism</h3>
+                            <p>Same input → same output, regardless of platform or language (unless purposely seeded).</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Collision Resistance</h3>
+                            <p>Hard to find two inputs with same hash. Critical for security; relaxed for non-crypto scenarios if uniformity is strong.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Preimage Resistance</h3>
+                            <p>Given a hash value, infeasible to recover original message. Mandatory for secure storage and signatures.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Performance</h3>
+                            <p>Balanced trade-off of throughput (GB/s), latency (ns/byte) and CPU features (SIMD, hardware instructions).</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Locality Sensitivity</h3>
+                            <p>Some hashes (SimHash, MinHash) intentionally keep similar inputs close together to enable near-duplicate detection.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="noncrypto" class="content-section">
+                    <h2>⚡ High-Speed Non-Cryptographic Hashes</h2>
+                    <p class="section-intro">Optimised for speed, low-latency partitioning, in-memory data structures and deduplication where adversarial resistance is not the primary goal.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>MurmurHash3</h3>
+                            <span class="badge">Cassandra</span>
+                            <span class="badge">ScyllaDB</span>
+                            <p>Designed by Austin Appleby for uniform distribution with strong avalanche behaviour.</p>
+                            <div class="code-snippet">
+// Cassandra partitioner pseudo-code
+long token = MurmurHash.hash3_x64_128(partitionKeyBytes, 0)[0];
+                            </div>
+                            <ul class="list">
+                                <li>🗂️ <strong>Apache Cassandra & ScyllaDB:</strong> Murmur3Partitioner (64-bit) distributes tokens across the consistent-hash ring.</li>
+                                <li>🔍 <strong>Elasticsearch:</strong> The <code>murmur3</code> field data mapper hashes terms for efficient cardinality aggregations.</li>
+                                <li>🔐 <strong>Drawback:</strong> Non-cryptographic; randomise the seed or add SipHash when accepting untrusted keys.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>xxHash</h3>
+                            <span class="badge">SIMD-Optimised</span>
+                            <span class="badge">Streaming</span>
+                            <p>Ultra-fast hash designed by Yann Collet; xxHash3 reaches 30+ GB/s on modern CPUs via AVX2/AVX-512.</p>
+                            <ul class="list">
+                                <li>📼 <strong>Zstandard & LZ4:</strong> Frame and block checksums use xxHash for high-throughput verification.</li>
+                                <li>🖥️ <strong>ClickHouse:</strong> <code>xxHash64</code> powers hash partitioning and deduplication functions.</li>
+                                <li>⚙️ <strong>Tip:</strong> Prefer 64-bit or 128-bit variants to keep collision probability negligible.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>FNV-1a</h3>
+                            <span class="badge">Portable</span>
+                            <span class="badge">RFC 3074</span>
+                            <p>Fowler–Noll–Vo hash favoured for simplicity and predictable cross-language output.</p>
+                            <ul class="list">
+                                <li>🌐 <strong>DHCP Load Balancing:</strong> IETF RFC 3074 specifies FNV-1a for consistent server selection.</li>
+                                <li>🧮 <strong>Development:</strong> Popular in simple hash-table utilities (e.g., Rust's <code>fnv</code> crate) when repeatable output is required.</li>
+                                <li>⚠️ <strong>Security:</strong> Susceptible to hash-flooding; pair with a random seed or SipHash when inputs are attacker controlled.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>CityHash / FarmHash</h3>
+                            <span class="badge">Google</span>
+                            <span class="badge">BigTable</span>
+                            <p>Google's high-speed family tuned for short strings. FarmHash dispatches to the best variant for the CPU at runtime.</p>
+                            <ul class="list">
+                                <li>🧠 <strong>TensorFlow:</strong> <code>tf.string_to_hash_bucket_fast</code> uses FarmHash for deterministic sharding.</li>
+                                <li>📚 <strong>Google storage systems:</strong> The CityHash paper documents internal use for SSTable indexing.</li>
+                                <li>⚠️ <strong>Note:</strong> Non-cryptographic—prefer SipHash/HighwayHash when inputs may be adversarial.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="rolling" class="content-section">
+                    <h2>🔁 Rolling & Locality-Sensitive Hashes</h2>
+                    <p class="section-intro">Ideal for sliding windows, deduplication, near-duplicate detection and streaming analytics.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Rabin-Karp Rolling Hash</h3>
+                            <span class="badge">Chunking</span>
+                            <span class="badge">Rsync</span>
+                            <p>Maintains hash value while sliding over input, enabling O(1) updates.</p>
+                            <ul class="list">
+                                <li>🗂️ <strong>Deduplication:</strong> Content-defined chunking in rsync, Dropbox, BorgBackup.</li>
+                                <li>📚 <strong>Search:</strong> Fast substring matching (e.g., plagiarism detection).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>SimHash</h3>
+                            <span class="badge">Search</span>
+                            <span class="badge">Near-Duplicate</span>
+                            <p>Converts high-dimensional vectors into compact fingerprints preserving cosine similarity.</p>
+                            <ul class="list">
+                                <li>🔍 <strong>Google:</strong> Identify near-duplicate web pages.</li>
+                                <li>📰 <strong>News feeds:</strong> Deduplicate headlines/content in real time.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>BuzHash</h3>
+                            <span class="badge">Streaming</span>
+                            <span class="badge">Byte-Oriented</span>
+                            <p>Uses rotate-xor operations; ideal for streaming chunk boundaries without multiplication.</p>
+                            <ul class="list">
+                                <li>💾 <strong>BorgBackup & restic:</strong> Content-defined chunking relies on BuzHash for deduplication.</li>
+                                <li>🔁 <strong>Firmware updates:</strong> Lightweight implementation suits embedded delta distribution.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>MinHash</h3>
+                            <span class="badge">Set Similarity</span>
+                            <p>Approximates Jaccard similarity using random permutations.</p>
+                            <ul class="list">
+                                <li>📊 <strong>Apache Spark MLlib:</strong> MinHashLSH groups similar documents and events.</li>
+                                <li>🎧 <strong>Recommendation systems:</strong> Large platforms cluster users/items based on MinHash sketches.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="consistent" class="content-section">
+                    <h2>🌐 Consistent & Rendezvous Hashing</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Classic Consistent Hashing</h3>
+                            <p>Keys and nodes are plotted on a ring. Only a fraction of keys move when nodes join/leave.</p>
+                            <ul class="list">
+                                <li>🗄️ <strong>Memcached:</strong> Twemproxy/Nginx upstream distribution.</li>
+                                <li>📘 <strong>Cassandra:</strong> Murmur3 partitioner + virtual nodes for load balancing.</li>
+                                <li>🛡️ <strong>Best Practice:</strong> Use virtual nodes to smooth uneven node capacity.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Rendezvous (Highest Random Weight)</h3>
+                            <p>Each node computes hash with key; highest score wins. Simple, optimal load distribution.</p>
+                            <ul class="list">
+                                <li>🕸️ <strong>Akamai CDN:</strong> Original HRW algorithm balances edge caches.</li>
+                                <li>☁️ <strong>Ceph CRUSH:</strong> Uses a weighted rendezvous variant for placing objects on OSDs.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Jump Consistent Hash</h3>
+                            <p>Efficient (O(1)) mapping introduced by Google for sharding billions of keys.</p>
+                            <div class="code-snippet">
+// Jump consistent hash (Go)
+func jumpConsistentHash(key uint64, buckets int32) int32 {
+    var b int64 = -1
+    var j int64 = 0
+    for j < int64(buckets) {
+        b = j
+        key = key*2862933555777941757 + 1
+        j = int64(float64(b+1) * (float64(1<<31) / float64((key>>33)+1)))
+    }
+    return int32(b)
+}
+                            </div>
+                            <p>Documented in Google Cloud Bigtable; adopted by Redis/etcd client libraries that need predictable sharding without storing a ring.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="crypto" class="content-section">
+                    <h2>🔐 Cryptographic Hash Families</h2>
+                    <p class="section-intro">Provide collision, preimage, and second-preimage resistance—mandatory for signatures, tamper detection, and zero-trust use cases.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>SHA-256 / SHA-512 (SHA-2)</h3>
+                            <span class="badge">Blockchain</span>
+                            <span class="badge">TLS</span>
+                            <ul class="list">
+                                <li>⛓️ <strong>Bitcoin:</strong> Double SHA-256 for block headers and transaction IDs.</li>
+                                <li>🔐 <strong>TLS:</strong> Certificate fingerprints, HMAC-SHA256 for message auth.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>SHA-3 (Keccak)</h3>
+                            <span class="badge">NIST</span>
+                            <p>Sponge construction; adjustable output length.</p>
+                            <ul class="list">
+                                <li>🧪 <strong>Use:</strong> Post-quantum research, Ethereum (Keccak-256 variant).</li>
+                                <li>⚙️ <strong>Tip:</strong> Efficient on hardware (FPGA/ASIC) due to simple permutation core.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>BLAKE2 / BLAKE3</h3>
+                            <span class="badge">Modern Alternative</span>
+                            <span class="badge">Streaming</span>
+                            <p>BLAKE2 matches SHA-3 security with higher speed; BLAKE3 adds tree hashing for multicore scalability.</p>
+                            <ul class="list">
+                                <li>🔐 <strong>libsodium & Argon2:</strong> BLAKE2b is the default general-purpose hash and key derivation primitive.</li>
+                                <li>🧾 <strong>b3sum utility:</strong> Official BLAKE3 tool delivers ultra-fast file integrity checks; adopted by backup and artifact pipelines that need multi-GB/s hashing.</li>
+                                <li>🚀 <strong>Performance:</strong> BLAKE3 scales with CPU cores (SIMD + threading) while keeping a small, constant-state.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>HMAC</h3>
+                            <span class="badge">Integrity</span>
+                            <p>Hash-based Message Authentication Code: combine hash with secret key.</p>
+                            <ul class="list">
+                                <li>🔑 <strong>Use:</strong> AWS SigV4 (HMAC-SHA256), JWT HS256.</li>
+                                <li>🛡️ <strong>Note:</strong> Resistant to length-extension attacks when built on MD/SHA families.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="password" class="content-section">
+                    <h2>🛡️ Password Hashing & Key Derivation</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Argon2id</h3>
+                            <span class="badge">PHC Winner</span>
+                            <p>Memory-hard, GPU-resistant. Configurable time, memory, parallelism parameters.</p>
+                            <ul class="list">
+                                <li>🔐 <strong>Use:</strong> Modern password storage, API key derivation.</li>
+                                <li>⚙️ <strong>Guideline:</strong> Allocate ≥64MB memory, 2 iterations, parallelism = CPU cores.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>bcrypt</h3>
+                            <span class="badge">Legacy</span>
+                            <p>Still solid, but 72-byte password limit. Cost parameter controls CPU usage.</p>
+                            <div class="warning">
+                                Move to Argon2id or scrypt when GPUs/ASIC resilience is required.
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <h3>scrypt</h3>
+                            <span class="badge">Memory-Hard</span>
+                            <p>Used by Tarsnap, Litecoin mining. Memory parameter defends against ASICs.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>PBKDF2</h3>
+                            <span class="badge">RFC 8018</span>
+                            <p>Widely supported but CPU-bound (easy for GPUs). Use high iteration counts and longer salts.</p>
+                        </div>
+                    </div>
+                    <div class="quick-hit" style="margin-top: 20px;">
+                        <strong>Salts & Peppers:</strong> Always store per-user random salt (≥128 bits). Optional pepper stored in HSM/KMS protects against database leaks.
+                    </div>
+                </section>
+
+                <section id="realtime" class="content-section">
+                    <h2>🚀 Real-Time Production Scenarios</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Kafka Partitioning (Murmur2)</h3>
+                            <ul class="use-case-list">
+                                <li>Default Java producer hashes record keys with Murmur2 to pick a partition deterministically.</li>
+                                <li>Seed is fixed (0) for protocol compatibility; custom partitioners can swap in alternate hashes when needed.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Cassandra &amp; Scylla Token Rings</h3>
+                            <ul class="use-case-list">
+                                <li>Murmur3Partitioner hashes partition keys to 64-bit tokens assigned around the ring.</li>
+                                <li>Virtual nodes spread token ownership so new nodes take balanced slices during expansion.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Git Content Addressing (SHA-1 → SHA-256)</h3>
+                            <ul class="use-case-list">
+                                <li>Blob hashes store entire repo history; the identifier travels with every clone.</li>
+                                <li>Optional SHA-256 mode shipped in Git 2.29 while SHA-1 remains default for backward compatibility.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Zstandard &amp; LZ4 Checksums (xxHash)</h3>
+                            <ul class="use-case-list">
+                                <li>Frame and block trailers carry xxHash fingerprints so decompression detects corruption at wire speed.</li>
+                                <li>Backup and CDN pipelines relying on these codecs verify chunks with the embedded hashes before serving.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Blockchain &amp; Smart Contracts</h3>
+                            <ul class="use-case-list">
+                                <li>Ethereum uses Keccak-256 for address derivation, storage tries.</li>
+                                <li>Solana leverages SHA-256 hardware acceleration (compute budget per transaction).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>APIs &amp; Auth (HMAC)</h3>
+                            <ul class="use-case-list">
+                                <li>Stripe, Slack sign webhooks with HMAC-SHA256 and timestamp to prevent replay.</li>
+                                <li>JWT HS256 tokens require rotated secrets and short TTLs.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Observability Pipelines</h3>
+                            <ul class="use-case-list">
+                                <li>Logstash's <code>fingerprint</code> filter uses Murmur3 or SHA-256 to deduplicate events before indexing.</li>
+                                <li>Apache Spark MLlib MinHashLSH groups similar records for near-duplicate detection at scale.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="compression" class="content-section">
+                    <h2>🗜️ Hashing for Compression & Deduplication</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Content-Defined Chunking</h3>
+                            <p>Use rolling hash (Rabin/BuzHash) to select chunk boundaries when fingerprint modulo pattern matches.</p>
+                            <ul class="list">
+                                <li>💾 <strong>Backup Systems:</strong> Borg, Restic, ZFS dedup.</li>
+                                <li>🌐 <strong>CDNs:</strong> Byte-range caching, video chunk reuse.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Compression Guardrails</h3>
+                            <ul class="list">
+                                <li>Run strong hash (SHA-256) after compression/encryption to detect bitrot.</li>
+                               <li>Store chunk ID (hash) + size → identical chunks are reused across backups.</li>
+                                <li>Use 160+ bit hashes to keep collision probability negligible for billions of chunks.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Integrity vs Compression</h3>
+                            <p>CRC32 is fast but weak; pairing CRC32C (hardware-accelerated) + SHA-256 balances speed and security.</p>
+                            <div class="warning">
+                                Avoid relying on CRCs for adversarial integrity—they detect random errors, not malicious tampering.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="security" class="content-section">
+                    <h2>🧱 Security Hardening & Best Practices</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Salt Everything</h3>
+                            <p>Store random salts per credential to defeat rainbow tables. Combine with pepper stored in KMS/HSM.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Keyed Hashes</h3>
+                            <p>Use HMAC or KMAC where authenticity is required. Raw hash comparisons are vulnerable to length-extension and timing attacks.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hash-Flooding Defense</h3>
+                            <p>Randomise seeds or use SipHash/HighwayHash for untrusted input in hash tables to prevent DoS.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Stretched Hashes</h3>
+                            <p>For file integrity, combine fast hash for dedup + cryptographic hash for verification (xxHash + BLAKE3).</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Timing-Safe Comparison</h3>
+                            <p>Use constant-time comparison functions (crypto.subtle.timingSafeEqual, bcrypt.compare) to prevent timing leaks.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Key Rotation & Versioning</h3>
+                            <p>Store hash metadata: algorithm, cost parameters, salt, version. Supports migrations (bcrypt → Argon2).</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tooling" class="content-section">
+                    <h2>🛠️ Tooling, Benchmarking & Hardware</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Benchmarks</h3>
+                            <ul class="list">
+                                <li><strong>SMHasher3:</strong> Avalanche, bias, distribution tests.</li>
+                                <li><strong>Hashcat:</strong> GPU cracking benchmarks for security posture.</li>
+                                <li><strong>hyperfine:</strong> CLI benchmarking for comparing implementations.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hardware Acceleration</h3>
+                            <ul class="list">
+                                <li>Intel/AMD CRC32C instruction (SSE 4.2).</li>
+                                <li>ARMv8 Crypto Extensions for SHA-1/SHA-256.</li>
+                                <li>Apple NEON acceleration for BLAKE3, xxHash.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Language Libraries</h3>
+                            <ul class="list">
+                                <li>Go: <code>hash/maphash</code> (seeded AES-based hash), <code>xxhash</code> module.</li>
+                                <li>Python: <code>hashlib</code> (SHA, BLAKE2), <code>mmh3</code>, <code>pyhash</code>.</li>
+                                <li>Rust: <code>twox-hash</code>, <code>blake3</code>, <code>ring</code>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="quick-cheat" class="content-section">
+                    <h2>⚡ Technique Selector Cheat Sheet</h2>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>Algorithm</th>
+                                <th>Why</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>High-speed partitioning</td>
+                                <td>xxHash / Murmur3</td>
+                                <td>Uniform, extremely fast, streaming input</td>
+                                <td>Kafka producers, Cassandra Murmur3Partitioner</td>
+                            </tr>
+                            <tr>
+                                <td>Password storage</td>
+                                <td>Argon2id</td>
+                                <td>Memory-hard, configurable</td>
+                                <td>OWASP guidance, modern SaaS login services</td>
+                            </tr>
+                            <tr>
+                                <td>Integrity &amp; signatures</td>
+                                <td>SHA-256 / SHA-3</td>
+                                <td>Collision/preimage resistance</td>
+                                <td>OCI container digests, signed software releases</td>
+                            </tr>
+                            <tr>
+                                <td>Deduplication</td>
+                                <td>Rabin-Karp + SHA-256</td>
+                                <td>Rolling chunking + strong verification</td>
+                                <td>BorgBackup, Restic, cloud object storage</td>
+                            </tr>
+                            <tr>
+                                <td>Consistent routing</td>
+                                <td>Jump Hash / Rendezvous</td>
+                                <td>Minimal key movement on rebalancing</td>
+                                <td>Akamai CDN HRW, Google Cloud Bigtable</td>
+                            </tr>
+                            <tr>
+                                <td>Similarity detection</td>
+                                <td>SimHash / MinHash</td>
+                                <td>Preserve distance in hash space</td>
+                                <td>Google web search dedupe, Apache Spark MLlib</td>
+                            </tr>
+                            <tr>
+                                <td>Transport security</td>
+                                <td>AES-GCM / ChaCha20-Poly1305</td>
+                                <td>AEAD handles confidentiality and integrity</td>
+                                <td>TLS 1.3, QUIC / HTTP/3</td>
+                            </tr>
+                            <tr>
+                                <td>Data at rest</td>
+                                <td>AES-XTS (disk) + AES-GCM (envelope)</td>
+                                <td>Suited to block devices and key wrapping</td>
+                                <td>BitLocker, AWS S3 SSE-KMS</td>
+                            </tr>
+                            <tr>
+                                <td>Mobile &amp; embedded clients</td>
+                                <td>ChaCha20-Poly1305</td>
+                                <td>Excellent performance on CPUs without AES-NI</td>
+                                <td>WireGuard, HTTP/3 on Android/iOS</td>
+                            </tr>
+                            <tr>
+                                <td>Key exchange</td>
+                                <td>X25519 + HKDF</td>
+                                <td>Fast forward-secure session keys</td>
+                                <td>TLS 1.3, Signal protocol handshake</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="comparison" class="content-section">
+                    <h2>📊 Hash Family Comparison</h2>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Security</th>
+                                <th>Speed</th>
+                                <th>Memory</th>
+                                <th>Typical Uses</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MurmurHash3</td>
+                                <td>Low (non-crypto)</td>
+                                <td>High</td>
+                                <td>Low</td>
+                                <td>Partitioning, hash tables</td>
+                                <td>Seed to prevent collisions under attack</td>
+                            </tr>
+                            <tr>
+                                <td>xxHash3</td>
+                                <td>Low</td>
+                                <td>Very High</td>
+                                <td>Low</td>
+                                <td>Stream hashing, dedup prefilter</td>
+                                <td>SIMD-accelerated, 64/128-bit variants</td>
+                            </tr>
+                            <tr>
+                                <td>SHA-256</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Low</td>
+                                <td>Integrity, signatures</td>
+                                <td>Ubiquitous hardware support</td>
+                            </tr>
+                            <tr>
+                                <td>BLAKE3</td>
+                                <td>High</td>
+                                <td>Very High</td>
+                                <td>Low</td>
+                                <td>Content addressing, file integrity</td>
+                                <td>Parallel-friendly tree mode</td>
+                            </tr>
+                            <tr>
+                                <td>Argon2id</td>
+                                <td>High</td>
+                                <td>Configurable</td>
+                                <td>High (memory-hard)</td>
+                                <td>Password hashing</td>
+                                <td>Adjust memory & iterations per policy</td>
+                            </tr>
+                            <tr>
+                                <td>Rabin-Karp</td>
+                                <td>Low</td>
+                                <td>High</td>
+                                <td>Low</td>
+                                <td>Rolling window, dedup chunking</td>
+                                <td>Combine with strong hash for integrity</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="checklist" class="content-section">
+                    <h2>✅ Deployment Checklist</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Algorithm Selection</h3>
+                            <ul class="list">
+                                <li>Define threat model (adversarial vs benign).</li>
+                                <li>Benchmark with realistic data distributions.</li>
+                                <li>Consider hardware support (SIMD, crypto extensions).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Operational Controls</h3>
+                            <ul class="list">
+                                <li>Log hash versions and parameters.</li>
+                                <li>Monitor collision rates, partition skew.</li>
+                                <li>Test rehashing path for migrations (e.g., Murmur → xxHash).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Security Hygiene</h3>
+                            <ul class="list">
+                                <li>Store salts & peppers separately.</li>
+                                <li>Rotate HMAC/signing keys, enforce TTL.</li>
+                                <li>Use TLS when transmitting hashes to prevent tampering.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="troubleshooting" class="content-section">
+                    <h2>🧰 Troubleshooting & Diagnostics</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Hot Partition</h3>
+                            <p>Check key distribution; consider random salting or Rendezvous hashing.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Unexpected Collisions</h3>
+                            <p>Verify seeding, upgrade to wider hash, add secondary hash for tie-breaker.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hash Upgrade Path</h3>
+                            <p>Store {algorithm, version}; compute new hash at read time and re-save to migrate gradually.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Slow Password Verification</h3>
+                            <p>Re-calibrate Argon2 parameters annually; ensure servers sized for peak auth load.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="interview" class="content-section">
+                    <h2>🎤 Interview Prep Quick Hits</h2>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Explain Murmur vs SHA-256</h3>
+                            <p>Murmur is non-crypto, faster, used for partitioning. SHA-256 is cryptographically strong, slower, used for integrity and security.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Consistent Hashing Scenario</h3>
+                            <p>Discuss how adding a node to the ring only remaps a portion of keys; mention virtual nodes and replication factor.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Salt vs Pepper</h3>
+                            <p>Salt is stored with hash to prevent rainbow tables; pepper is secret-wide, stored in secure storage to mitigate DB leaks.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Rolling Hash Example</h3>
+                            <p>Describe Rabin-Karp in rsync: chunk boundaries triggered when hash modulo mask equals pattern.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hash Collisions & Mitigation</h3>
+                            <p>Use wider hashes, secondary checks, or store original data for final verification (content-addressable storage).</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Compression + Hashing</h3>
+                            <p>Explain chunk fingerprinting with strong verification to avoid collision-induced data loss.</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <nav class="sidebar-nav-right" id="sidebarNavRight">
+                <div class="sidebar-header-right">
+                    Rapid Reference
+                </div>
+                <div class="nav-sections">
+                    <div>
+                        <div class="nav-section-title">Cheat Sheets</div>
+                        <div class="nav-links">
+                            <a href="#quick-cheat" class="nav-link">Technique Selector</a>
+                            <a href="#encryption-comparison" class="nav-link">Encryption Selector</a>
+                            <a href="#comparison" class="nav-link">Hash Comparison</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Deep Dives</div>
+                        <div class="nav-links">
+                            <a href="#noncrypto" class="nav-link">Murmur vs xxHash</a>
+                            <a href="#consistent" class="nav-link">Consistent Hash Playbook</a>
+                            <a href="#encryption-overview" class="nav-link">Encryption Overview</a>
+                            <a href="#encryption-basics" class="nav-link">Encryption Basics</a>
+                            <a href="#encryption-modes" class="nav-link">Modes & AEAD</a>
+                            <a href="#key-management" class="nav-link">Key Management</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Execution</div>
+                        <div class="nav-links">
+                            <a href="#realtime" class="nav-link">Systems in Production</a>
+                            <a href="#tooling" class="nav-link">Benchmark & Profiling</a>
+                            <a href="#security" class="nav-link">Security Checklist</a>
+                            <a href="#troubleshooting" class="nav-link">Troubleshooting Tips</a>
+                            <a href="#interview" class="nav-link">Interview Prep</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <script>
+        const leftNav = document.getElementById('sidebarNavLeft');
+        const rightNav = document.getElementById('sidebarNavRight');
+        const navOverlay = document.getElementById('mobileNavOverlay');
+        const navToggles = document.querySelectorAll('.mobile-nav-toggle');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const body = document.body;
+
+        function closeNavs() {
+            if (leftNav) leftNav.classList.remove('open');
+            if (rightNav) rightNav.classList.remove('open');
+            if (navOverlay) navOverlay.classList.remove('visible');
+            body.classList.remove('nav-open');
+        }
+
+        navToggles.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.getAttribute('data-target');
+                const targetNav = document.getElementById(targetId);
+                if (!targetNav) return;
+                const isOpen = targetNav.classList.contains('open');
+                closeNavs();
+                if (!isOpen) {
+                    targetNav.classList.add('open');
+                    if (navOverlay) navOverlay.classList.add('visible');
+                    body.classList.add('nav-open');
+                }
+            });
+        });
+
+        if (navOverlay) {
+            navOverlay.addEventListener('click', closeNavs);
+        }
+
+        document.addEventListener('keyup', event => {
+            if (event.key === 'Escape') {
+                closeNavs();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeNavs();
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.getBoundingClientRect().top + window.scrollY - 32,
+                        behavior: 'smooth'
+                    });
+                }
+                if (window.innerWidth <= 768) {
+                    closeNavs();
+                }
+            });
+        });
+
+        window.addEventListener('scroll', () => {
+            const fromTop = window.scrollY + 40;
+            navLinks.forEach(link => {
+                const section = document.querySelector(link.getAttribute('href'));
+                if (section && section.offsetTop <= fromTop && section.offsetTop + section.offsetHeight > fromTop) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
