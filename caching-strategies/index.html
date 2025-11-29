@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caching Strategies Field Guide</title>
+    <style>
+        :root {
+            --bg-gradient-start: #f0f7ff;
+            --bg-gradient-end: #e0fff4;
+            --card-bg: rgba(255, 255, 255, 0.97);
+            --accent: #0d47a1;
+            --accent-soft: rgba(13, 71, 161, 0.12);
+            --shadow: 0 18px 40px rgba(13, 71, 161, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #0f1c3f;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, #0277bd, #00acc1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: #34515e;
+            font-size: 1.05rem;
+        }
+
+        .layout {
+            display: flex;
+            gap: 22px;
+        }
+
+        nav {
+            width: 260px;
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            background: var(--card-bg);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 22px;
+        }
+
+        nav h3 {
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            background: var(--accent-soft);
+            color: #063970;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #0277bd, #00acc1);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        main {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 28px;
+        }
+
+        section {
+            margin-bottom: 36px;
+        }
+
+        section h2 {
+            font-size: 1.9rem;
+            color: #01579b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro {
+            color: #4b636e;
+            margin-bottom: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #f9fbfd;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid rgba(2, 119, 189, 0.7);
+            box-shadow: 0 12px 26px rgba(2, 119, 189, 0.12);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #064370;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #01579b;
+            background: rgba(1, 87, 155, 0.14);
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        ul.list {
+            padding-left: 20px;
+        }
+
+        ul.list li {
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: rgba(255, 224, 178, 0.92);
+            border-left: 4px solid #fb8c00;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .best-practice {
+            background: rgba(200, 230, 201, 0.92);
+            border-left: 4px solid #388e3c;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .matrix {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fafafa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 22px rgba(13, 71, 161, 0.1);
+        }
+
+        .matrix th, .matrix td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .matrix th {
+            background: #0277bd;
+            color: #fff;
+            font-size: 0.96rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #546e7a;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Caching Strategies Field Guide</h1>
+            <p>From local in-memory caches to global CDN layers—understand patterns, tradeoffs, and diagnostics to keep systems fast and predictable.</p>
+        </div>
+
+        <div class="layout">
+            <nav>
+                <h3>Sections</h3>
+                <div class="nav-links">
+                    <a href="#fundamentals">Caching Fundamentals</a>
+                    <a href="#patterns">Caching Patterns</a>
+                    <a href="#eviction">Eviction & Invalidation</a>
+                    <a href="#topologies">Topology & Placement</a>
+                    <a href="#consistency">Consistency & Freshness</a>
+                    <a href="#observability">Observability & Tuning</a>
+                    <a href="#cheatsheet">Cheat Sheet</a>
+                </div>
+            </nav>
+
+            <main>
+                <section id="fundamentals">
+                    <h2>🧠 Caching Fundamentals</h2>
+                    <p class="intro">Caching reduces latency and offloads pressure from primary data stores, but introduces staleness and invalidation challenges. Choose caching explicitly—avoid accidental caches (HTTP proxies, ORM internal caches) without monitoring.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Key Concepts</h3>
+                            <ul class="list">
+                                <li><strong>Hit ratio:</strong> Hits ÷ (Hits + Misses). Track by resource and client type.</li>
+                                <li><strong>Latency per tier:</strong> Warm caches should reduce P95 by 50%+ relative to origin.</li>
+                                <li><strong>Cost awareness:</strong> Compare cache infra vs origin load savings.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>When to Cache</h3>
+                            <ul class="list">
+                                <li>Expensive or rate-limited operations (DB queries, API calls, compute-heavy rendering).</li>
+                                <li>Frequently accessed, infrequently changing resources.</li>
+                                <li>Hotspot traffic (popular product catalog, trending articles).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>When Not to Cache</h3>
+                            <ul class="list">
+                                <li>Highly dynamic or personalised content where stale data harms UX.</li>
+                                <li>Data size exceeds cache budget or fetch cost is already small.</li>
+                                <li>Complex invalidation logic outweighs performance benefit.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Metrics to Monitor</h3>
+                            <ul class="list">
+                                <li>Hit/miss ratio, eviction counts, TTL expirations.</li>
+                                <li>Cache latency vs origin latency, origin request rate.</li>
+                                <li>Error/failure rates (timeouts, backend fallbacks).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="patterns">
+                    <h2>🧩 Caching Patterns</h2>
+                    <p class="intro">Different workloads call for different caching approaches; pick patterns that align with data freshness, cost, and architecture.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Cache-aside (Lazy Loading)</h3>
+                            <span class="tag">Application Layer</span>
+                            <ul class="list">
+                                <li>App checks cache first → on miss fetches from origin → stores value.</li>
+                                <li>Best when app controls lifecycle and misses are acceptable.</li>
+                                <li><strong>Beware:</strong> Stampede on cold start; add request coalescing.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Read-through / Write-through</h3>
+                            <span class="tag">Transparent Access</span>
+                            <ul class="list">
+                                <li>Cache provider fetches origin on miss automatically.</li>
+                                <li>Write-through: writes go to cache and origin synchronously.</li>
+                                <li>Suitable when using managed caches (e.g., AWS ElastiCache with Redis modules) or custom proxies.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Write-back (Write-behind)</h3>
+                            <span class="tag">High Throughput</span>
+                            <ul class="list">
+                                <li>Writes go to cache, asynchronously persisted to origin.</li>
+                                <li>Boosts write throughput but risk of data loss on failure.</li>
+                                <li>Use when durability handled via WAL/replication (e.g., CDN edge log shipping).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Global CDN Edge Cache</h3>
+                            <span class="tag">Web</span>
+                            <ul class="list">
+                                <li>Serves static assets, APIs with proper cache headers.</li>
+                                <li>Combine with origin shielding, per-country rules.</li>
+                                <li>Monitor cache keys, TTL, and invalidations closely.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Client-side Caching</h3>
+                            <span class="tag">Browser</span>
+                            <ul class="list">
+                                <li>Use HTTP caching headers (Cache-Control, ETag) effectively.</li>
+                                <li>Service workers for offline-first experiences.</li>
+                                <li>LocalStorage/IndexedDB for prefetching and reducing network calls.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Near-cache / Multi-layer</h3>
+                            <span class="tag">Microservices</span>
+                            <ul class="list">
+                                <li>Combine local in-process caches with shared caches (Redis).</li>
+                                <li>Add stale-while-revalidate strategies to hide latency.</li>
+                                <li>Use consistent hashing to distribute cache keys across nodes.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="eviction">
+                    <h2>🧹 Eviction, Invalidation & Risk Mitigation</h2>
+                    <p class="intro">The hardest part of caching is keeping it correct and resilient. Choose eviction policies wisely and guard against common failure modes that can overwhelm origin systems.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Eviction Policies</h3>
+                            <ul class="list">
+                                <li><strong>LRU:</strong> Least Recently Used—great default for general workloads.</li>
+                                <li><strong>LFU:</strong> Keeps frequently accessed items (Redis LFU, Guava).</li>
+                                <li><strong>TTL-based:</strong> Expire after fixed time (cache-aside + TTL).</li>
+                                <li><strong>Random sampling:</strong> Scales for very large caches (e.g., Redis approximated LRU).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Invalidation Patterns</h3>
+                            <ul class="list">
+                                <li><strong>Explicit delete:</strong> Application removes cache after writes (cache-aside).</li>
+                                <li><strong>Versioned keys:</strong> Embed version/timestamp in key, rotate on release.</li>
+                                <li><strong>Event-driven:</strong> Use message queues or CDC to invalidate caches.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cache Stampede</h3>
+                            <span class="tag">Traffic Spike</span>
+                            <ul class="list">
+                                <li>Multiple requests concurrently regenerate the same key when it expires.</li>
+                                <li><strong>Mitigation:</strong> Request coalescing, locks/mutexes, serve-stale-while-revalidate.</li>
+                                <li>Add jitter to TTLs; pre-warm critical keys on deploy.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cache Avalanche</h3>
+                            <span class="tag">Mass Expiration</span>
+                            <ul class="list">
+                                <li>Large number of keys expire simultaneously causing origin overload.</li>
+                                <li><strong>Mitigation:</strong> Randomize TTLs, stagger invalidations, partition cache clears.</li>
+                                <li>Maintain origin capacity headroom; consider soft TTL + background refresh.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cache Penetration</h3>
+                            <span class="tag">Miss Storm</span>
+                            <ul class="list">
+                                <li>Requests for non-existent keys always miss (malicious or flawed input).</li>
+                                <li><strong>Mitigation:</strong> Cache negative results briefly, validate inputs, use bloom filters.</li>
+                                <li>Apply rate limiting / circuit breakers for suspicious patterns.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cache Poisoning</h3>
+                            <span class="tag">Integrity Risk</span>
+                            <ul class="list">
+                                <li>Attackers or buggy services populate cache with incorrect data that then spreads quickly.</li>
+                                <li><strong>Impact:</strong> Users receive tampered responses, security controls bypassed.</li>
+                                <li><strong>Mitigation:</strong> Authenticate/authorise writes, validate payloads, use signed cache entries or E2E encryption.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Large Keys / Values</h3>
+                            <span class="tag">Memory & Network</span>
+                            <ul class="list">
+                                <li>Oversized keys or values increase serialization time, network transfer, and memory fragmentation.</li>
+                                <li><strong>Impact:</strong> Higher latency, eviction of useful data, cache node instability.</li>
+                                <li><strong>Mitigation:</strong> Use hashed/normalized keys, compress values, split blobs across tiers, enforce size limits.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Hot Keys / Hot Partitions</h3>
+                            <span class="tag">Load Imbalance</span>
+                            <ul class="list">
+                                <li>A small set of keys receives disproportional traffic, overwhelming specific nodes.</li>
+                                <li><strong>Impact:</strong> Increased latency, throttling, node failures, uneven eviction.</li>
+                                <li><strong>Mitigation:</strong> Key sharding (random suffixes), request replication, consistent hashing with virtual nodes, replicate popular keys.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cache Coherence</h3>
+                            <span class="tag">Staleness</span>
+                            <ul class="list">
+                                <li>Multi-level or multi-region caches drift apart; clients see conflicting values.</li>
+                                <li><strong>Impact:</strong> Data inconsistency, violated invariants, user confusion.</li>
+                                <li><strong>Mitigation:</strong> Publish invalidations via pub/sub, use version tokens, employ write-through or lease-based protocols.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>TTL & Refresh Strategies</h3>
+                            <ul class="list">
+                                <li>Align TTL with data volatility and tolerance for staleness.</li>
+                                <li>Use sliding TTL or refresh-ahead for frequently accessed keys.</li>
+                                <li>Monitor near-expiry hits to detect aggressive TTL settings.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="best-practice">
+                        <strong>Action Items:</strong> instrument cache hit/miss metrics, track stampede events, and bake mitigation techniques (locks, jitter, negative caching) into library helpers or middleware so every team benefits.
+                    </div>
+                </section>
+
+                <section id="topologies">
+                    <h2>🌍 Topology & Placement</h2>
+                    <p class="intro">Where you place caches influences latency, consistency, and operational complexity.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Client-side</h3>
+                            <ul class="list">
+                                <li>Browsers, mobile apps, IoT devices.</li>
+                                <li>Use HTTP caching headers, service workers, offline storage.</li>
+                                <li><strong>Consider:</strong> Security (no sensitive data), storage limits, versioning.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Edge/CDN</h3>
+                            <ul class="list">
+                                <li>Global POPs, serverless edges (Cloudflare Workers, AWS CloudFront).</li>
+                                <li>Cache static assets, API responses with proper TTL/invalidation.</li>
+                                <li>Monitor regional hit ratios, shield origins for cascade protection.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Service/Proxy Layer</h3>
+                            <ul class="list">
+                                <li>Reverse proxies (Varnish, Nginx), API gateways.</li>
+                                <li>Shared caching across services (Redis, Memcached, Aerospike).</li>
+                                <li>Implement authentication, TTL, and invalidation centrally.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>In-process</h3>
+                            <ul class="list">
+                                <li>Local caches (Guava, Caffeine, Spring Cache).</li>
+                                <li>Minimal latency but requires keeping in sync with shared caches.</li>
+                                <li>Add metrics to detect stale data and invalidation failures.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="consistency">
+                    <h2>🔁 Consistency & Freshness</h2>
+                    <p class="intro">Caching inevitably introduces staleness; manage expectations and choose strategies based on tolerance for outdated data.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Strong vs Eventual</h3>
+                            <ul class="list">
+                                <li><strong>Strong:</strong> Writes immediately visible (write-through, read-after-write).</li>
+                                <li><strong>Eventual:</strong> Accept small window of stale data (cache-aside with TTL).</li>
+                                <li>Clearly document which endpoints or data sets are eventual.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Stale-While-Revalidate</h3>
+                            <ul class="list">
+                                <li>Serve cached content while refreshing asynchronously.</li>
+                                <li>HTTP <code>stale-while-revalidate</code> directive or manual implementations.</li>
+                                <li>Prevents stampede, keeps user latency low.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Write Propagation</h3>
+                            <ul class="list">
+                                <li>Use pub/sub (Redis channel, Kafka) to broadcast invalidations.</li>
+                                <li>Leverage change data capture (Debezium) to update caches.</li>
+                                <li>Design fallback logic: on cache failure, degrade gracefully to origin.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cache Coherency</h3>
+                            <ul class="list">
+                                <li>Coordinate caches across regions with replication and versioning.</li>
+                                <li>Track refresh timestamps in payload for debugging.</li>
+                                <li>Consider write leases or compare-and-swap to prevent race conditions.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="observability">
+                    <h2>📊 Observability & Tuning</h2>
+                    <p class="intro">Monitor caches like production services—visibility ensures ROI and prevents hidden incidents.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Metrics</h3>
+                            <ul class="list">
+                                <li>Hit ratio per resource/tenant, miss latency, backend fallbacks.</li>
+                                <li>Evictions, expirations, memory usage, fragmentation.</li>
+                                <li>Origin load reduction, cost savings estimates.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Logging & Tracing</h3>
+                            <ul class="list">
+                                <li>Include cache metadata in traces (hit, miss, TTL left).</li>
+                                <li>Log key invalidations, purge events, error responses.</li>
+                                <li>Use sampling to avoid log volume explosion on high-QPS caches.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Testing Strategies</h3>
+                            <ul class="list">
+                                <li>A/B test TTL changes to observe impact on latency and staleness complaints.</li>
+                                <li>Load test with cold and warm scenarios.</li>
+                                <li>Chaos experiments: simulate cache outages, forced evictions.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cost Controls</h3>
+                            <ul class="list">
+                                <li>Estimate break-even point (cache cost vs origin cost saved).</li>
+                                <li>Set eviction and TTL policies to minimise oversized caches.</li>
+                                <li>Auto-scale shared caches or use serverless caches for bursty workloads.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="cheatsheet">
+                    <h2>📝 Cheat Sheet & Decision Matrix</h2>
+                    <table class="matrix">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>Recommended Strategy</th>
+                                <th>Why</th>
+                                <th>Examples</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Hot product catalog</td>
+                                <td>Cache-aside + TTL + pre-warm</td>
+                                <td>Controlled invalidation, tolerable staleness</td>
+                                <td>Retail homepage, streaming service landing page</td>
+                            </tr>
+                            <tr>
+                                <td>Global static assets</td>
+                                <td>CDN edge caching + immutable versioning</td>
+                                <td>Lowest latency, offload origin, versioned assets</td>
+                                <td>Image/CDN buckets, static SPA bundles</td>
+                            </tr>
+                            <tr>
+                                <td>Third-party API with rate limits</td>
+                                <td>Write-through cache + TTL</td>
+                                <td>Centralises access, protects from spikes</td>
+                                <td>Currency rates, weather APIs</td>
+                            </tr>
+                            <tr>
+                                <td>Personalised dashboards</td>
+                                <td>Per-user cache with short TTL, SWR</td>
+                                <td>Balance freshness with speed, hide origin latency</td>
+                                <td>Analytics dashboards, social feeds</td>
+                            </tr>
+                            <tr>
+                                <td>Heavy compute results</td>
+                                <td>Write-back / async refresh</td>
+                                <td>Amortises expensive computations</td>
+                                <td>Report generation, machine learning inference</td>
+                            </tr>
+                            <tr>
+                                <td>Microservice fan-out</td>
+                                <td>Near-cache + central Redis + request coalescing</td>
+                                <td>Reduce chatter, prevent stampedes</td>
+                                <td>Checkout pipeline, profile service</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            Continually review cache efficacy: watch hit ratios, latency, and downstream load to keep gains aligned with business goals.
+        </footer>
+    </div>
+</body>
+</html>
+
