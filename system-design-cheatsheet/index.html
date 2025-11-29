@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design Cheat Sheet</title>
+    <style>
+        :root {
+            --bg1: #f5fbff;
+            --bg2: #fff6f0;
+            --card: rgba(255, 255, 255, 0.97);
+            --accent: #0d47a1;
+            --accent-soft: rgba(13, 71, 161, 0.12);
+            --shadow: 0 18px 42px rgba(13, 71, 161, 0.16);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #102a43;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .header {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #0d47a1, #f57c00);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: #546e7a;
+            font-size: 1.05rem;
+        }
+
+        .layout {
+            display: flex;
+            gap: 22px;
+        }
+
+        nav {
+            width: 260px;
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            background: var(--card);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 22px;
+        }
+
+        nav h3 {
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            background: var(--accent-soft);
+            color: #0d1b2a;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #0d47a1, #f57c00);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        main {
+            flex: 1;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
+
+        section {
+            margin-bottom: 36px;
+        }
+
+        section h2 {
+            font-size: 1.9rem;
+            color: #0d47a1;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro {
+            color: #546e7a;
+            margin-bottom: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #fbfcff;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid rgba(13, 71, 161, 0.75);
+            box-shadow: 0 12px 28px rgba(13, 71, 161, 0.12);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            color: #102a43;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0d47a1;
+            background: rgba(13, 71, 161, 0.14);
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        ul.list {
+            padding-left: 20px;
+        }
+
+        ul.list li {
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: rgba(255, 224, 178, 0.92);
+            border-left: 4px solid #fb8c00;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .best-practice {
+            background: rgba(200, 230, 201, 0.92);
+            border-left: 4px solid #2e7d32;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fafafa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 26px rgba(13, 71, 161, 0.12);
+        }
+
+        .table th, .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .table th {
+            background: #0d47a1;
+            color: #fff;
+            font-size: 0.96rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #546e7a;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 System Design Cheat Sheet</h1>
+            <p>Key concepts, patterns, and example architectures to structure system design interviews and real-world design sessions.</p>
+        </div>
+
+        <div class="layout">
+            <nav>
+                <h3>Sections</h3>
+                <div class="nav-links">
+                    <a href="#framework">Design Framework</a>
+                    <a href="#building-blocks">Platform Building Blocks</a>
+                    <a href="#patterns">Design Patterns</a>
+                    <a href="#tradeoffs">Trade-off Guides</a>
+                    <a href="#capacity">Capacity Planning</a>
+                    <a href="#case-studies">Case Studies</a>
+                    <a href="#questions">Interview Checklist</a>
+                </div>
+            </nav>
+
+            <main>
+                <section id="framework">
+                    <h2>🧭 Design Framework</h2>
+                    <p class="intro">Structure your design discussions to cover requirements, capacity, architecture, and trade-offs.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>1. Clarify Requirements</h3>
+                            <ul class="list">
+                                <li>Functional scope, MVP vs full solution.</li>
+                                <li>Non-functional: latency, availability, durability, compliance.</li>
+                                <li>Traffic profile: requests per second, data size, peak vs steady-state.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>2. Define Interfaces & API</h3>
+                            <ul class="list">
+                                <li>External APIs, internal service boundaries.</li>
+                                <li>Data contracts, payload size, versioning.</li>
+                                <li>Authorization/authentication needs.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>3. High-Level Architecture</h3>
+                            <ul class="list">
+                                <li>Identify major components (frontend, backend, storage, caches, messaging).</li>
+                                <li>Define data flow from ingress to storage to clients.</li>
+                                <li>Use diagrams to illustrate interactions and replication.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>4. Deep Dive on Key Areas</h3>
+                            <ul class="list">
+                                <li>Data storage modeling.</li>
+                                <li>Scaling strategies (horizontal, vertical, partitioning).</li>
+                                <li>Consistency models, caching, queueing, failover.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>5. Consider Reliability & Operability</h3>
+                            <ul class="list">
+                                <li>Monitoring, logging, alerting.</li>
+                                <li>Deployment strategy, rollback plans, auto-scaling.</li>
+                                <li>Security, compliance, data privacy.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>6. Evaluate Trade-offs</h3>
+                            <ul class="list">
+                                <li>Latency vs consistency, complexity vs time-to-market.</li>
+                                <li>Cost implications of architecture choices.</li>
+                                <li>Evolution over time (initial vs future phases).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="building-blocks">
+                    <h2>🧱 Platform Building Blocks</h2>
+                    <p class="intro">Understand core components you’ll combine when designing systems.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Load Balancers</h3>
+                            <span class="tag">Traffic</span>
+                            <ul class="list">
+                                <li>L4 vs L7, health checks, SSL termination.</li>
+                                <li>Consistent hashing vs round robin vs least connections.</li>
+                                <li>Global load balancing (Anycast, GSLB).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Caches</h3>
+                            <span class="tag">Performance</span>
+                            <ul class="list">
+                                <li>Multi-tier: client, edge/CDN, service, database caches.</li>
+                                <li>Patterns: cache-aside, read/write-through, write-back hybrids.</li>
+                                <li>Invalidation & stampede control: explicit delete, event-driven, jitter, stale-while-revalidate.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Datastores</h3>
+                            <span class="tag">Persistence</span>
+                            <ul class="list">
+                                <li>Relational (PostgreSQL/MySQL) vs NoSQL (Cassandra, DynamoDB) vs NewSQL (CockroachDB).</li>
+                                <li>Replication, sharding, quorum reads/writes, schema evolution.</li>
+                                <li>Select engines based on query model, latency, durability, and consistency needs.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Queues & Streams</h3>
+                            <span class="tag">Decoupling</span>
+                            <ul class="list">
+                                <li>Message brokers (RabbitMQ, SQS) vs log streams (Kafka, Pulsar, Kinesis).</li>
+                                <li>Delivery semantics (at-least/exactly-once), ordering, consumer groups.</li>
+                                <li>Backpressure, DLQs, replay strategy, schema registry governance.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Object Storage & CDN</h3>
+                            <span class="tag">Durability</span>
+                            <ul class="list">
+                                <li>Immutable blobs (S3, GCS) for assets, backups, ML artifacts.</li>
+                                <li>Versioning, lifecycle policies, replication across regions or availability zones.</li>
+                                <li>Integrate with CDN for signed URLs, cache-busting, regional performance.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Search & Indexing</h3>
+                            <span class="tag">Discovery</span>
+                            <ul class="list">
+                                <li>Text search (Elasticsearch, OpenSearch) and vector search (Pinecone, Weaviate).</li>
+                                <li>Denormalised indices, relevancy tuning, synonym management.</li>
+                                <li>Ingestion via CDC, pipelines, or change streams; handle reindex and backfill.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Observability Stack</h3>
+                            <span class="tag">Operations</span>
+                            <ul class="list">
+                                <li>Metrics (Prometheus, CloudWatch), tracing (OpenTelemetry), logs (ELK, Loki).</li>
+                                <li>Alerting on golden signals, runbooks, incident tooling (PagerDuty, Opsgenie).</li>
+                                <li>Error budgets, chaos drills, automated diagnostics.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="patterns">
+                    <h2>🧩 Design Patterns</h2>
+                    <p class="intro">Reusable blueprints that appear across large-scale systems. Choose intentionally—every pattern introduces trade-offs.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>CQRS</h3>
+                            <span class="tag">Read/Write Split</span>
+                            <ul class="list">
+                                <li>Separate read and write models to optimise latency vs consistency.</li>
+                                <li>Combine with read replicas or materialised views for low-latency queries.</li>
+                                <li>Manage eventual consistency on read side and schema drift between models.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Event Sourcing</h3>
+                            <span class="tag">Immutable Log</span>
+                            <ul class="list">
+                                <li>Persist events, rebuild state via projections, enable time-travel debugging.</li>
+                                <li>Requires snapshotting, replays, and careful event versioning.</li>
+                                <li>Great for auditability and CQRS read models; ensure GDPR deletion strategy.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Saga / Orchestration</h3>
+                            <span class="tag">Distributed Transactions</span>
+                            <ul class="list">
+                                <li>Coordinate multi-service workflows via choreography (events) or orchestration (controller).</li>
+                                <li>Define compensating actions, timeouts, and idempotent handlers.</li>
+                                <li>Instrument saga metrics to detect stuck or failing instances.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Bulkheads & Circuit Breakers</h3>
+                            <span class="tag">Resilience</span>
+                            <ul class="list">
+                                <li>Isolate resource pools per dependency/tenant to contain blast radius.</li>
+                                <li>Trip circuits on failures, recover via half-open probes, combine with retries/backoff.</li>
+                                <li>Expose load shedding fallbacks (cached or degraded responses).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Strangler Fig</h3>
+                            <span class="tag">Modernisation</span>
+                            <ul class="list">
+                                <li>Incrementally route traffic from legacy to new services via edge layer.</li>
+                                <li>Keep data flows in sync—dual writes or event bridges until cut-over.</li>
+                                <li>Observe KPIs on both stacks before decomposing the monolith.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Edge & Offline First</h3>
+                            <span class="tag">Global UX</span>
+                            <ul class="list">
+                                <li>Leverage CDNs, edge compute, or P2P sync to reduce round trips.</li>
+                                <li>Conflict resolution via CRDTs, OT, or last-write-wins semantics.</li>
+                                <li>Secure data at rest on device; plan for key revocation and remote wipe.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tradeoffs">
+                    <h2>⚖️ Trade-off Guides</h2>
+                    <p class="intro">Frame conversations with stakeholders using these common axes; document your rationale.</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Dimension</th>
+                                <th>Preferred When</th>
+                                <th>Upside</th>
+                                <th>Downside</th>
+                                <th>Probe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Consistency vs Availability</td>
+                                <td>CP (strong consistency)</td>
+                                <td>Deterministic reads, simpler business rules.</td>
+                                <td>Higher latency, partition-sensitive outages.</td>
+                                <td>Can users tolerate stale data? What’s the outage profile?</td>
+                            </tr>
+                            <tr>
+                                <td>Latency vs Cost</td>
+                                <td>Edge/CDN replication</td>
+                                <td>Low latency, global reach.</td>
+                                <td>Complex invalidation, higher storage spend.</td>
+                                <td>Is content cacheable? How fast does it change?</td>
+                            </tr>
+                            <tr>
+                                <td>Build vs Buy</td>
+                                <td>Managed service</td>
+                                <td>Reduced ops burden, faster launch.</td>
+                                <td>Vendor lock-in, limited customisation.</td>
+                                <td>Is differentiation strategic? Does compliance allow outsourcing?</td>
+                            </tr>
+                            <tr>
+                                <td>Single vs Multi Region</td>
+                                <td>Single region</td>
+                                <td>Simpler data model, lower cost.</td>
+                                <td>Worse latency for distant users, larger blast radius.</td>
+                                <td>What are RTO/RPO targets? Any data residency rules?</td>
+                            </tr>
+                            <tr>
+                                <td>Monolith vs Microservices</td>
+                                <td>Modular monolith</td>
+                                <td>Fast development, easy refactor, single deploy pipeline.</td>
+                                <td>Scale bottlenecks, slower independent releases.</td>
+                                <td>Do teams align to modules? How often do boundaries change?</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="capacity">
+                    <h2>📈 Capacity Planning Toolkit</h2>
+                    <p class="intro">Stay ahead of growth—capacity work is cheaper than firefighting.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Traffic Forecasting</h3>
+                            <span class="tag">Demand</span>
+                            <ul class="list">
+                                <li>Translate MAU/DAU into RPS, concurrent sessions, peak factors.</li>
+                                <li>Account for seasonality, marketing pushes, incident scenarios.</li>
+                                <li>Validate with synthetic and replay tests before big launches.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Resource Headroom</h3>
+                            <span class="tag">Resilience</span>
+                            <ul class="list">
+                                <li>Target ≥30% headroom for CPU, memory, IO at P95 load.</li>
+                                <li>Design N+1 or N+2 capacity, test zone evacuation regularly.</li>
+                                <li>Codify autoscaling triggers, warm-up procedures, manual overrides.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Storage Growth</h3>
+                            <span class="tag">Data</span>
+                            <ul class="list">
+                                <li>Track dataset growth, compression ratios, churn rates.</li>
+                                <li>Introduce tiering, compaction, and retention guardrails.</li>
+                                <li>Plan migration/partition strategies before limits are hit.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Cost Guardrails</h3>
+                            <span class="tag">Finance</span>
+                            <ul class="list">
+                                <li>Monitor cost per request/tenant; alert when budgets exceed thresholds.</li>
+                                <li>Use rightsizing, reserved/spot instances, autoscaling schedules.</li>
+                                <li>Make trade-off decisions transparent to product & finance partners.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="case-studies">
+                    <h2>🧪 Reference Architectures</h2>
+                    <p class="intro">Apply patterns to well-known prompts—use them as scaffolding, not final answers.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Realtime Feed / Timeline</h3>
+                            <ul class="list">
+                                <li>Hybrid fan-out (write for influencers, read for long-tail).</li>
+                                <li>Write pipeline → Kafka → fan-out workers → cache + cold store.</li>
+                                <li>Ranking service with feature store, eventual consistency tolerances.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Chat / Messaging</h3>
+                            <ul class="list">
+                                <li>Gateway fan-out (WebSocket/gRPC), presence service, typing indicators.</li>
+                                <li>Partition messages by conversation, ack + retry semantics.</li>
+                                <li>End-to-end encryption, spam/abuse throttling, offline sync.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Ride Sharing / Dispatch</h3>
+                            <ul class="list">
+                                <li>Geo-spatial index (H3, R-Tree) for nearby driver lookup.</li>
+                                <li>Streaming ETL for ETA prediction, surge pricing, telemetry.</li>
+                                <li>Dual write to transactional DB + analytics/ML features.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Video Streaming</h3>
+                            <ul class="list">
+                                <li>Ingest → transcode pipeline (FFmpeg/MediaConvert) → global object storage.</li>
+                                <li>CDN edge auth, ABR manifests, QoE feedback loop.</li>
+                                <li>DRM, geo-restrictions, watermarking, device compatibility matrix.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>E-commerce Checkout</h3>
+                            <ul class="list">
+                                <li>Inventory reservation + idempotent payment service.</li>
+                                <li>Saga for order orchestration (payment, fulfillment, notifications).</li>
+                                <li>Fraud scoring, rate limiting, feature flags for rollback.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Analytics Pipeline</h3>
+                            <ul class="list">
+                                <li>Ingestion gateway → stream/batch ETL → lakehouse/warehouse (Snowflake, BigQuery, Iceberg).</li>
+                                <li>Deduplication, late-arriving events, schema registry.</li>
+                                <li>Serving layer (Presto/Trino/Druid) + semantic cache + access governance.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="questions">
+                    <h2>❓ Interview Checklist</h2>
+                    <p class="intro">Before wrapping, ensure you’ve addressed these pillars. Missing one is a common interview pitfall.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Product & Users</h3>
+                            <ul class="list">
+                                <li>Who are the primary users? What are success metrics?</li>
+                                <li>What workloads are bursty vs steady?</li>
+                                <li>Any SLAs/SLIs for latency, availability, data freshness?</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Data & Storage</h3>
+                            <ul class="list">
+                                <li>Entity relationships, access patterns, retention policies.</li>
+                                <li>Consistency model per operation, idempotency, conflict resolution.</li>
+                                <li>Backup/restore, migration, schema evolution, GDPR deletes.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Scalability & Performance</h3>
+                            <ul class="list">
+                                <li>Peak load assumptions, headroom, load test results.</li>
+                                <li>Caching layers, partition strategy, autoscaling configuration.</li>
+                                <li>Cold start plans, rate limiting, backpressure signals.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Reliability & Operations</h3>
+                            <ul class="list">
+                                <li>SLOs/error budgets, monitoring, alerting, incident response.</li>
+                                <li>Deployment strategy, rollback, blue/green or canary approach.</li>
+                                <li>DR/BCP plans, chaos and game-day cadence.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Security & Compliance</h3>
+                            <ul class="list">
+                                <li>AuthN/Z design, secrets management, audit logging.</li>
+                                <li>Data classification, encryption at rest/in transit, key rotation.</li>
+                                <li>Regulatory needs (GDPR, HIPAA, PCI, SOC2) and data residency.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Evolution & Trade-offs</h3>
+                            <ul class="list">
+                                <li>Phase-wise roadmap, iteration strategy, feature flags.</li>
+                                <li>Open risks, assumptions, follow-up experiments or metrics.</li>
+                                <li>Communication plan with stakeholders (eng, product, infra).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            System design is iterative—document assumptions, measure outcomes, and evolve architecture as scale and requirements shift.
+        </footer>
+    </div>
+
+</body>
+</html>
