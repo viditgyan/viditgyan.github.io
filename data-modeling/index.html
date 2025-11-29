@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Modeling Playbook</title>
+    <style>
+        :root {
+            --bg1: #fef8ff;
+            --bg2: #f2fbff;
+            --card: rgba(255, 255, 255, 0.97);
+            --accent: #4a148c;
+            --accent-soft: rgba(74, 20, 140, 0.12);
+            --shadow: 0 16px 36px rgba(74, 20, 140, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1a1d2e;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .header {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, #6a1b9a, #00838f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: #455a64;
+            font-size: 1.05rem;
+        }
+
+        .layout {
+            display: flex;
+            gap: 22px;
+        }
+
+        nav {
+            width: 260px;
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            background: var(--card);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 22px;
+        }
+
+        nav h3 {
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            background: var(--accent-soft);
+            color: #1a1d2e;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #6a1b9a, #00838f);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        main {
+            flex: 1;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
+
+        section {
+            margin-bottom: 36px;
+        }
+
+        section h2 {
+            font-size: 1.9rem;
+            color: #4a148c;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro {
+            color: #546e7a;
+            margin-bottom: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #fbf9ff;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid rgba(106, 27, 154, 0.7);
+            box-shadow: 0 12px 28px rgba(106, 27, 154, 0.12);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            color: #311b58;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #4a148c;
+            background: rgba(74, 20, 140, 0.16);
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        ul.list {
+            padding-left: 20px;
+        }
+
+        ul.list li {
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: rgba(255, 204, 188, 0.92);
+            border-left: 4px solid #d84315;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .best-practice {
+            background: rgba(200, 230, 201, 0.92);
+            border-left: 4px solid #2e7d32;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fafafa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 26px rgba(74, 20, 140, 0.12);
+        }
+
+        .table th, .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .table th {
+            background: #6a1b9a;
+            color: #fff;
+            font-size: 0.96rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #546e7a;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧱 Data Modeling Playbook</h1>
+            <p>Design relational and non-relational data models, manage schema changes, and power analytics pipelines with confidence.</p>
+        </div>
+
+        <div class="layout">
+            <nav>
+                <h3>Sections</h3>
+                <div class="nav-links">
+                    <a href="#foundations">Foundations</a>
+                    <a href="#relational">Relational Modeling</a>
+                    <a href="#nosql">NoSQL Patterns</a>
+                    <a href="#hybrid">Hybrid & Polyglot</a>
+                    <a href="#analytics">Analytics Modeling</a>
+                    <a href="#evolution">Schema Evolution</a>
+                    <a href="#matrix">Technique Matrix</a>
+                </div>
+            </nav>
+
+            <main>
+                <section id="foundations">
+                    <h2>📐 Modeling Foundations</h2>
+                    <p class="intro">Data modeling is about representing business concepts, relationships, and lifecycle rules. Decisions you make early influence performance, consistency, and maintainability.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Start with Requirements</h3>
+                            <ul class="list">
+                                <li>Gather access patterns (queries, lookup keys, aggregations).</li>
+                                <li>Define SLAs (latency, throughput, consistency).</li>
+                                <li>Capture lifecycle: creation, updates, retention, archival.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Business Vocabulary</h3>
+                            <ul class="list">
+                                <li>Create conceptual model (entities, relationships, strong/weak dependencies).</li>
+                                <li>Document attributes, data types, default values.</li>
+                                <li>Align with domain-driven design (bounded contexts).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Balance Trade-offs</h3>
+                            <ul class="list">
+                                <li>Normalisation vs denormalisation (write vs read heavy).</li>
+                                <li>Consistency vs availability (CAP theorem, PACELC).</li>
+                                <li>Storage cost vs query efficiency.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Documentation & Governance</h3>
+                            <ul class="list">
+                                <li>Use ER diagrams, data dictionaries.</li>
+                                <li>Establish naming conventions and standards.</li>
+                                <li>Track data lineage and PII classification.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="relational">
+                    <h2>🗂️ Relational Modeling Patterns</h2>
+                    <p class="intro">Relational databases excel at structured data, strong consistency, and complex relationships.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Normalization (1NF–BCNF)</h3>
+                            <span class="tag">OLTP</span>
+                            <ul class="list">
+                                <li>Reduce redundancy, prevent update anomalies.</li>
+                                <li>Use BCNF for transactional workloads; relax for read-heavy systems.</li>
+                                <li>Document surrogate keys vs natural keys.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Denormalization</h3>
+                            <span class="tag">Read Optimized</span>
+                            <ul class="list">
+                                <li>Store computed/aggregated fields for fast reads.</li>
+                                <li>Recalculate via triggers, jobs, or event sourcing.</li>
+                                <li>Add documentation for derivation logic and refresh cadence.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Join Tables / Association</h3>
+                            <span class="tag">Relationships</span>
+                            <ul class="list">
+                                <li>Many-to-many via link tables (with extra attributes if needed).</li>
+                                <li>Use cascades or application logic for referential integrity.</li>
+                                <li>Index foreign keys and join columns.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Versioning & Temporal Tables</h3>
+                            <span class="tag">Auditing</span>
+                            <ul class="list">
+                                <li>Use Slowly Changing Dimensions (Type 2) or history tables.</li>
+                                <li>Temporal tables in SQL Server/PostgreSQL (system versioning).</li>
+                                <li>Track effective dates, validity windows.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Partitioning</h3>
+                            <span class="tag">Scale</span>
+                            <ul class="list">
+                                <li>Range/hash partition tables for large datasets.</li>
+                                <li>Align indexes with partition keys.</li>
+                                <li>Use partition pruning to speed queries.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Constraints & Integrity</h3>
+                            <span class="tag">Correctness</span>
+                            <ul class="list">
+                                <li>Set foreign keys, unique constraints, check constraints.</li>
+                                <li>Use database migrations and CI checks to enforce rules.</li>
+                                <li>Implement soft deletes carefully (status flags + filtered indexes).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="nosql">
+                    <h2>🌲 NoSQL Data Patterns</h2>
+                    <p class="intro">NoSQL databases optimise for specific access patterns at scale. Model data around queries and consistency needs.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Key-Value</h3>
+                            <span class="tag">Cache/Session</span>
+                            <ul class="list">
+                                <li>Simple <code>key → value</code> lookups (Redis, DynamoDB).</li>
+                                <li>Model per-key JSON blobs for quick retrieval.</li>
+                                <li>Combine with TTL, version, or locking if needed.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Document Stores</h3>
+                            <span class="tag">Flexible Schema</span>
+                            <ul class="list">
+                                <li>Store JSON documents (MongoDB, Couchbase, Firestore).</li>
+                                <li>Embed vs reference: embed for tightly coupled data, reference for shared data.</li>
+                                <li>Precompute indexes and use schema validation when possible.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Wide-Column</h3>
+                            <span class="tag">Time-series/IoT</span>
+                            <ul class="list">
+                                <li>Partition key + clustering columns (Cassandra, HBase).</li>
+                                <li>Design tables per query (query-driven modeling).</li>
+                                <li>Plan TTLs, cold storage, and repair windows.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Graph</h3>
+                            <span class="tag">Relationships</span>
+                            <ul class="list">
+                                <li>Nodes, edges, properties (Neo4j, JanusGraph).</li>
+                                <li>Use for highly connected data: social graphs, recommendations.</li>
+                                <li>Model traversal patterns; index starting nodes.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Search Engine</h3>
+                            <span class="tag">Full-text</span>
+                            <ul class="list">
+                                <li>Index documents with tokenisation (Elasticsearch, Solr).</li>
+                                <li>Design analyzers, shards, replicas based on query mix.</li>
+                                <li>Keep source of truth elsewhere; use pipelines to sync.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Event Sourcing</h3>
+                            <span class="tag">Append-only</span>
+                            <ul class="list">
+                                <li>Store every change as an event; rebuild state with projections.</li>
+                                <li>Ensure idempotent event handlers; manage schema evolution in events.</li>
+                                <li>Use snapshots to accelerate rebuilds.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="hybrid">
+                    <h2>🔄 Hybrid & Polyglot Strategies</h2>
+                    <p class="intro">Most systems blend multiple models; ensure coordination and clarity on sources of truth.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Polyglot Persistence</h3>
+                            <ul class="list">
+                                <li>Divide data domains across best-fit stores.</li>
+                                <li>Maintain metadata catalog of data locations and owners.</li>
+                                <li>Implement CDC to keep derived stores updated.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Read Models vs Write Models</h3>
+                            <span class="tag">CQRS</span>
+                            <ul class="list">
+                                <li>Command model handles writes with validation.</li>
+                                <li>Query model built for fast reads (denormalized, aggregated).</li>
+                                <li>Synchronise via events, message queues.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Federated GraphQL</h3>
+                            <ul class="list">
+                                <li>GraphQL schema combined from multiple microservices.</li>
+                                <li>Define resolvers pulling data from underlying stores.</li>
+                                <li>Implement data loaders/batching to avoid N+1 issues.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Data Lakehouse</h3>
+                            <span class="tag">Analytics</span>
+                            <ul class="list">
+                                <li>Combine data lake storage (Parquet, ORC) with warehouse capabilities.</li>
+                                <li>Table formats: Delta Lake, Apache Iceberg, Apache Hudi.</li>
+                                <li>Support ACID transactions, schema evolution, time travel.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="analytics">
+                    <h2>📊 Analytics & Warehouse Modeling</h2>
+                    <p class="intro">Analytical models optimise for aggregations, historical queries, and BI workloads.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Star Schema</h3>
+                            <span class="tag">Fact & Dimension</span>
+                            <ul class="list">
+                                <li>Central fact table with quantitative metrics.</li>
+                                <li>Dimension tables describe entities (date, customer, product).</li>
+                                <li>Use surrogate keys, hierarchical dimensions (snowflake as needed).</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Data Vault</h3>
+                            <span class="tag">Flexibility</span>
+                            <ul class="list">
+                                <li>Hub (keys), link (relationships), satellite (attributes).</li>
+                                <li>Supports agile data warehouses, auditable history.</li>
+                                <li>Build star schemas as data marts on top.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Columnar Storage</h3>
+                            <span class="tag">High Compression</span>
+                            <ul class="list">
+                                <li>Store columns separately (Parquet, ORC, columnar DBs).</li>
+                                <li>Enable predicate pushdown, vectorized execution.</li>
+                                <li>Partition data by time, entity, or region.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Slowly Changing Dimensions</h3>
+                            <ul class="list">
+                                <li>Type 1: overwrite (no history).</li>
+                                <li>Type 2: add new row with effective dates.</li>
+                                <li>Type 3: add new column for previous value.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Lakehouse Governance</h3>
+                            <ul class="list">
+                                <li>Catalog (Glue, Hive Metastore, Unity Catalog) for schema tracking.</li>
+                                <li>Data quality rules (Great Expectations, dbt tests).</li>
+                                <li>Security: row/column masking, PII redaction, IAM.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-time Analytics</h3>
+                            <ul class="list">
+                                <li>Streaming ETL (Kafka, Flink, Spark Structured Streaming).</li>
+                                <li>Materialized views, incremental processing (ClickHouse, Materialize).</li>
+                                <li>Handle late-arriving data via watermarks and windowing.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="evolution">
+                    <h2>♻️ Schema Evolution & Data Governance</h2>
+                    <p class="intro">Data models must evolve without breaking downstream systems.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Versioning</h3>
+                            <ul class="list">
+                                <li>Use backward-compatible schema changes when possible (add columns, default values).</li>
+                                <li>Annotate schema migrations with release notes.</li>
+                                <li>For event schemas, use Avro/Proto schema registry with compatibility checks.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Data Contracts</h3>
+                            <ul class="list">
+                                <li>Define contracts between producers and consumers (API-like for data).</li>
+                                <li>Automate validations (Great Expectations, Deequ) in CI pipelines.</li>
+                                <li>Notify consumers before breaking changes.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Migration Strategies</h3>
+                            <ul class="list">
+                                <li>Blue/green data migrations (dual write/read, switch after validation).</li>
+                                <li>Shadow writes: write to new schema, compare results before cutover.</li>
+                                <li>Backfill processes with monitoring & checkpoints.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Data Quality & Lineage</h3>
+                            <ul class="list">
+                                <li>Set expectations for nullability, uniqueness, ranges.</li>
+                                <li>Track lineage across pipelines (OpenLineage, DataHub, Amundsen).</li>
+                                <li>Alert on out-of-spec data and escalate to data owners.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="matrix">
+                    <h2>🧭 Modeling Technique Matrix</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Use Case</th>
+                                <th>Modeling Approach</th>
+                                <th>Pros</th>
+                                <th>Considerations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Transactional system (OLTP)</td>
+                                <td>Normalised relational schema</td>
+                                <td>Strong consistency, ACID, avoids anomalies</td>
+                                <td>Potential joins, denormalize selectively for hot reads</td>
+                            </tr>
+                            <tr>
+                                <td>Read-heavy API (profiles, catalogs)</td>
+                                <td>Denormalized tables + cache</td>
+                                <td>Fast reads, simpler queries</td>
+                                <td>Need mechanisms to keep data in sync</td>
+                            </tr>
+                            <tr>
+                                <td>Time-series telemetry</td>
+                                <td>Wide-column store / time-series DB</td>
+                                <td>Efficient writes, TTL, rollups</td>
+                                <td>Use partition keys wisely, handle retention policies</td>
+                            </tr>
+                            <tr>
+                                <td>Recommendation graph</td>
+                                <td>Graph DB</td>
+                                <td>Natural traversal, flexible relationships</td>
+                                <td>Different indexing, requires graph query expertise</td>
+                            </tr>
+                            <tr>
+                                <td>Enterprise data warehouse</td>
+                                <td>Star schema / data vault</td>
+                                <td>Consistent analytics, slow-changing dimensions</td>
+                                <td>ETL/ELT pipelines, governance required</td>
+                            </tr>
+                            <tr>
+                                <td>Event-driven system</td>
+                                <td>Event sourcing + CQRS</td>
+                                <td>Audit trail, rebuild state, async projections</td>
+                                <td>Complexity in projections, eventually consistent reads</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            Effective data models evolve with the business—iterate, measure impact, and keep stakeholders aligned on schema changes.
+        </footer>
+    </div>
+</body>
+</html>
+
