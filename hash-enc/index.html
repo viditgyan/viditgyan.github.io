@@ -445,20 +445,21 @@
         <div class="main-content-wrapper">
             <nav class="sidebar-nav" id="sidebarNavLeft">
                 <div class="sidebar-header">
-                    Hashing Atlas
+                    Hashing & Encryption Atlas
                 </div>
                 <div class="nav-sections">
                     <div>
-                        <div class="nav-section-title">Hashing Foundations</div>
+                        <div class="nav-section-title">Overview</div>
                         <div class="nav-links">
                             <a href="#overview" class="nav-link">Hashing Overview</a>
-                            <a href="#properties" class="nav-link">Key Hash Properties</a>
+                            <a href="#encryption-overview" class="nav-link">Encryption Overview</a>
                             <a href="#hash-vs-encryption" class="nav-link">Hashing vs Encryption</a>
                         </div>
                     </div>
                     <div>
                         <div class="nav-section-title">Hashing Techniques</div>
                         <div class="nav-links">
+                            <a href="#properties" class="nav-link">Key Hash Properties</a>
                             <a href="#noncrypto" class="nav-link">High-Speed Hashes</a>
                             <a href="#rolling" class="nav-link">Rolling & Locality</a>
                             <a href="#consistent" class="nav-link">Consistent Hashing</a>
@@ -467,17 +468,12 @@
                         </div>
                     </div>
                     <div>
-                        <div class="nav-section-title">Encryption Foundations</div>
-                        <div class="nav-links">
-                            <a href="#encryption-basics" class="nav-link">Encryption Overview</a>
-                            <a href="#encryption-modes" class="nav-link">Modes & AEAD</a>
-                            <a href="#key-management" class="nav-link">Key Management</a>
-                        </div>
-                    </div>
-                    <div>
                         <div class="nav-section-title">Encryption Techniques</div>
                         <div class="nav-links">
-                            <a href="#encryption" class="nav-link">Algorithm Playbook</a>
+                            <a href="#encryption-basics" class="nav-link">Encryption Fundamentals</a>
+                            <a href="#encryption-modes" class="nav-link">Modes & AEAD</a>
+                            <a href="#key-management" class="nav-link">Key Management</a>
+                            <a href="#encryption" class="nav-link">Encryption Techniques in Practice</a>
                             <a href="#encryption-comparison" class="nav-link">Encryption Selector</a>
                         </div>
                     </div>
@@ -531,6 +527,45 @@
                                 <li><strong>Endianness:</strong> Some libraries expose little-endian outputs (Kafka uses big-endian Murmur).</li>
                                 <li><strong>Seeding:</strong> Adjustable seed defends against hash-flooding attacks.</li>
                                 <li><strong>Streaming:</strong> Many hashes accept incremental updates for large payloads.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="encryption-overview" class="content-section">
+                    <h2>🔐 Encryption Overview</h2>
+                    <p class="section-intro">Encryption protects data confidentiality while supporting authenticity and integrity when combined with the right constructions. Use this section to orient yourself before choosing specific algorithms.</p>
+                    <div class="card-grid">
+                        <div class="info-card">
+                            <h3>Core Objectives</h3>
+                            <ul class="list">
+                                <li>🕵️ <strong>Confidentiality:</strong> Only authorised parties can read the data.</li>
+                                <li>🛡️ <strong>Integrity:</strong> Detect tampering with MAC/HMAC or AEAD tags.</li>
+                                <li>✅ <strong>Authenticity:</strong> Digital signatures prove the sender's identity.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Cryptographic Building Blocks</h3>
+                            <ul class="list">
+                                <li>🧱 <strong>Block ciphers:</strong> AES, Camellia, and future candidates like Ascon.</li>
+                                <li>🌊 <strong>Stream ciphers:</strong> ChaCha20, Salsa20 for lightweight performance.</li>
+                                <li>🧬 <strong>KDFs:</strong> HKDF, PBKDF2, scrypt derive keys from passwords or shared secrets.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Protocol Patterns</h3>
+                            <ul class="list">
+                                <li>🔐 <strong>Authenticated encryption:</strong> AEAD is the default choice for new designs.</li>
+                                <li>🔄 <strong>Hybrid encryption:</strong> Public-key exchange + symmetric data encryption.</li>
+                                <li>🧩 <strong>Zero trust:</strong> Encrypt everywhere (in transit, at rest, in use via TEEs).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Operational Checklist</h3>
+                            <ul class="list">
+                                <li>📋 Classify data sensitivity before selecting algorithms and key lengths.</li>
+                                <li>🔁 Plan for rotation, revocation, and incident response.</li>
+                                <li>📜 Align with standards: NIST SP 800-57, PCI DSS, ISO 27001.</li>
                             </ul>
                         </div>
                     </div>
@@ -887,16 +922,16 @@
                     <div class="card-grid">
                         <div class="info-card">
                             <h3>MurmurHash3</h3>
-                            <span class="badge">Kafka</span>
                             <span class="badge">Cassandra</span>
+                            <span class="badge">ScyllaDB</span>
                             <p>Designed by Austin Appleby for uniform distribution with strong avalanche behaviour.</p>
                             <div class="code-snippet">
-// Kafka default partitioner (Java)
-int partition = Math.abs(MurmurHash3.murmur3_x86_32(keyBytes, 0, keyBytes.length, 0)) % numPartitions;
+// Cassandra partitioner pseudo-code
+long token = MurmurHash.hash3_x64_128(partitionKeyBytes, 0)[0];
                             </div>
                             <ul class="list">
-                                <li>🚚 <strong>Kafka:</strong> Default partitioner hashes record keys with Murmur3-32 (seed = 0) for stable routing.</li>
-                                <li>🗂️ <strong>Apache Cassandra & ScyllaDB:</strong> Murmur3Partitioner (64-bit) distributes tokens across the ring.</li>
+                                <li>🗂️ <strong>Apache Cassandra & ScyllaDB:</strong> Murmur3Partitioner (64-bit) distributes tokens across the consistent-hash ring.</li>
+                                <li>🔍 <strong>Elasticsearch:</strong> The <code>murmur3</code> field data mapper hashes terms for efficient cardinality aggregations.</li>
                                 <li>🔐 <strong>Drawback:</strong> Non-cryptographic; randomise the seed or add SipHash when accepting untrusted keys.</li>
                             </ul>
                         </div>
@@ -918,7 +953,7 @@ int partition = Math.abs(MurmurHash3.murmur3_x86_32(keyBytes, 0, keyBytes.length
                             <p>Fowler–Noll–Vo hash favoured for simplicity and predictable cross-language output.</p>
                             <ul class="list">
                                 <li>🌐 <strong>DHCP Load Balancing:</strong> IETF RFC 3074 specifies FNV-1a for consistent server selection.</li>
-                                <li>🧮 <strong>Development:</strong> Popular in simple hash-table utilities (e.g., Rust’s <code>fnv</code> crate) when repeatable output is required.</li>
+                                <li>🧮 <strong>Development:</strong> Popular in simple hash-table utilities (e.g., Rust's <code>fnv</code> crate) when repeatable output is required.</li>
                                 <li>⚠️ <strong>Security:</strong> Susceptible to hash-flooding; pair with a random seed or SipHash when inputs are attacker controlled.</li>
                             </ul>
                         </div>
@@ -926,7 +961,7 @@ int partition = Math.abs(MurmurHash3.murmur3_x86_32(keyBytes, 0, keyBytes.length
                             <h3>CityHash / FarmHash</h3>
                             <span class="badge">Google</span>
                             <span class="badge">BigTable</span>
-                            <p>Google’s high-speed family tuned for short strings. FarmHash dispatches to the best variant for the CPU at runtime.</p>
+                            <p>Google's high-speed family tuned for short strings. FarmHash dispatches to the best variant for the CPU at runtime.</p>
                             <ul class="list">
                                 <li>🧠 <strong>TensorFlow:</strong> <code>tf.string_to_hash_bucket_fast</code> uses FarmHash for deterministic sharding.</li>
                                 <li>📚 <strong>Google storage systems:</strong> The CityHash paper documents internal use for SSTable indexing.</li>
@@ -1108,10 +1143,10 @@ func jumpConsistentHash(key uint64, buckets int32) int32 {
                     <h2>🚀 Real-Time Production Scenarios</h2>
                     <div class="card-grid">
                         <div class="info-card">
-                            <h3>Kafka Partitioning (Murmur3)</h3>
+                            <h3>Kafka Partitioning (Murmur2)</h3>
                             <ul class="use-case-list">
-                                <li>Ensures stable partition selection for keyed events.</li>
-                                <li>Seed = 0 for compatibility; custom partitioner can inject random seeds to rebalance.</li>
+                                <li>Default Java producer hashes record keys with Murmur2 to pick a partition deterministically.</li>
+                                <li>Seed is fixed (0) for protocol compatibility; custom partitioners can swap in alternate hashes when needed.</li>
                             </ul>
                         </div>
                         <div class="info-card">
@@ -1152,7 +1187,7 @@ func jumpConsistentHash(key uint64, buckets int32) int32 {
                         <div class="info-card">
                             <h3>Observability Pipelines</h3>
                             <ul class="use-case-list">
-                                <li>Logstash’s <code>fingerprint</code> filter uses Murmur3 or SHA-256 to deduplicate events before indexing.</li>
+                                <li>Logstash's <code>fingerprint</code> filter uses Murmur3 or SHA-256 to deduplicate events before indexing.</li>
                                 <li>Apache Spark MLlib MinHashLSH groups similar records for near-duplicate detection at scale.</li>
                             </ul>
                         </div>
@@ -1481,7 +1516,7 @@ func jumpConsistentHash(key uint64, buckets int32) int32 {
                         <div class="nav-section-title">Cheat Sheets</div>
                         <div class="nav-links">
                             <a href="#quick-cheat" class="nav-link">Technique Selector</a>
-                            <a href="#encryption-comparison" class="nav-link">Encryption Matrix</a>
+                            <a href="#encryption-comparison" class="nav-link">Encryption Selector</a>
                             <a href="#comparison" class="nav-link">Hash Comparison</a>
                         </div>
                     </div>
@@ -1490,8 +1525,9 @@ func jumpConsistentHash(key uint64, buckets int32) int32 {
                         <div class="nav-links">
                             <a href="#noncrypto" class="nav-link">Murmur vs xxHash</a>
                             <a href="#consistent" class="nav-link">Consistent Hash Playbook</a>
-                            <a href="#encryption-basics" class="nav-link">Encryption Primer</a>
-                            <a href="#encryption-modes" class="nav-link">AEAD & Modes</a>
+                            <a href="#encryption-overview" class="nav-link">Encryption Overview</a>
+                            <a href="#encryption-basics" class="nav-link">Encryption Basics</a>
+                            <a href="#encryption-modes" class="nav-link">Modes & AEAD</a>
                             <a href="#key-management" class="nav-link">Key Management</a>
                         </div>
                     </div>
