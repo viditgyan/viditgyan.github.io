@@ -41,6 +41,7 @@
             font-size: 2.5rem;
             margin-bottom: 10px;
             background: linear-gradient(135deg, #667eea, #764ba2);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -433,6 +434,53 @@
             backdrop-filter: blur(10px);
         }
 
+        .mobile-nav-buttons {
+            display: none;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mobile-nav-toggle {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.25);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .mobile-nav-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(102, 126, 234, 0.35);
+        }
+
+        .mobile-nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1400;
+        }
+
+        .mobile-nav-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body.nav-open {
+            overflow: hidden;
+        }
+
         @media (max-width: 1400px) {
             .sidebar-nav {
                 width: 250px;
@@ -464,27 +512,6 @@
         }
 
         @media (max-width: 1000px) {
-            .sidebar-nav-right {
-                position: relative;
-                width: 100%;
-                right: auto;
-                top: auto;
-                bottom: auto;
-                margin-bottom: 20px;
-                order: 2;
-            }
-            
-            .main-content {
-                margin-right: 0;
-                order: 1;
-            }
-            
-            .main-content-wrapper {
-                flex-direction: column;
-            }
-        }
-
-        @media (max-width: 768px) {
             .sidebar-nav {
                 position: relative;
                 width: 100%;
@@ -514,15 +541,68 @@
             .main-content-wrapper {
                 flex-direction: column;
             }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav-buttons {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .mobile-nav-toggle {
+                font-size: 0.9rem;
+            }
+            
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar-nav,
+            .sidebar-nav-right {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                height: 100vh;
+                width: 82%;
+                max-width: 320px;
+                margin: 0;
+                padding: 80px 22px 60px 22px;
+                overflow-y: auto;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(14px);
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+                transition: transform 0.3s ease;
+                z-index: 1500;
+            }
+
+            .sidebar-nav {
+                left: 0;
+                transform: translateX(-110%);
+                border-radius: 0 18px 18px 0;
+            }
+
+            .sidebar-nav-right {
+                right: 0;
+                left: auto;
+                transform: translateX(110%);
+                border-radius: 18px 0 0 18px;
+            }
+
+            .sidebar-nav.open,
+            .sidebar-nav-right.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin: 0;
+                order: 1;
+            }
             
             .container {
-                padding: 10px;
+                padding: 12px;
             }
             
-            .pros-cons {
-                grid-template-columns: 1fr;
-            }
-            
+            .pros-cons,
             .performance-grid {
                 grid-template-columns: 1fr;
             }
@@ -584,93 +664,6 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        @media (max-width: 768px) {
-            .sidebar-nav {
-                position: relative;
-                width: 100%;
-                left: auto;
-                top: auto;
-                bottom: auto;
-                margin-bottom: 20px;
-            }
-            
-            .main-content {
-                margin-left: 0;
-                margin-right: 0;
-            }
-            
-            .main-content-wrapper {
-                flex-direction: column;
-            }
-            
-            .container {
-                padding: 10px;
-            }
-            
-            .pros-cons {
-                grid-template-columns: 1fr;
-            }
-            
-            .performance-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Interview Tips Section Specific Styling */
-        #interview-tips {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        #interview-tips h2 {
-            color: #2c3e50;
-            font-size: 2rem;
-            margin-bottom: 25px;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        #interview-tips h3 {
-            color: #2c3e50;
-            font-size: 1.3rem;
-            margin: 25px 0 15px 0;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #ecf0f1;
-        }
-
-        #interview-tips ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        #interview-tips ul li {
-            background: #f8f9fa;
-            margin: 8px 0;
-            padding: 12px 15px;
-            border-left: 4px solid #3498db;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-
-        #interview-tips ul li:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
-
-        #interview-tips img {
-            display: block;
-            margin: 20px auto;
-            max-width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
     </style>
 </head>
 <body>
@@ -683,8 +676,13 @@
             <h1>⛁ Database Indexing Strategies ⛁</h1>
             <p>Comprehensive Reference Guide - From Fundamentals to Advanced Techniques</p>
         </div>
+        <div class="mobile-nav-buttons">
+            <button class="mobile-nav-toggle" data-target="sidebarNavLeft">📚 Browse Topics</button>
+            <button class="mobile-nav-toggle" data-target="sidebarNavRight">🎯 Prep Tools</button>
+        </div>
+        <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
         <div class="main-content-wrapper">
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav" id="sidebarNavLeft">
                 <div class="sidebar-header">
                     📚 Database Types & Index Fundamentals
                 </div>
@@ -716,17 +714,25 @@
                             <a href="#oracle" class="nav-link">Oracle</a>
                             <a href="#sqlserver" class="nav-link">SQL Server</a>
                             <a href="#sqlite" class="nav-link">SQLite</a>
+                            <a href="#mariadb" class="nav-link">MariaDB</a>
+                            <a href="#db2" class="nav-link">IBM Db2</a>
+                            <a href="#aurora" class="nav-link">Amazon Aurora</a>
                         </div>
                     </div>
                     <div>
                         <h3>🌐 NoSQL Systems</h3>
                         <div class="nav-links">
                             <a href="#cassandra" class="nav-link">Cassandra</a>
+                            <a href="#scylladb" class="nav-link">ScyllaDB</a>
                             <a href="#mongodb" class="nav-link">MongoDB</a>
                             <a href="#dynamodb" class="nav-link">DynamoDB</a>
                             <a href="#redis" class="nav-link">Redis</a>
                             <a href="#rocksdb" class="nav-link">RocksDB</a>
                             <a href="#elasticsearch" class="nav-link">Elasticsearch</a>
+                            <a href="#cosmosdb" class="nav-link">Azure Cosmos DB</a>
+                            <a href="#couchbase" class="nav-link">Couchbase</a>
+                            <a href="#hbase" class="nav-link">Apache HBase</a>
+                            <a href="#firestore" class="nav-link">Firestore</a>
                         </div>
                     </div>
                     <div>
@@ -741,6 +747,34 @@
                         </div>
                     </div>
                     <div>
+                        <h3>🏢 Data Warehousing</h3>
+                        <div class="nav-links">
+                            <a href="#hive" class="nav-link">Apache Hive</a>
+                            <a href="#snowflake" class="nav-link">Snowflake</a>
+                            <a href="#bigquery" class="nav-link">Google BigQuery</a>
+                            <a href="#duckdb" class="nav-link">DuckDB</a>
+                            <a href="#redshift" class="nav-link">Amazon Redshift</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>🧠 Vector & AI</h3>
+                        <div class="nav-links">
+                            <a href="#vector" class="nav-link">Vector Overview</a>
+                            <a href="#pinecone" class="nav-link">Pinecone</a>
+                            <a href="#weaviate" class="nav-link">Weaviate</a>
+                            <a href="#milvus" class="nav-link">Milvus</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>💧 Lakehouse Tables</h3>
+                        <div class="nav-links">
+                            <a href="#lakehouse" class="nav-link">Lakehouse Overview</a>
+                            <a href="#deltalake" class="nav-link">Delta Lake</a>
+                            <a href="#iceberg" class="nav-link">Apache Iceberg</a>
+                            <a href="#hudi" class="nav-link">Apache Hudi</a>
+                        </div>
+                    </div>
+                    <div>
                         <h3>📊 Specialized</h3>
                         <div class="nav-links">
                             <a href="#timeseries" class="nav-link">Time-Series</a>
@@ -748,12 +782,13 @@
                             <a href="#graph" class="nav-link">Graph DB</a>
                             <a href="#analytics" class="nav-link">Analytics</a>
                             <a href="#consistent-hash" class="nav-link">Consistent Hash</a>
+                            <a href="#etcd" class="nav-link">etcd</a>
                         </div>
                     </div>
                 </div>
             </nav>
             
-            <nav class="sidebar-nav-right">
+            <nav class="sidebar-nav-right" id="sidebarNavRight">
                 <div class="sidebar-header-right">
                     🎯 Analysis & Prep
                 </div>
@@ -790,6 +825,7 @@
                     <div>
                         <h3>🎯 Quick Access</h3>
                         <div class="nav-links">
+                            <a href="#rapid-review" class="nav-link">Rapid Review</a>
                             <a href="#interview-tips" class="nav-link">Interview Tips</a>
                             <a href="#common-questions" class="nav-link">Common Questions</a>
                             <a href="#advanced-design" class="nav-link">Advanced Design</a>
@@ -802,6 +838,74 @@
             </nav>
             
             <main class="main-content">
+                <section id="rapid-review" class="content-section">
+                    <h2>⚡ Rapid Review Cheat Sheet</h2>
+                    <p class="section-intro">Use this table to map a problem statement to the fastest relevant indexing approach in under a minute.</p>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>Go-To Index / Feature</th>
+                                <th>Remember This</th>
+                                <th>DB Examples</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Equality lookups</strong></td>
+                                <td>Hash index / key-value access</td>
+                                <td>Plan rehashing strategy; no ORDER BY</td>
+                                <td>Redis, DynamoDB GSI, PostgreSQL hash</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Range & sorting</strong></td>
+                                <td>B+ Tree / clustered index</td>
+                                <td>Clustered = physical order; watch page splits</td>
+                                <td>InnoDB, SQL Server, Oracle B-Tree</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Write-heavy ingest</strong></td>
+                                <td>LSM tree + bloom filters</td>
+                                <td>Tune compaction (leveled vs size-tiered)</td>
+                                <td>Cassandra, ScyllaDB, RocksDB, CockroachDB</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Low-cardinality analytics</strong></td>
+                                <td>Bitmap / columnar zone maps</td>
+                                <td>Batch updates only; compress to save space</td>
+                                <td>Snowflake, Vertica, PostgreSQL bitmap</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Time-series / append-only</strong></td>
+                                <td>BRIN + partitioning</td>
+                                <td>Correlation &gt; 0.7, align storage to time</td>
+                                <td>PostgreSQL BRIN, TimescaleDB, ClickHouse</td>
+                            </tr>
+                            <tr>
+                                <td><strong>JSON / semi-structured</strong></td>
+                                <td>GIN / inverted index</td>
+                                <td>Index containment operators; keep documents sparse</td>
+                                <td>PostgreSQL GIN, MongoDB text, Elasticsearch</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Geo / multidimensional</strong></td>
+                                <td>R-Tree / GiST / geohash</td>
+                                <td>Keep dimensionality low; precompute bounding boxes</td>
+                                <td>PostGIS, MongoDB 2dsphere, Elasticsearch BKD</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Service discovery</strong></td>
+                                <td>Consensus-backed KV with MVCC</td>
+                                <td>Use TTL + watchers; plan compaction windows</td>
+                                <td>etcd, Consul, ZooKeeper</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="interview-tip">
+                        <h4>📝 Last-Minute Reminders</h4>
+                        <p><strong>Always state assumptions:</strong> workload mix (read/write), cardinality, latency goals. <strong>Explain trade-offs:</strong> highlight amplification triangle for LSM, locking for B+ trees, and maintenance cost for bitmap indexes. <strong>Close strong:</strong> mention monitoring signals you would check after rollout.</p>
+                    </div>
+                </section>
                 <!-- <section id="timeseries" class="content-section">
                     <div class="index-card">
                         <h3>Time-Series Database Indexes</h3>
@@ -856,11 +960,11 @@
                             <div class="pros">
                                 <h5>✅ Advantages</h5>
                                 <ul>
-                                    <li>Faster range scans than B-Tree</li>
-                                    <li>Better cache locality</li>
-                                    <li>Leaf nodes are linked → excellent for ORDER BY</li>
-                                    <li>More keys per internal node → shorter tree</li>
-                                    <li>Supports both clustered and non-clustered</li>
+                                    <li>Leaf node linkage enables efficient range scans</li>
+                                    <li>High key density in internal nodes keeps the tree shallow</li>
+                                    <li>Leaf nodes are linked → excellent for ORDER BY and LIMIT</li>
+                                    <li>Cache-friendly because internal nodes hold only keys</li>
+                                    <li>Underlying structure for both clustered and non-clustered indexes</li>
                                 </ul>
                             </div>
                             <div class="cons">
@@ -906,14 +1010,14 @@
                             <div class="performance-grid">
                                 <div class="perf-item"><strong>Equality Search:</strong> O(1) avg</div>
                                 <div class="perf-item"><strong>Range Queries:</strong> ❌ Not supported</div>
-                                <div class="perf-item"><strong>Storage Overhead:</strong> 10-25%</div>
-                                <div class="perf-item"><strong>Worst Case:</strong> O(n) if many collisions, O(1) average case</div>
+                                <div class="perf-item"><strong>Storage Overhead:</strong> Load factor dependent (plan for 20-40%)</div>
+                                <div class="perf-item"><strong>Worst Case:</strong> O(n) if many collisions or after poor resizing</div>
                             </div>
                         </div>
 
                         <div class="interview-tip">
                             <h4>💡 Interview Key Point</h4>
-                            <p><strong>Hash Collision Strategy:</strong> Chaining (linked lists) vs Open Addressing (linear probing). Chaining handles high load factors better, open addressing has better cache locality.</p>
+                            <p><strong>Hash Collision Strategy:</strong> Chaining (linked lists) vs Open Addressing (linear probing). Chaining handles high load factors better, open addressing has better cache locality. Discuss rehashing cost when the table grows—resizing pauses can impact latency-sensitive systems.</p>
                         </div>
 
                         <div class="db-tags">
@@ -973,8 +1077,8 @@
                             <div class="performance-grid">
                                 <div class="perf-item"><strong>Writes:</strong> O(1) amortized</div>
                                 <div class="perf-item"><strong>Reads:</strong> O(log n) levels to check</div>
-                                <div class="perf-item"><strong>Space Amplification:</strong> 10-30% (normal), up to 200% (during compaction)</div>
-                                <div class="perf-item"><strong>Write Amplification:</strong> 10-50x during compaction</div>
+                                <div class="perf-item"><strong>Space Amplification:</strong> 10-50% (leveled), can temporarily double during compaction</div>
+                                <div class="perf-item"><strong>Write Amplification:</strong> 4-12x typical, spikes under heavy compaction</div>
                             </div>
                         </div>
 
@@ -989,6 +1093,146 @@
                             <span class="db-tag">RocksDB</span>
                             <span class="db-tag">HBase</span>
                             <span class="db-tag">DynamoDB</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <div class="index-card">
+                        <h3 id="vector">Vector Database Playbook</h3>
+                        <div class="concept-box">
+                            <h4>ANN (Approximate Nearest Neighbor) Fundamentals</h4>
+                            <p><strong>Index Types:</strong> HNSW (graph-based), IVF/FAISS (product quantization), DiskANN (SSD optimized)<br>
+                            <strong>Hybrid Query:</strong> Combine vector + metadata filters to keep latency low<br>
+                            <strong>Recall vs Latency:</strong> Tune ef/search lists (HNSW) or probe counts (IVF) for trade-offs<br>
+                            <strong>Lifecycle:</strong> Batch-build large indexes, stream updates via delta indexes, periodically merge<br>
+                            <strong>Observability:</strong> Track recall@k, tail latency (p95/p99), and index freshness SLA</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Vector Interview Checklist</h4>
+                            <p>Explain embedding generation pipeline, index build cadence, and fallback when recall drops. Mention hybrid search (ANN + keyword) and guardrails against embedding drift.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="pinecone">Pinecone Index Architecture</h3>
+                        <div class="concept-box">
+                            <h4>Managed Vector Service</h4>
+                            <p><strong>Pods:</strong> Dedicated compute units sized by pod class (S1, P1, etc.)<br>
+                            <strong>Index Types:</strong> IVF-PQ for memory efficiency, HNSW for high recall, sparse-dense hybrid<br>
+                            <strong>Namespaces:</strong> Logical partitions for multi-tenant isolation<br>
+                            <strong>Metadata Filters:</strong> Pre-filter with boolean conditions before ANN search<br>
+                            <strong>Async Operations:</strong> Upserts, deletes, and fetch APIs decouple ingestion from query</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Pinecone Talking Points</h4>
+                            <p>Emphasize managed infrastructure (autoscaling, replication) and usage-based pricing. Discuss setting <code>topK</code>, <code>includeValues</code>, and <code>includeMetadata</code> depending on RAG workload.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="weaviate">Weaviate Hybrid Search</h3>
+                        <div class="concept-box">
+                            <h4>OSS Vector + Symbolic</h4>
+                            <p><strong>HNSW:</strong> Default vector index with configurable efConstruction/search settings<br>
+                            <strong>BM25:</strong> Keyword search stored alongside vectors for hybrid queries<br>
+                            <strong>Modules:</strong> Built-in embedding providers (OpenAI, Cohere, HuggingFace) for server-side embedding<br>
+                            <strong>Multitenancy:</strong> Tenant isolation across index segments<br>
+                            <strong>Replication & Sharding:</strong> Automatic with Raft-based consistency per shard</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Weaviate Highlights</h4>
+                            <p>Explain the <code>nearText</code> and <code>nearVector</code> APIs, hybrid scoring (<code>alpha</code> parameter), and backup/export support. Mention GraphQL interface as differentiator.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="milvus">Milvus Vector Engine</h3>
+                        <div class="concept-box">
+                            <h4>Cloud-Native ANN Platform</h4>
+                            <p><strong>Index Variety:</strong> IVF_FLAT, IVF_SQ8, HNSW, ANNOY, DiskANN with GPU acceleration via cuVS<br>
+                            <strong>Data Management:</strong> Segments (sorted by time) compacted in background for optimal recall<br>
+                            <strong>Scalar Indexes:</strong> B+ trees and bloom filters for metadata predicates<br>
+                            <strong>Milvus + Zilliz Cloud:</strong> Managed option with autoscaling and backup<br>
+                            <strong>Integration:</strong> Works with LangChain, pgvector ingestion, and streaming sources (Kafka)</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Milvus Talking Points</h4>
+                            <p>Discuss segment sealing strategy, index build triggers, and role of query nodes vs data nodes. Highlight delta logs for fast delete propagation.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <div class="index-card">
+                        <h3 id="lakehouse">Lakehouse Table Indexing</h3>
+                        <div class="concept-box">
+                            <h4>ACID Tables on Object Storage</h4>
+                            <p><strong>Manifest Metadata:</strong> Track file-level statistics (min/max, bloom) for data skipping<br>
+                            <strong>Schema Evolution:</strong> Support adds/drops with per-snapshot compatibility<br>
+                            <strong>Time Travel:</strong> Query historical snapshots using table versions<br>
+                            <strong>Optimize Jobs:</strong> Compact small files, reorder data (cluster) to improve pruning<br>
+                            <strong>Streaming + Batch:</strong> Unified ingestion with incremental checkpoints</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Lakehouse Interview Angle</h4>
+                            <p>Outline how Lakehouse tables bridge data lakes and warehouses: open formats, ACID metadata, and decoupled compute. Mention vectorized readers (Parquet/ORC) leveraging statistics for skip scans.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="deltalake">Delta Lake Optimization</h3>
+                        <div class="concept-box">
+                            <h4>Transaction Log Driven</h4>
+                            <p><strong>Delta Log:</strong> JSON + checkpoint parquet capture table mutations<br>
+                            <strong>Data Skipping:</strong> min/max stats stored per file for filter pushdown<br>
+                            <strong>Z-Ordering:</strong> Multi-dimensional clustering improves locality for composite filters<br>
+                            <strong>Change Data Feed:</strong> Enable CDC-style incremental pipelines<br>
+                            <strong>Liquid Clustering:</strong> (v3) Fully-managed clustering across columns with automatic maintenance</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Delta Lake Talking Points</h4>
+                            <p>Highlight OPTIMIZE + ZORDER commands, VACUUM retention policies, and compatibility with Photon/Databricks runtime. Explain how schema enforcement/expectations guard data quality.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="iceberg">Apache Iceberg Indexing</h3>
+                        <div class="concept-box">
+                            <h4>Hidden Partitioning & Manifests</h4>
+                            <p><strong>Partition Specs:</strong> column transforms (truncate, bucket, day/hour) stored in metadata<br>
+                            <strong>Manifest Lists:</strong> Hierarchical metadata enables quick planning without scanning object storage<br>
+                            <strong>Row-Level Deletes:</strong> Position and equality delete files maintain ACID semantics<br>
+                            <strong>Snapshot Isolation:</strong> Readers see consistent snapshots; writers perform optimistic concurrency control<br>
+                            <strong>REST Catalog:</strong> Vendor-neutral catalog API eases interoperability</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Iceberg Interview Highlights</h4>
+                            <p>Mention hidden partitioning eliminates partition drift, <code>rewrite_data_files</code> jobs for clustering, and engine support (Trino, Spark, Flink, Snowflake, BigQuery).</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="hudi">Apache Hudi Incremental Tables</h3>
+                        <div class="concept-box">
+                            <h4>Streaming Ingestion Friendly</h4>
+                            <p><strong>Table Types:</strong> Copy-on-Write (columnar read optimized) vs Merge-on-Read (low-latency ingest)<br>
+                            <strong>Indexes:</strong> Bloom filters (default), simple index, bucket index, metadata table for fast upserts<br>
+                            <strong>Timeline:</strong> Commit log tracks inflight/complete actions enabling incremental pulls<br>
+                            <strong>Clustering:</strong> Async table services reorder data to improve file pruning<br>
+                            <strong>Storage Integration:</strong> Works with Spark, Flink, Kafka Connect for streaming ingest</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Hudi Talking Points</h4>
+                            <p>Explain how Hudi handles upserts in data lakes, snapshot vs incremental queries, and the role of metadata table in cutting file listing costs. Mention compaction scheduling for MOR tables.</p>
                         </div>
                     </div>
                 </section>
@@ -1033,7 +1277,7 @@
                     <div id="brin" class="index-card">
                         <h3 class="index-title">BRIN (Block Range Index) <span class="rating">⭐⭐⭐</span></h3>
                         <p class="subtitle">Space-efficient for correlated data - PostgreSQL's innovation</p>
-                        <p><strong>BRIN Limitation:</strong> Only effective with correlation coefficient > 0.1 between column values and physical storage order. Use pg_stats.correlation to verify.</p>
+                        <p><strong>BRIN Limitation:</strong> Works best when <code>pg_stats.correlation</code> is &gt; 0.7 between column values and on-disk ordering. Anything near zero behaves like a table scan.</p>
                         
                         <div class="concept-box">
                             <h4>🧠 Core Concept</h4>
@@ -1042,7 +1286,7 @@
 
                         <div class="interview-tip">
                             <h4>💡 Interview Gold</h4>
-                            <p><strong>Correlation Dependency:</strong> Only effective when data has natural correlation with physical storage order. Perfect for time-series (timestamps), append-only tables, or geographically sorted data.</p>
+                            <p><strong>Correlation Dependency:</strong> Only effective when data has natural correlation with physical storage order—target correlation scores above 0.7. Perfect for time-series (timestamps), append-only tables, or geographically sorted data.</p>
                         </div>
 
                         <div class="db-tags">
@@ -1563,7 +1807,7 @@ WHERE optional_field IS NOT NULL;</pre>
                         
                         <div class="performance-grid">
                             <div class="perf-metric">
-                                <strong>Throughput:</strong> 100K-1M TPS (depends on complexity)</div>
+                                <strong>Throughput:</strong> 100K-1M TPS (depends on complexity)
                             </div>
                             <div class="perf-metric">
                                 <strong>Latency:</strong> Sub-millisecond
@@ -1772,6 +2016,57 @@ WHERE optional_field IS NOT NULL;</pre>
                     </div>
 
                     <div class="index-card">
+                        <h3 id="mariadb">MariaDB Index Enhancements</h3>
+                        <div class="concept-box">
+                            <h4>Community-Driven MySQL Fork</h4>
+                            <p><strong>InnoDB & XtraDB:</strong> Default transactional engine with adaptive hash index<br>
+                            <strong>Aria Storage:</strong> Crash-safe replacement for MyISAM, supports table-level compression<br>
+                            <strong>ColumnStore:</strong> Columnar engine with extent maps for analytical workloads<br>
+                            <strong>Invisible Indexes:</strong> Toggle participation without dropping definitions<br>
+                            <strong>Dynamic Columns:</strong> Store sparse attributes efficiently (JSON alternative)</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 MariaDB Interview Nuggets</h4>
+                            <p><strong>Query Optimizer:</strong> Supports hash joins, optimizer traces, and histogram-based cardinality. <strong>Replication:</strong> Galera cluster provides multi-master replication with write-set certification—mention when asked about HA options.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="db2">IBM Db2 Index Strategies</h3>
+                        <div class="concept-box">
+                            <h4>Enterprise Hybrid Storage</h4>
+                            <p><strong>Encoded Vector Index (EVI):</strong> Column-wise bitmap for fast OLAP aggregations<br>
+                            <strong>BLU Acceleration:</strong> Column-organized tables with synopsis tables (zone maps) and actionable compression<br>
+                            <strong>Adaptive Compression:</strong> Dictionary compression lowers I/O while staying CPU-friendly<br>
+                            <strong>Multi-Dimensional Clustering:</strong> Keeps related rows together to minimize random I/O<br>
+                            <strong>Automatic Reorganization:</strong> Online reorg and statistics collection keep indexes healthy</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Db2 Interview Essentials</h4>
+                            <p><strong>Key Pitch:</strong> "Db2 combines row and column stores, letting you mix OLTP with analytics." Mention native federation (Db2 Big SQL) and pureScale clustering for scale-out ACID workloads.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="aurora">Amazon Aurora Index Design</h3>
+                        <div class="concept-box">
+                            <h4>Cloud-Native MySQL & PostgreSQL</h4>
+                            <p><strong>Shared Storage:</strong> Six-way replicated SSD layer decouples compute and indexes<br>
+                            <strong>Parallel Query:</strong> Pushes predicate evaluation down into storage nodes<br>
+                            <strong>Global Database:</strong> Cross-region replicas with 1 second RPO and sub-second RTO<br>
+                            <strong>Backtracking:</strong> Journaled redo provides point-in-time rewind without restore<br>
+                            <strong>Cluster Cache Management:</strong> Warm buffer caches across replicas reduce failover latency</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Aurora Talking Points</h4>
+                            <p><strong>Explain:</strong> Secondary indexes follow same semantics as base MySQL/Postgres, but redo records are shipped to storage nodes where pages are reconstructed—reducing double write amplification. Highlight Serverless v2 autoscaling for cost-aware designs.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
                         <h3 id="cassandra">Cassandra Index Strategies</h3>
                         <div class="concept-box">
                             <h4>Distributed LSM Architecture</h4>
@@ -1784,6 +2079,31 @@ WHERE optional_field IS NOT NULL;</pre>
                         <div class="interview-tip">
                             <h4>💡 Cassandra Interview Critical</h4>
                             <p><strong>Anti-Pattern:</strong> Secondary indexes on high-cardinality data cause scatter-gather queries. <strong>Solution:</strong> Materialized views or application-level denormalization.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="scylladb">ScyllaDB Index Strategy</h3>
+                        <div class="concept-box">
+                            <h4>Cassandra-Compatible, Performance Tuned</h4>
+                            <p><strong>Shard-per-Core:</strong> Each CPU core owns its data slice for predictable latency<br>
+                            <strong>LSM Engine:</strong> Similar data model to Cassandra with aggressive parallel compaction<br>
+                            <strong>Materialized Views:</strong> Async propagation with base table back-pressure<br>
+                            <strong>Secondary Index:</strong> Local per-partition indexes (use sparingly)<br>
+                            <strong>Row Cache:</strong> Optional per-table cache to accelerate hot reads<br>
+                            <strong>Alternator:</strong> DynamoDB API compatibility layer</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 ScyllaDB Interview Essentials</h4>
+                            <p><strong>I/O Scheduler:</strong> Shares resources fairly under load using the Seastar framework. <strong>Repair:</strong> Row-level repair with incremental sync reduces maintenance windows. <strong>Compatibility:</strong> Drop-in for Cassandra drivers but offers lower p99 latency with the same schema.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">ScyllaDB</span>
+                            <span class="db-tag">Shard-Per-Core</span>
+                            <span class="db-tag">LSM</span>
+                            <span class="db-tag">Cassandra Compatible</span>
                         </div>
                     </div>
 
@@ -1852,6 +2172,217 @@ WHERE optional_field IS NOT NULL;</pre>
                         <div class="interview-tip">
                             <h4>💡 Elasticsearch Interview Excellence</h4>
                             <p><strong>Index Template:</strong> Dynamic mapping and settings. <strong>Routing:</strong> Control document placement for query optimization. <strong>Force Merge:</strong> Optimize read-only indices by reducing segment count.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="cosmosdb">Azure Cosmos DB Indexing</h3>
+                        <div class="concept-box">
+                            <h4>Globally Distributed Multi-Model</h4>
+                            <p><strong>Automatic Indexing:</strong> All JSON properties indexed by default with adaptive precision<br>
+                            <strong>Indexing Modes:</strong> Consistent, lazy, or none to tune RU consumption<br>
+                            <strong>Composite & Spatial:</strong> Composite indexes accelerate compound ORDER BY; spatial supports GeoJSON queries<br>
+                            <strong>Analytical Store:</strong> Columnar copy for Synapse Link without ETL<br>
+                            <strong>Multi-Model APIs:</strong> Core (SQL), MongoDB, Cassandra, Gremlin, Table</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Cosmos DB Interview Highlights</h4>
+                            <p><strong>Always mention RUs:</strong> Throughput budgeting ties directly to index cost. Recommend disabling unused paths with indexing policies. Note five well-defined consistency levels when discussing global workloads.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="couchbase">Couchbase Index Services</h3>
+                        <div class="concept-box">
+                            <h4>Document + Cache Hybrid</h4>
+                            <p><strong>GSI (N1QL):</strong> Secondary indexes managed by dedicated index service nodes<br>
+                            <strong>FTS Service:</strong> Full-text inverted indexes with highlights and ranking<br>
+                            <strong>Analytics Service:</strong> MPP columnar engine using Dremel-style execution<br>
+                            <strong>Eventing & Functions:</strong> Triggers and functions respond to data changes with indexed access<br>
+                            <strong>XDCR:</strong> Cross data center replication keeps indexes in sync across clusters</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Couchbase Talking Points</h4>
+                            <p><strong>Key Differentiator:</strong> Data, index, query, and analytics services can scale independently. Mention memory-first caching layer (managed cache) and support for replica indexes for high availability.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="hbase">Apache HBase Access Paths</h3>
+                        <div class="concept-box">
+                            <h4>Hadoop Native Wide-Column Store</h4>
+                            <p><strong>LSM Storage:</strong> MemStore + HFiles with block cache and bloom filters<br>
+                            <strong>Region Servers:</strong> Automatically split regions to balance load<br>
+                            <strong>Secondary Indexing:</strong> Phoenix adds SQL layer with global/local indexes and salting<br>
+                            <strong>Time Range Scans:</strong> Each cell version is timestamped enabling fast temporal queries<br>
+                            <strong>Co-Processors:</strong> Server-side hooks to implement custom index logic or aggregations</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 HBase Interview Reminder</h4>
+                            <p><strong>Discuss:</strong> Bloom filters to avoid disk lookups, block cache sizing, and compaction strategies. Highlight strong consistency per row key and Phoenix interoperability for SQL workloads.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="firestore">Firestore Indexing Model</h3>
+                        <div class="concept-box">
+                            <h4>Serverless Mobile/Edge Backend</h4>
+                            <p><strong>Automatic Single-Field Indexes:</strong> Every document field indexed for equality and ordering<br>
+                            <strong>Composite Indexes:</strong> Declarative definitions for multi-field queries and array membership<br>
+                            <strong>Collection Group Queries:</strong> Shared schema across subcollections with consistent indexing<br>
+                            <strong>TTL Policies:</strong> Auto-delete data with index cleanup handled by Firestore<br>
+                            <strong>Offline Sync:</strong> Local persistence maintains indexes on device for offline querying</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Firestore Talking Points</h4>
+                            <p><strong>Performance Angle:</strong> Reads charged per document; indexes help limit fetched docs. Mention eventual consistency for collection group queries and strong consistency inside collections. Remember to cite Firestore's usage in mobile-first architectures.</p>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="hive">Apache Hive Index Strategies</h3>
+                        <div class="concept-box">
+                            <h4>SQL on Hadoop Foundations</h4>
+                            <p><strong>Partition Pruning:</strong> Directory-based partition elimination is the real "index"<br>
+                            <strong>File Formats:</strong> ORC/Parquet provide min/max, bloom, and dictionary stats for skip scans<br>
+                            <strong>Materialized Views:</strong> Automatic rewrite for star schema aggregations<br>
+                            <strong>LLAP:</strong> Low-latency analytical processing keeps hot data in memory<br>
+                            <strong>Secondary Indexes:</strong> Compact/Bitmap indexes exist but rarely outperform partitions</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Hive Interview Focus</h4>
+                            <p><strong>Best Practice:</strong> Design partition keys (e.g., date, region) to enable tight pruning; combine with bucketing for skews. <strong>Query Optimization:</strong> Cost-based optimizer adds map join, predicate pushdown, and vectorization—quote these features in interviews.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">Hive</span>
+                            <span class="db-tag">Hadoop</span>
+                            <span class="db-tag">Partitioning</span>
+                            <span class="db-tag">ORC</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="snowflake">Snowflake Index Mechanics</h3>
+                        <div class="concept-box">
+                            <h4>Cloud-Native Micro-Partitioning</h4>
+                            <p><strong>Micro-Partitions:</strong> Automatic min/max, bloom-like stats per 16MB partition eliminate scans<br>
+                            <strong>Automatic Clustering:</strong> Continuous maintenance keeps frequently filtered columns ordered<br>
+                            <strong>Search Optimization:</strong> Optional index-like data structure for high-selectivity predicates<br>
+                            <strong>Result Cache:</strong> Statement-level caching for repeated dashboards<br>
+                            <strong>Metadata Services:</strong> Centralized statistics support instant query planning</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Snowflake Talking Points</h4>
+                            <p><strong>Key Insight:</strong> You do not create indexes manually—partitioning/clustering plus pruning metadata handle it. Mention <em>automatic</em> statistics, zero copy cloning, and separate compute warehouses when asked about tuning.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">Snowflake</span>
+                            <span class="db-tag">Micro-Partition</span>
+                            <span class="db-tag">Cloud DW</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="bigquery">Google BigQuery Access Paths</h3>
+                        <div class="concept-box">
+                            <h4>Dremel Tree Execution</h4>
+                            <p><strong>Columnar Storage:</strong> Capacitor format with automatic dictionary/statistics per column<br>
+                            <strong>Partitioning:</strong> Time-unit, ingestion-time, or column partitioning for scan reduction<br>
+                            <strong>Clustering:</strong> Up to four clustering columns provide sorted blocks for predicate pruning<br>
+                            <strong>Search Index:</strong> Optional JSON/text index for selective contains queries<br>
+                            <strong>BI Engine:</strong> In-memory accelerator for dashboard workloads</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 BigQuery Interview Nuggets</h4>
+                            <p><strong>Optimization Formula:</strong> Partition first, then cluster; monitor slot usage with <code>INFORMATION_SCHEMA.JOBS</code>. Mention approximate algorithms (HyperLogLog++, approximate percentiles) when discussing large-scale analytics.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">BigQuery</span>
+                            <span class="db-tag">Dremel</span>
+                            <span class="db-tag">Columnar</span>
+                            <span class="db-tag">Serverless</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="redshift">Amazon Redshift Indexing</h3>
+                        <div class="concept-box">
+                            <h4>Managed MPP Columnar Warehouse</h4>
+                            <p><strong>Sort Keys:</strong> Define block ordering for efficient zone-map pruning<br>
+                            <strong>Distribution Styles:</strong> EVEN, KEY, AUTO to balance joins and aggregations<br>
+                            <strong>Materialized Views:</strong> Incremental refresh with automatic query rewrite<br>
+                            <strong> Spectrum:</strong> Query data in S3 with partition pruning via manifest files<br>
+                            <strong>Automatic Table Optimization:</strong> Recommends sort/dist keys and performs background VACUUM/ANALYZE</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 Redshift Talking Points</h4>
+                            <p><strong>Call out:</strong> Concurrency Scaling and RA3 managed storage. Mention Data Sharing for multi-cluster reads and AQUA accelerator for hardware-boosted scans.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">Redshift</span>
+                            <span class="db-tag">MPP</span>
+                            <span class="db-tag">Columnar</span>
+                            <span class="db-tag">AWS</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="duckdb">DuckDB Index & Caching</h3>
+                        <div class="concept-box">
+                            <h4>In-Process OLAP Engine</h4>
+                            <p><strong>Automatic Zone Maps:</strong> Min/max statistics per data chunk enable rapid pruning<br>
+                            <strong>Adaptive Caching:</strong> On-disk persistent cache of parquet stripes for reuse<br>
+                            <strong>Vectorized Execution:</strong> 1024-value chunks keep CPU pipelines full<br>
+                            <strong>Data Fusion:</strong> Combines columnar formats (Parquet, Arrow) without ingestion<br>
+                            <strong>No Manual Indexes:</strong> Focus on file layout and ordering instead</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 DuckDB Soundbites</h4>
+                            <p><strong>Use Case:</strong> Local analytics, CI pipelines, embedded dashboards. Emphasize ease-of-use: single file, zero configuration, integrates with Python/R, and leverages vectorized execution instead of user-defined indexes.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">DuckDB</span>
+                            <span class="db-tag">In-Process</span>
+                            <span class="db-tag">Columnar</span>
+                            <span class="db-tag">Analytics</span>
+                        </div>
+                    </div>
+
+                    <div class="index-card">
+                        <h3 id="etcd">etcd Index & Watch Architecture</h3>
+                        <div class="concept-box">
+                            <h4>Consensus-Backed Coordination Store</h4>
+                            <p><strong>MVCC:</strong> BoltDB B+Tree with versioned keys for consistent reads<br>
+                            <strong>Revision Index:</strong> Every change increments a global revision—ranges act like indexes<br>
+                            <strong>Watcher Streams:</strong> Server-side filters deliver changes since a revision<br>
+                            <strong>Lease System:</strong> TTL-based keys support service discovery heartbeats<br>
+                            <strong>Raft:</strong> Consistent replication across nodes for fault tolerance</p>
+                        </div>
+                        
+                        <div class="interview-tip">
+                            <h4>💡 etcd Interview Corner</h4>
+                            <p><strong>Design Pointer:</strong> Highlight read paths—linearizable reads hit the leader, <code>serializable</code> reads go quorum-free. Mention compaction of historical revisions and the watch API used by Kubernetes to show practical relevance.</p>
+                        </div>
+                        
+                        <div class="db-tags">
+                            <span class="db-tag">etcd</span>
+                            <span class="db-tag">Raft</span>
+                            <span class="db-tag">MVCC</span>
+                            <span class="db-tag">Service Discovery</span>
                         </div>
                     </div>
                 </section>
@@ -2981,8 +3512,55 @@ WHERE optional_field IS NOT NULL;</pre>
         </div>
     </div>
     <script>
+        const leftNav = document.getElementById('sidebarNavLeft');
+        const rightNav = document.getElementById('sidebarNavRight');
+        const navOverlay = document.getElementById('mobileNavOverlay');
+        const navToggles = document.querySelectorAll('.mobile-nav-toggle');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const backToTop = document.getElementById('backToTop');
+        const scrollProgress = document.getElementById('scrollProgress');
+        const body = document.body;
+
+        const closeMobileNavs = () => {
+            if (leftNav) leftNav.classList.remove('open');
+            if (rightNav) rightNav.classList.remove('open');
+            if (navOverlay) navOverlay.classList.remove('visible');
+            body.classList.remove('nav-open');
+        };
+
+        navToggles.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.getAttribute('data-target');
+                const targetNav = document.getElementById(targetId);
+                if (!targetNav) return;
+                const isOpen = targetNav.classList.contains('open');
+                closeMobileNavs();
+                if (!isOpen) {
+                    targetNav.classList.add('open');
+                    if (navOverlay) navOverlay.classList.add('visible');
+                    body.classList.add('nav-open');
+                }
+            });
+        });
+
+        if (navOverlay) {
+            navOverlay.addEventListener('click', closeMobileNavs);
+        }
+
+        document.addEventListener('keyup', event => {
+            if (event.key === 'Escape') {
+                closeMobileNavs();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeMobileNavs();
+            }
+        });
+
         // Sidebar navigation active state and smooth scroll
-        document.querySelectorAll('.nav-link').forEach(link => {
+        navLinks.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
@@ -2992,45 +3570,46 @@ WHERE optional_field IS NOT NULL;</pre>
                         behavior: 'smooth'
                     });
                 }
+                if (window.innerWidth <= 768) {
+                    closeMobileNavs();
+                }
             });
         });
-        window.addEventListener('scroll', function() {
-            let fromTop = window.scrollY + 40;
-            document.querySelectorAll('.nav-link').forEach(link => {
-                let section = document.querySelector(link.getAttribute('href'));
+
+        window.addEventListener('scroll', () => {
+            const fromTop = window.scrollY + 40;
+            navLinks.forEach(link => {
+                const section = document.querySelector(link.getAttribute('href'));
                 if (section && section.offsetTop <= fromTop && section.offsetTop + section.offsetHeight > fromTop) {
                     link.classList.add('active');
                 } else {
                     link.classList.remove('active');
                 }
             });
-            
-            // Back to top button
-            const backToTop = document.getElementById('backToTop');
-            if (window.scrollY > 300) {
-                backToTop.style.display = 'block';
-            } else {
-                backToTop.style.display = 'none';
+
+            if (backToTop) {
+                backToTop.style.display = window.scrollY > 300 ? 'block' : 'none';
             }
-            
-            // Scroll progress bar
-            const scrollProgress = document.getElementById('scrollProgress');
-            const winHeight = window.innerHeight;
-            const docHeight = document.documentElement.scrollHeight;
-            const scrollTop = window.scrollY;
-            const scrollPercent = (scrollTop / (docHeight - winHeight)) * 100;
-            scrollProgress.style.width = scrollPercent + '%';
+
+            if (scrollProgress) {
+                const winHeight = window.innerHeight;
+                const docHeight = document.documentElement.scrollHeight;
+                const scrollTop = window.scrollY;
+                const scrollPercent = (scrollTop / (docHeight - winHeight)) * 100;
+                scrollProgress.style.width = scrollPercent + '%';
+            }
         });
-        
-        // Back to top button click handler
-        document.getElementById('backToTop').addEventListener('click', function() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        
+
+        if (backToTop) {
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
         // Show dual navigation indicator on first load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             const indicator = document.getElementById('dualNavIndicator');
-            if (window.innerWidth > 1000) {
+            if (indicator && window.innerWidth > 1000) {
                 indicator.style.display = 'block';
                 setTimeout(() => {
                     indicator.style.display = 'none';
