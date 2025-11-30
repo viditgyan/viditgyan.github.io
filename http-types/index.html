@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTTP Delivery Patterns - Engineering Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #273746;
+            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 28px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.6rem;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #566573;
+            font-size: 1.05rem;
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            gap: 26px;
+            align-items: flex-start;
+        }
+
+        .sidebar-nav,
+        .sidebar-nav-right {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+            position: sticky;
+            top: 24px;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .sidebar-nav-right {
+            margin-left: auto;
+        }
+
+        .sidebar-header,
+        .sidebar-header-right {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #2980b9, #2ecc71);
+        }
+
+        .sidebar-header-right {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .nav-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .nav-section-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: rgba(236, 240, 241, 0.85);
+            color: #2c3e50;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            transform: translateX(4px);
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+        }
+
+        .content-section {
+            margin-bottom: 40px;
+        }
+
+        .content-section h2 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: #154360;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-intro {
+            color: #566573;
+            margin-bottom: 18px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .pill.success {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+        }
+
+        .pill.warning {
+            background: rgba(243, 156, 18, 0.15);
+            color: #d68910;
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        }
+
+        .info-card {
+            border-radius: 16px;
+            padding: 20px;
+            background: rgba(248, 249, 250, 0.96);
+            border: 1px solid rgba(189, 195, 199, 0.4);
+            box-shadow: 0 8px 24px rgba(44, 62, 80, 0.08);
+        }
+
+        .info-card h3 {
+            margin-bottom: 12px;
+            color: #1b4f72;
+        }
+
+        .info-card .badge {
+            display: inline-block;
+            background: rgba(41, 128, 185, 0.15);
+            color: #2c3e50;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 6px;
+            margin-bottom: 8px;
+        }
+
+        .list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #424949;
+        }
+
+        .list li::before {
+            content: "•";
+            color: #00c9ff;
+            margin-right: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 18px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            border: 1px solid rgba(189, 195, 199, 0.35);
+            background: rgba(255, 255, 255, 0.96);
+            vertical-align: top;
+        }
+
+        th {
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            color: #1f3a60;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 24px;
+        }
+
+        .table-scroll table {
+            min-width: 820px;
+        }
+
+        .code-snippet {
+            background: #0b1a2a;
+            color: #ecf0f1;
+            font-family: "Fira Code", "Courier New", monospace;
+            padding: 16px;
+            border-radius: 14px;
+            margin-top: 14px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.45);
+        }
+
+        .code-snippet code {
+            display: block;
+            white-space: pre;
+        }
+
+        .callout {
+            background: rgba(255, 255, 255, 0.9);
+            border-left: 5px solid #00c9ff;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .callout strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #0e6251;
+        }
+
+        .mobile-controls {
+            display: none;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .mobile-toggle {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            color: #0b2545;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        .mobile-toggle:focus {
+            outline: 2px solid rgba(0, 201, 255, 0.6);
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar-nav,
+            .sidebar-nav-right {
+                position: static;
+                width: 100%;
+                max-height: none;
+                box-shadow: 0 6px 26px rgba(0, 0, 0, 0.14);
+                display: none;
+            }
+
+            .sidebar-nav.active,
+            .sidebar-nav-right.active {
+                display: block;
+            }
+
+            .mobile-controls {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 28px 20px;
+            }
+
+            .header h1 {
+                font-size: 2.1rem;
+            }
+
+            .main-content {
+                padding: 24px;
+            }
+
+            .content-section h2 {
+                font-size: 1.7rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>HTTP Delivery Patterns</h1>
+            <p>
+                Compare REST polling, long polling, WebSockets, Server-Sent Events, gRPC streaming, WebRTC, and webhook fan-out with production-ready guidance, Java starter snippets, and interview-ready talking points.
+            </p>
+        </header>
+
+        <div class="mobile-controls">
+            <button
+                class="mobile-toggle"
+                data-toggle-target="primary-nav"
+                aria-controls="primary-nav"
+                aria-expanded="false"
+            >
+                ☰ Navigation
+            </button>
+            <button
+                class="mobile-toggle"
+                data-toggle-target="reference-nav"
+                aria-controls="reference-nav"
+                aria-expanded="false"
+            >
+                ⚡ Rapid Reference
+            </button>
+        </div>
+
+        <div class="main-content-wrapper">
+            <nav class="sidebar-nav" id="primary-nav" aria-label="Primary navigation">
+                <div class="sidebar-header">Delivery Playbook</div>
+                <div class="nav-sections">
+                    <div>
+                        <div class="nav-section-title">Overview</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#overview">Why HTTP delivery patterns</a>
+                            <a class="nav-link" href="#quick-compare">Comparison matrix</a>
+                            <a class="nav-link" href="#decision-heuristics">Selection heuristics</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Delivery Options</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#rest-http">Standard REST polling</a>
+                            <a class="nav-link" href="#long-polling">Long polling</a>
+                            <a class="nav-link" href="#websockets">WebSockets</a>
+                            <a class="nav-link" href="#sse">Server-Sent Events</a>
+                            <a class="nav-link" href="#grpc-streaming">HTTP/2 &amp; gRPC streams</a>
+                            <a class="nav-link" href="#webrtc">WebRTC data channels</a>
+                            <a class="nav-link" href="#webhooks">Webhooks &amp; event bridges</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Operating Guidance</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#operations">Capacity &amp; scaling</a>
+                            <a class="nav-link" href="#security">Security &amp; compliance</a>
+                            <a class="nav-link" href="#troubleshooting">Troubleshooting playbook</a>
+                            <a class="nav-link" href="#resources">Implementation checklist</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="main-content">
+                <section class="content-section" id="overview">
+                    <h2>🌐 Overview</h2>
+                    <p class="section-intro">
+                        HTTP delivery patterns let producers and consumers stay in sync without forcing constant
+                        manual refresh. The right choice depends on latency goals, client reach, infrastructure
+                        maturity, compliance requirements, and operational constraints.
+                    </p>
+                    <div class="callout">
+                        <strong>Core insight</strong>
+                        Match the transport to the business SLA. A trading desk demanding &lt;50 ms updates, a
+                        collaboration app maintaining shared cursors, and a SaaS admin console showing aggregated
+                        metrics each favor different delivery semantics.
+                    </div>
+                    <div class="grid grid-3">
+                        <div class="info-card">
+                            <h3>Latency target</h3>
+                            <span class="badge">Event freshness</span>
+                            <p>
+                                Sub-second feedback loops (collaboration cursors, in-game telemetry) benefit from
+                                bidirectional protocols that keep connections warm (WebSockets, WebRTC, gRPC
+                                streaming).
+                            </p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Client footprint</h3>
+                            <span class="badge">Browser support</span>
+                            <p>
+                                Browsers, mobile SDKs, IoT sensors, and server-to-server channels expose different
+                                transport support. SSE and WebSockets work natively in modern browsers; gRPC streaming
+                                typically sits inside service meshes.
+                            </p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Operational shape</h3>
+                            <span class="badge">Scaling strategy</span>
+                            <p>
+                                Stateless fleets with L7 load balancers prefer long polling. Stateful connection
+                                brokers or dedicated gateways suit WebSockets, SSE, and HTTP/2 streaming.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="callout">
+                        <strong>Connection initiation in practice</strong>
+                        <ul class="list">
+                            <li>Every option begins with a client-initiated handshake because browsers, NATs, and firewalls block unsolicited inbound sockets.</li>
+                            <li>Once that session is open, push-capable channels (SSE, WebSockets, gRPC streaming, WebRTC) let the server publish updates without waiting for another request.</li>
+                            <li>Pure polling (REST, long polling fallback) remains entirely client-driven, making it the resilience baseline when push mechanisms are unavailable.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="content-section" id="quick-compare">
+                    <h2>📊 Comparison Matrix</h2>
+                    <p class="section-intro">
+                        Use this matrix to contrast the main delivery options. Favor objective metrics and production
+                        learnings over hype.
+                    </p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Transport</th>
+                                    <th>Directionality</th>
+                                    <th>Latency profile</th>
+                                    <th>Strengths</th>
+                                    <th>Watch-outs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>REST polling</strong></td>
+                                    <td>HTTP/1.1 request/response</td>
+                                    <td>Client pull (short polling)</td>
+                                    <td>Seconds to minutes (poll interval)</td>
+                                    <td>
+                                        Stateless, cache-friendly, trivial to implement; leverages global HTTP tooling
+                                    </td>
+                                    <td>High latency between polls; wasteful repetitive fetches; poor fan-out efficiency</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Long polling</strong></td>
+                                    <td>HTTP/1.1 keep-alive, repeated requests</td>
+                                    <td>Client-initiated pull</td>
+                                    <td>500 ms+ (depends on poll interval)</td>
+                                    <td>
+                                        Sits on existing HTTP stacks; works through proxies/CDNs; easy fallbacks
+                                    </td>
+                                    <td>
+                                        Wasteful under quiet workloads; connection thrash at scale; multiplexing is manual
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>WebSockets</strong></td>
+                                    <td>TCP + WebSocket framing</td>
+                                    <td>Full duplex</td>
+                                    <td>20–100 ms after upgrade</td>
+                                    <td>
+                                        Bi-directional, low overhead per message; binary frames; wide library support
+                                    </td>
+                                    <td>
+                                        Stateful servers; sticky load balancing required; proxies/firewalls need hardening
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Server-Sent Events</strong></td>
+                                    <td>HTTP/1.1 chunked responses</td>
+                                    <td>Server → client (one way)</td>
+                                    <td>Near-live once stream open</td>
+                                    <td>
+                                        Native EventSource API; automatic reconnects; fits metrics &amp; notifications
+                                    </td>
+                                    <td>Text-only; no upstream messages; limited legacy proxy compatibility</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>HTTP/2 &amp; gRPC streaming</strong></td>
+                                    <td>HTTP/2 frames over TCP/TLS</td>
+                                    <td>Uni/Bi-directional (gRPC)</td>
+                                    <td>Sub-100 ms (depends on network)</td>
+                                    <td>Multiplexed streams; back-pressure; schema contracts via proto</td>
+                                    <td>Requires HTTP/2 aware gateways; browser support only via gRPC-Web (unary)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>WebRTC data channels</strong></td>
+                                    <td>SRTP + SCTP/DTLS</td>
+                                    <td>Peer-to-peer, full duplex</td>
+                                    <td>&lt;50 ms with TURNless paths</td>
+                                    <td>Optimized for media &amp; peer mesh; NAT traversal; adaptive congestion control</td>
+                                    <td>Signaling service required; TURN relays add cost; debugging complexity</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="content-section" id="decision-heuristics">
+                    <h2>🧭 Selection Heuristics</h2>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Pick REST polling when…</h3>
+                            <ul class="list">
+                                <li>Requirements allow refresh latency measured in seconds or minutes.</li>
+                                <li>Infrastructure favors stateless, auto-scaled HTTP endpoints behind CDNs.</li>
+                                <li>You want simple API semantics that reuse existing REST/RESTful client libraries.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Pick long polling when…</h3>
+                            <ul class="list">
+                                <li>
+                                    Clients already operate behind strict proxies or corporate firewalls that block
+                                    WebSockets.
+                                </li>
+                                <li>
+                                    Update cadences are predictable (every few seconds) and tolerance for stale data
+                                    exists.
+                                </li>
+                                <li>
+                                    You need a fallback path for unreliable networks (e.g., Slack and Gmail use long
+                                    polling fallbacks).
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Pick WebSockets when…</h3>
+                            <ul class="list">
+                                <li>
+                                    Bi-directional, sub-second interactions matter (collaboration cursors, multiplayer
+                                    state syncing).
+                                </li>
+                                <li>
+                                    Message frequency is high enough that HTTP request overhead dominates.
+                                </li>
+                                <li>
+                                    You can run stateful gateways or leverage managed brokers (AWS API Gateway
+                                    WebSocket, Socket.IO hubs).
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Pick SSE when…</h3>
+                            <ul class="list">
+                                <li>Updates flow one way (dashboards, alerting, progress indicators).</li>
+                                <li>You want HTTP semantics plus auto-reconnect/resume, without custom framing.</li>
+                                <li>Messages are lightweight text or JSON payloads (CI pipeline events, GitHub Actions logs).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Pick HTTP/2 or gRPC streams when…</h3>
+                            <ul class="list">
+                                <li>Service-to-service streaming is required with flow control and typed contracts.</li>
+                                <li>You already operate service meshes supporting mTLS and HTTP/2 aware load balancers.</li>
+                                <li>You need bi-directional streaming for ML inference or IoT command channels.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="rest-http">
+                    <h2>🧱 Standard REST Polling</h2>
+                    <p class="section-intro">
+                        The conventional request/response pattern issues periodic HTTP GETs against RESTful endpoints.
+                        Clients accept that data may be stale between polls, trading timeliness for implementation
+                        simplicity and broad compatibility with caches, CDNs, and dev tooling.
+                    </p>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Advantages</h3>
+                            <ul class="list">
+                                <li>Works anywhere plain HTTPS works: browsers, mobile SDKs, cron jobs, server-side scripts.</li>
+                                <li>Stateless handlers scale horizontally and benefit from CDN edge caching and retries.</li>
+                                <li>Easy to secure with OAuth/JWT, WAFs, and standard API gateways.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Limitations</h3>
+                            <ul class="list">
+                                <li>Data freshness is bounded by poll interval; clients miss events between requests.</li>
+                                <li>Repeated full payload transfers inflate bandwidth costs versus delta-based channels.</li>
+                                <li>Under heavy fan-out, origin services may see thundering herds after cache expiry.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Production Use Cases</h3>
+                        <span class="badge">Status dashboards</span>
+                        <span class="badge">Scheduled syncs</span>
+                        <span class="badge">Public APIs</span>
+                        <p>
+                            REST polling powers API-first SaaS integrations, cron-based data syncs, and dashboards that
+                            tolerate multi-second refresh cycles (e.g., marketing analytics, nightly ETL monitors).
+                        </p>
+                    </div>
+                    <pre class="code-snippet"><code>// Spring REST controller for periodic polling
+@RestController
+@RequestMapping("/api/metrics")
+public class MetricsController {
+
+    private final MetricsService metricsService;
+
+    public MetricsController(MetricsService metricsService) {
+        this.metricsService = metricsService;
+    }
+
+    @GetMapping
+    public ResponseEntity&lt;MetricsSnapshot&gt; fetch(@RequestParam(defaultValue = "team") String scope) {
+        MetricsSnapshot snapshot = metricsService.snapshot(scope);
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.maxAge(Duration.ofSeconds(15)))
+            .body(snapshot);
+    }
+}
+</code></pre>
+                    <div class="callout">
+                        <strong>Implementation notes</strong>
+                        Publish `Cache-Control`/`ETag` headers so caches absorb redundant pulls, and add jitter to client
+                        polling intervals to avoid synchronization bursts when credentials or cache entries expire.
+                    </div>
+                </section>
+
+                <section class="content-section" id="long-polling">
+                    <h2>⏳ Long Polling</h2>
+                    <p class="section-intro">
+                        The client issues a request that the server holds open until new data arrives or a timeout
+                        occurs. The client immediately re-issues the request once it returns, enabling near-real-time
+                        updates with ordinary HTTP infrastructure.
+                    </p>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Advantages</h3>
+                            <ul class="list">
+                                <li>Works end-to-end through CDNs, WAFs, and enterprise proxies by reusing HTTP semantics.</li>
+                                <li>No specialized gateway: horizontal scaling via stateless application tiers.</li>
+                                <li>Straightforward observability (HTTP access logs, request-level metrics).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Limitations</h3>
+                            <ul class="list">
+                                <li>Idle connections waste server threads if not coupled with async/reactive I/O.</li>
+                                <li>Latency floor depends on poll timeout; bursty workloads can thrash connection pools.</li>
+                                <li>Resource-heavy at massive scale (each client repeatedly negotiates HTTP headers).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Production Use Cases</h3>
+                        <span class="badge">Slack fallback</span>
+                        <span class="badge">Salesforce Streaming API (CometD)</span>
+                        <span class="badge">Legacy mobile push</span>
+                        <p>
+                            Slack, Salesforce, and long-lived admin consoles rely on long polling as a compatibility
+                            layer when WebSockets are blocked or as a gradual migration path.
+                        </p>
+                    </div>
+                    <pre class="code-snippet"><code>// Spring Boot controller using DeferredResult for long polling
+@RestController
+@RequestMapping("/events")
+public class LongPollingController {
+
+    private final SubscriptionHub hub;
+
+    public LongPollingController(SubscriptionHub hub) {
+        this.hub = hub;
+    }
+
+    @GetMapping
+    public DeferredResult&lt;ResponseEntity&lt;EventBatch&gt;&gt; next(@RequestParam String cursor) {
+        DeferredResult&lt;ResponseEntity&lt;EventBatch&gt;&gt; result = new DeferredResult&lt;&gt;(30_000L);
+        hub.register(cursor, result);
+        result.onTimeout(() -&gt; result.setResult(ResponseEntity.noContent().build()));
+        result.onError(throwable -&gt; hub.deregister(cursor));
+        return result;
+    }
+}
+</code></pre>
+                    <div class="callout">
+                        <strong>Implementation notes</strong>
+                        Use async servlet processing (DeferredResult, WebFlux, Netty) to prevent thread exhaustion.
+                        Cache miss detection and delta compression (JSON patch, protocol buffers) cut payload size.
+                    </div>
+                </section>
+
+                <section class="content-section" id="websockets">
+                    <h2>🔄 WebSockets</h2>
+                    <p class="section-intro">
+                        A single HTTP upgrade handshake establishes a persistent TCP connection with lightweight frames
+                        flowing in both directions. Ideal for high-frequency, interactive workloads.
+                    </p>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Advantages</h3>
+                            <ul class="list">
+                                <li>Bi-directional messaging with minimal framing overhead; supports binary payloads.</li>
+                                <li>Back-pressure via flow control libraries (Netty, Jetty) helps protect upstream services.</li>
+                                <li>Excellent for event fan-out through in-memory hubs or managed brokers (Ably, Pusher, Azure Web PubSub).</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Limitations</h3>
+                            <ul class="list">
+                                <li>Requires sticky sessions or connection brokers to maintain affinity.</li>
+                                <li>Stateful connection management complicates autoscaling and blue/green deployments.</li>
+                                <li>Some corporate proxies terminate idle sockets; heartbeat and reconnect logic is mandatory.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Production Use Cases</h3>
+                        <span class="badge">Figma multiplayer cursors</span>
+                        <span class="badge">Bloomberg FX feeds</span>
+                        <span class="badge">Uber driver dispatch</span>
+                        <p>
+                            Design collaboration, trading dashboards, and ride-hailing apps rely on WebSockets to
+                            synchronize state with sub-second latency.
+                        </p>
+                    </div>
+                    <pre class="code-snippet"><code>// Simple WebSocket handler using Spring WebSocket
+@Component
+public class TickerSocketHandler extends TextWebSocketHandler {
+
+    private final Set&lt;WebSocketSession&gt; sessions = ConcurrentHashMap.newKeySet();
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        sessions.add(session);
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        for (WebSocketSession openSession : sessions) {
+            if (openSession.isOpen()) {
+                openSession.sendMessage(message);
+            }
+        }
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        sessions.remove(session);
+    }
+}
+</code></pre>
+                    <div class="callout">
+                        <strong>Operational guardrails</strong>
+                        Terminate TLS at edge nodes that understand WebSocket upgrades, enforce idle timeouts (e.g., two
+                        minutes), and emit per-connection metrics (connected, dropped, upgrade failures) to capacity
+                        dashboards.
+                    </div>
+                </section>
+
+                <section class="content-section" id="sse">
+                    <h2>📣 Server-Sent Events (SSE)</h2>
+                    <p class="section-intro">
+                        SSE streams text-based events over long-lived HTTP responses. Browsers expose the
+                        <code>EventSource</code> API, automatically handling reconnects and last-event-id resumption.
+                    </p>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Advantages</h3>
+                            <ul class="list">
+                                <li>Auto-reconnect, heartbeat, and backoff handled by the browser EventSource.</li>
+                                <li>Uses standard HTTP/1.1; easy observability and compatible with HTTP caching headers.</li>
+                                <li>Ideal for status dashboards, CI/CD logs, GitHub notification feeds, Stripe webhook monitors.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Limitations</h3>
+                            <ul class="list">
+                                <li>One-way only (server → client). Pair with fetch or WebSocket for upstream commands.</li>
+                                <li>UTF-8 text payloads only; binary data must be base64 encoded.</li>
+                                <li>Some enterprise proxies buffer responses—send periodic heartbeat comments (:keep-alive).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Production Use Cases</h3>
+                        <span class="badge">GitHub Actions log streaming</span>
+                        <span class="badge">Vercel build output</span>
+                        <span class="badge">Kubernetes dashboard events</span>
+                        <p>
+                            Engineering teams lean on SSE to surface incremental progress without reloading pages or
+                            upgrading to WebSockets.
+                        </p>
+                    </div>
+                    <pre class="code-snippet"><code>// Spring MVC endpoint returning an SseEmitter
+@RestController
+public class DeploymentStreamController {
+
+    private final DeploymentEventPublisher publisher;
+
+    public DeploymentStreamController(DeploymentEventPublisher publisher) {
+        this.publisher = publisher;
+    }
+
+    @GetMapping(path = "/stream/deployments", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamDeployments() {
+        SseEmitter emitter = new SseEmitter(0L); // never times out
+        publisher.register(emitter);
+        emitter.onCompletion(() -&gt; publisher.deregister(emitter));
+        emitter.onTimeout(() -&gt; publisher.deregister(emitter));
+        return emitter;
+    }
+}
+</code></pre>
+                    <div class="callout">
+                        <strong>Implementation notes</strong>
+                        Flush the response buffer after each event, emit comment heartbeats every 15–30 seconds, and cap
+                        outstanding emitters per node to avoid memory pressure.
+                    </div>
+                </section>
+
+                <section class="content-section" id="grpc-streaming">
+                    <h2>🔗 HTTP/2 &amp; gRPC Streaming</h2>
+                    <p class="section-intro">
+                        HTTP/2 enables multiplexed streams on a single TCP connection. gRPC builds on HTTP/2 to provide
+                        typed contracts, flow control, and client/server/bidirectional streaming primitives.
+                    </p>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Advantages</h3>
+                            <ul class="list">
+                                <li>Multiplex many logical streams per connection (fewer sockets, better for microservices).</li>
+                                <li>Built-in back-pressure and flow control prevents overwhelming consumers.</li>
+                                <li>Protobuf schemas give forward/backward compatibility and tooling for stubs.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Limitations</h3>
+                            <ul class="list">
+                                <li>Browsers lack native gRPC streaming; use gRPC-Web with Envoy proxy for unary calls.</li>
+                                <li>Edge load balancers must support HTTP/2 end-to-end to retain streaming benefits.</li>
+                                <li>Extra effort to expose observability (per-stream metrics, message sizes) if not using service mesh.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Production Use Cases</h3>
+                        <span class="badge">Netflix control plane</span>
+                        <span class="badge">Stripe internal ledgers</span>
+                        <span class="badge">Cloud Spanner client</span>
+                        <p>
+                            Internal service meshes rely on gRPC streaming for config propagation, ledger event
+                            propagation, and ML inference pipelines.
+                        </p>
+                    </div>
+                    <pre class="code-snippet"><code>// gRPC bidirectional stream in Java (io.grpc)
+public class EventStreamService extends EventStreamGrpc.EventStreamImplBase {
+
+    @Override
+    public StreamObserver&lt;ClientEvent&gt; connect(StreamObserver&lt;ServerEvent&gt; responseObserver) {
+        return new StreamObserver&lt;&gt;() {
+            @Override
+            public void onNext(ClientEvent request) {
+                ServerEvent ack = ServerEvent.newBuilder()
+                    .setCorrelationId(request.getCorrelationId())
+                    .setStatus("ACK")
+                    .build();
+                responseObserver.onNext(ack);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // log and cleanup resources
+            }
+
+            @Override
+            public void onCompleted() {
+                responseObserver.onCompleted();
+            }
+        };
+    }
+}
+</code></pre>
+                    <div class="callout">
+                        <strong>Implementation notes</strong>
+                        Prefer Envoy or Linkerd to terminate TLS and enforce retries. Enable message compression (gRPC
+                        supports gzip) and set max inbound message sizes to defend against abuse.
+                    </div>
+                </section>
+
+                <section class="content-section" id="webrtc">
+                    <h2>📡 WebRTC Data Channels</h2>
+                    <p class="section-intro">
+                        WebRTC establishes peer-to-peer channels optimized for low-latency delivery. Data channels reuse
+                        SCTP over DTLS, inheriting congestion control tuned for real-time media.
+                    </p>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Where it shines</h3>
+                            <ul class="list">
+                                <li>Browser-to-browser collaboration (Figma multiplayer, Miro cursors) with mesh topologies.</li>
+                                <li>Live media applications (video conferencing, cloud gaming) requiring synchronized control data.</li>
+                                <li>IoT gateways needing direct peer channels with fallback to TURN relays.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Operational considerations</h3>
+                            <ul class="list">
+                                <li>Requires signaling service (often via WebSocket) for SDP/ICE exchange.</li>
+                                <li>TURN servers add bandwidth cost but guarantee connectivity through restrictive NATs.</li>
+                                <li>Observability is harder: rely on WebRTC stats API and tracing aggregated via RTCPeerConnection.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <pre class="code-snippet"><code>// Java signaling snippet using WebSocket to exchange WebRTC offers
+@Component
+public class SignalingSocketHandler extends TextWebSocketHandler {
+
+    private final Map&lt;String, WebSocketSession&gt; peers = new ConcurrentHashMap&lt;&gt;();
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        peers.put(session.getId(), session);
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        SignalingPayload payload = parse(message.getPayload());
+        WebSocketSession target = peers.get(payload.targetId());
+        if (target != null &amp;&amp; target.isOpen()) {
+            target.sendMessage(new TextMessage(message.getPayload()));
+        }
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        peers.remove(session.getId());
+    }
+}
+</code></pre>
+                    <p class="section-intro">
+                        Run TURN (Traversal Using Relays around NAT) servers in multiple regions to avoid asymmetrical
+                        routing. Monitor relay utilization to scale bandwidth ahead of peak events.
+                    </p>
+                </section>
+
+                <section class="content-section" id="webhooks">
+                    <h2>📮 Webhooks &amp; Event Bridges</h2>
+                    <p class="section-intro">
+                        When clients do not maintain persistent connections, publish events to consumer-owned endpoints or
+                        managed event bridges. Pair with retries, signatures, and dead-letter queues for reliability.
+                    </p>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Use cases</h3>
+                            <ul class="list">
+                                <li>Third-party integrations (Stripe, Shopify, GitHub) pushing lifecycle events.</li>
+                                <li>Internal decoupling across bounded contexts (billing → analytics).</li>
+                                <li>Hybrid cloud fan-out via Amazon EventBridge, Google Eventarc, Azure Event Grid.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Hardening tips</h3>
+                            <ul class="list">
+                                <li>Include HMAC signatures and timestamps to defend against replay attacks.</li>
+                                <li>Idempotency keys prevent duplicate processing after retries.</li>
+                                <li>Use exponential backoff with DLQs to handle persistent consumer failures.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <pre class="code-snippet"><code>// Spring webhook dispatcher with signature verification
+@RestController
+public class WebhookController {
+
+    private final SignatureVerifier verifier;
+    private final EventProcessor processor;
+
+    public WebhookController(SignatureVerifier verifier, EventProcessor processor) {
+        this.verifier = verifier;
+        this.processor = processor;
+    }
+
+    @PostMapping("/webhooks/partner")
+    public ResponseEntity&lt;Void&gt; receive(
+        @RequestHeader("X-Signature") String signature,
+        @RequestHeader("X-Timestamp") String timestamp,
+        @RequestBody String payload
+    ) {
+        verifier.requireValid(signature, timestamp, payload);
+        processor.enqueue(payload);
+        return ResponseEntity.accepted().build();
+    }
+}
+</code></pre>
+                    <div class="callout">
+                        <strong>Fallback strategy</strong>
+                        Pair webhooks with a pollable status API so consumers can recover missed deliveries during outages
+                        or credential rotations.
+                    </div>
+                </section>
+
+                <section class="content-section" id="operations">
+                    <h2>🛠️ Capacity &amp; Scaling</h2>
+                    <div class="grid grid-3">
+                        <div class="info-card">
+                            <h3>Connection management</h3>
+                            <ul class="list">
+                                <li>Track concurrent connections per node and enforce quotas to avoid exhausting file descriptors.</li>
+                                <li>Use connection brokers (NGINX, HAProxy, Envoy) with consistent hashing for WebSockets.</li>
+                                <li>Warm standby nodes before scale-out to avoid connection storms.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Message delivery</h3>
+                            <ul class="list">
+                                <li>Separate ingestion from fan-out using message brokers (Kafka, NATS, Redis Streams).</li>
+                                <li>Batch/compress payloads (protobuf, JSON lines) to reduce bandwidth for chatty channels.</li>
+                                <li>Apply QoS tiers (premium vs free) via weighted fair queues to control abuse.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Testing &amp; chaos</h3>
+                            <ul class="list">
+                                <li>Load test connection churn (connect/disconnect) in addition to steady-state throughput.</li>
+                                <li>Simulate throttled cellular links to evaluate heartbeat and reconnect strategies.</li>
+                                <li>Inject delayed or reordered messages to validate idempotency and ordering guarantees.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="security">
+                    <h2>🛡️ Security &amp; Compliance</h2>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Transport hardening</h3>
+                            <ul class="list">
+                                <li>Terminate TLS 1.2+ with modern cipher suites (ECDHE+AES-GCM or ChaCha20-Poly1305).</li>
+                                <li>Require WSS for WebSockets; enforce HSTS and strict origin checks.</li>
+                                <li>For gRPC, prefer mTLS with SPIFFE identities to isolate workloads.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Authentication &amp; authorization</h3>
+                            <ul class="list">
+                                <li>Issue short-lived JWT or opaque tokens and validate them at connection upgrade.</li>
+                                <li>Enforce channel-level authorization (rooms, topics) server side to stop spoofed subscriptions.</li>
+                                <li>Throttle join/leave and message rates per identity to combat flooding attacks.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="callout">
+                        <strong>Auditability</strong>
+                        Emit connection audit logs (who connected, scopes, IPs) and message metadata (size, rate) to SIEM
+                        platforms. Retain replayable event logs for compliance investigations.
+                    </div>
+                </section>
+
+                <section class="content-section" id="troubleshooting">
+                    <h2>🧯 Troubleshooting Playbook</h2>
+                    <div class="grid grid-3">
+                        <div class="info-card">
+                            <h3>Symptom: High reconnect churn</h3>
+                            <ul class="list">
+                                <li>Check idle timeout mismatch between client (heartbeat) and load balancer.</li>
+                                <li>Inspect TLS termination for handshake failures (cipher mismatch).</li>
+                                <li>Review DNS load balancing; sticky sessions may collapse onto a single node.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Symptom: Stale data</h3>
+                            <ul class="list">
+                                <li>Ensure fan-out tier publishes to all shards (consistent hashing bugs can starve clients).</li>
+                                <li>Measure end-to-end latency (ingest → broker → connection). Identify slow consumers via lag metrics.</li>
+                                <li>Enable heartbeats and sequence IDs to detect dropouts quickly.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Symptom: Memory pressure</h3>
+                            <ul class="list">
+                                <li>Bound per-connection buffers and apply back-pressure or drop oldest messages.</li>
+                                <li>Instrument queue depth and publishing latency; set alerts before OOM occurs.</li>
+                                <li>Use adaptive fan-out (delta updates) to reduce payload size for slow clients.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="resources">
+                    <h2>📋 Implementation Checklist</h2>
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Before launch</h3>
+                            <ul class="list">
+                                <li>Decide fallback paths (WebSockets → SSE → long polling) and test downgrade flow.</li>
+                                <li>Provision capacity: estimate connections per node, message rate, and TLS handshake budget.</li>
+                                <li>Document SLAs (latency, message ordering, durability) and align with stakeholders.</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>After launch</h3>
+                            <ul class="list">
+                                <li>Monitor connection churn, message throughput, error rates, and reconnect loops.</li>
+                                <li>Run load regression before major events (marketing campaigns, market open).</li>
+                                <li>Review incident postmortems; tune backoff, buffer limits, and readiness probes.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="sidebar-nav-right" id="reference-nav" aria-label="Rapid reference">
+                <div class="sidebar-header-right">Rapid Reference</div>
+                <div class="nav-sections">
+                    <div>
+                        <div class="nav-section-title">Key anchors</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#rest-http">REST polling baseline</a>
+                            <a class="nav-link" href="#quick-compare">Latency vs complexity</a>
+                            <a class="nav-link" href="#decision-heuristics">Decision heuristics</a>
+                            <a class="nav-link" href="#operations">Scaling checklist</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Code snippets</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#rest-http">REST polling controller</a>
+                            <a class="nav-link" href="#long-polling">DeferredResult long poll</a>
+                            <a class="nav-link" href="#websockets">Spring WebSocket hub</a>
+                            <a class="nav-link" href="#sse">SseEmitter stream</a>
+                            <a class="nav-link" href="#grpc-streaming">gRPC stream handler</a>
+                            <a class="nav-link" href="#webrtc">WebRTC signaling</a>
+                            <a class="nav-link" href="#webhooks">Signed webhook endpoint</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Operations</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#security">Security guardrails</a>
+                            <a class="nav-link" href="#troubleshooting">Troubleshooting signs</a>
+                            <a class="nav-link" href="#resources">Launch checklist</a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const toggles = document.querySelectorAll(".mobile-toggle");
+
+        toggles.forEach((button) => {
+            button.addEventListener("click", () => {
+                const targetId = button.getAttribute("data-toggle-target");
+                const nav =
+                    targetId === "primary-nav"
+                        ? document.getElementById("primary-nav")
+                        : document.getElementById("reference-nav");
+                const isActive = nav.classList.toggle("active");
+                button.setAttribute("aria-expanded", String(isActive));
+                if (isActive) {
+                    nav.focus({ preventScroll: true });
+                }
+            });
+        });
+
+        const navLinks = document.querySelectorAll(".nav-link");
+
+        const closeNavs = () => {
+            if (window.innerWidth <= 1200) {
+                document.getElementById("primary-nav").classList.remove("active");
+                document.getElementById("reference-nav").classList.remove("active");
+                toggles.forEach((button) => button.setAttribute("aria-expanded", "false"));
+            }
+        };
+
+        navLinks.forEach((link) => link.addEventListener("click", closeNavs));
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                closeNavs();
+            }
+        });
+    </script>
+</body>
+</html>
+
