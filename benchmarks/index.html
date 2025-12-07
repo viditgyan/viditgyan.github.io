@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>System Design Benchmarks - Quick Reference</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1a1a2e;
+            background: linear-gradient(135deg, #0c0c1e 0%, #1a1a3a 50%, #0f2027 100%);
+            min-height: 100vh;
+        }
+        a { color: inherit; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .header {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.6rem;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p { color: #566573; font-size: 1.05rem; }
+        .main-content-wrapper { display: flex; gap: 26px; align-items: flex-start; }
+        .sidebar-nav {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 24px;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+        }
+        .nav-sections { display: flex; flex-direction: column; gap: 18px; }
+        .nav-section-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; color: #2c3e50; }
+        .nav-links { display: flex; flex-direction: column; gap: 8px; }
+        .nav-link {
+            text-decoration: none;
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: rgba(236, 240, 241, 0.85);
+            color: #2c3e50;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .nav-link:hover { background: linear-gradient(135deg, #ff6b6b, #feca57); transform: translateX(4px); }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        }
+        .content-section { margin-bottom: 40px; }
+        .content-section h2 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-intro { color: #566573; margin-bottom: 18px; }
+        .grid { display: grid; gap: 18px; }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        .info-card {
+            border-radius: 16px;
+            padding: 20px;
+            background: rgba(248, 249, 250, 0.96);
+            border: 1px solid rgba(189, 195, 199, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+        .info-card h3 { margin-bottom: 12px; color: #1a1a2e; }
+        .info-card .badge {
+            display: inline-block;
+            background: rgba(255, 107, 107, 0.15);
+            color: #c0392b;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 6px;
+            margin-bottom: 8px;
+        }
+        .badge.green { background: rgba(46, 204, 113, 0.15); color: #27ae60; }
+        .badge.blue { background: rgba(52, 152, 219, 0.15); color: #2980b9; }
+        .badge.purple { background: rgba(155, 89, 182, 0.15); color: #8e44ad; }
+        .badge.orange { background: rgba(243, 156, 18, 0.15); color: #d68910; }
+        .list { list-style: none; display: flex; flex-direction: column; gap: 8px; color: #424949; }
+        .list li::before { content: "•"; color: #ff6b6b; margin-right: 8px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 18px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 14px 16px;
+            border: 1px solid rgba(189, 195, 199, 0.35);
+            background: rgba(255, 255, 255, 0.96);
+            vertical-align: top;
+        }
+        th {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: #1a1a2e;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+        .table-scroll { width: 100%; overflow-x: auto; margin-bottom: 24px; }
+        .table-scroll table { min-width: 820px; }
+        .callout {
+            background: rgba(255, 255, 255, 0.9);
+            border-left: 5px solid #ff6b6b;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+        .callout > strong:first-child { display: block; margin-bottom: 6px; color: #c0392b; }
+        .callout .list { margin-top: 10px; }
+        .callout .list li strong { display: inline; color: #c0392b; }
+        .benchmark-value {
+            font-family: "Fira Code", "Courier New", monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #c0392b;
+            display: block;
+            margin: 8px 0;
+        }
+        .benchmark-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid rgba(255, 107, 107, 0.2);
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .benchmark-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(255, 107, 107, 0.2);
+        }
+        .benchmark-card h4 { color: #1a1a2e; margin-bottom: 8px; font-size: 1rem; }
+        .benchmark-card .value {
+            font-family: "Fira Code", monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .benchmark-card .unit { color: #7f8c8d; font-size: 0.85rem; }
+        .mobile-controls { display: none; gap: 12px; margin-bottom: 18px; }
+        .mobile-toggle {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: #1a1a2e;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+        }
+        @media (max-width: 1200px) {
+            .main-content-wrapper { flex-direction: column; }
+            .sidebar-nav { position: static; width: 100%; max-height: none; display: none; }
+            .sidebar-nav.active { display: block; }
+            .mobile-controls { display: flex; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .header { padding: 28px 20px; }
+            .header h1 { font-size: 2.1rem; }
+            .main-content { padding: 24px; }
+            .content-section h2 { font-size: 1.7rem; }
+            table { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>System Design Benchmarks</h1>
+            <p>Essential performance numbers for back-of-envelope calculations, capacity planning, and system design interviews. Memorize these orders of magnitude to estimate throughput, latency, and resource requirements.</p>
+        </header>
+
+        <div class="mobile-controls">
+            <button class="mobile-toggle" data-toggle-target="primary-nav" aria-controls="primary-nav" aria-expanded="false">☰ Navigation</button>
+        </div>
+
+        <div class="main-content-wrapper">
+            <nav class="sidebar-nav" id="primary-nav" aria-label="Primary navigation">
+                <div class="sidebar-header">Benchmark Guide</div>
+                <div class="nav-sections">
+                    <div>
+                        <div class="nav-section-title">Estimation</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#quick-reference">Quick Reference Card</a>
+                            <a class="nav-link" href="#capacity-estimation">Capacity Estimation</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Fundamentals</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#latency-numbers">Latency Numbers</a>
+                            <a class="nav-link" href="#powers-of-two">Powers of Two</a>
+                            <a class="nav-link" href="#time-conversions">Time Conversions</a>
+                            <a class="nav-link" href="#availability">Availability & SLAs</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Storage Systems</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#database-benchmarks">Database Throughput</a>
+                            <a class="nav-link" href="#nosql-benchmarks">NoSQL Systems</a>
+                            <a class="nav-link" href="#cache-benchmarks">Cache Performance</a>
+                            <a class="nav-link" href="#object-storage">Object Storage (S3)</a>
+                            <a class="nav-link" href="#disk-io">Disk I/O</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Network & Servers</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#network-bandwidth">Network Bandwidth</a>
+                            <a class="nav-link" href="#cdn-benchmarks">CDN Performance</a>
+                            <a class="nav-link" href="#server-capacity">Server Capacity</a>
+                            <a class="nav-link" href="#serverless">Serverless/Lambda</a>
+                            <a class="nav-link" href="#api-gateways">API Gateways</a>
+                            <a class="nav-link" href="#load-balancers">Load Balancers</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="nav-section-title">Messaging & Queues</div>
+                        <div class="nav-links">
+                            <a class="nav-link" href="#message-queues">Message Queues</a>
+                            <a class="nav-link" href="#event-streaming">Event Streaming</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="main-content">
+                <!-- LATENCY NUMBERS -->
+                <section class="content-section" id="latency-numbers">
+                    <h2>⚡ Latency Numbers Every Engineer Should Know</h2>
+                    <p class="section-intro">These latency numbers help you understand the relative cost of different operations. Memorize the orders of magnitude—exact values vary by hardware generation.</p>
+                    
+                    <div class="grid grid-4">
+                        <div class="benchmark-card">
+                            <h4>L1 Cache Reference</h4>
+                            <div class="value">0.5 ns</div>
+                            <div class="unit">nanoseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Branch Mispredict</h4>
+                            <div class="value">5 ns</div>
+                            <div class="unit">nanoseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>L2 Cache Reference</h4>
+                            <div class="value">7 ns</div>
+                            <div class="unit">nanoseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Mutex Lock/Unlock</h4>
+                            <div class="value">25 ns</div>
+                            <div class="unit">nanoseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Main Memory Reference</h4>
+                            <div class="value">100 ns</div>
+                            <div class="unit">nanoseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Compress 1KB (Snappy)</h4>
+                            <div class="value">3 μs</div>
+                            <div class="unit">microseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Send 1KB over 1 Gbps</h4>
+                            <div class="value">10 μs</div>
+                            <div class="unit">microseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Read 4KB Random SSD</h4>
+                            <div class="value">150 μs</div>
+                            <div class="unit">microseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Read 1MB Seq. Memory</h4>
+                            <div class="value">250 μs</div>
+                            <div class="unit">microseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Round Trip Same DC</h4>
+                            <div class="value">500 μs</div>
+                            <div class="unit">microseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Read 1MB Seq. SSD</h4>
+                            <div class="value">1 ms</div>
+                            <div class="unit">milliseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>HDD Disk Seek</h4>
+                            <div class="value">10 ms</div>
+                            <div class="unit">milliseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Read 1MB Seq. HDD</h4>
+                            <div class="value">20 ms</div>
+                            <div class="unit">milliseconds</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Send Packet CA→NL→CA</h4>
+                            <div class="value">150 ms</div>
+                            <div class="unit">milliseconds</div>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Key Insight</strong>
+                        Memory is ~100× faster than SSD, SSD is ~100× faster than HDD for random reads. Network round trips within a datacenter (~500μs) are comparable to SSD seeks. Cross-continental trips add 100-200ms of latency.
+                    </div>
+                </section>
+
+                <!-- POWERS OF TWO -->
+                <section class="content-section" id="powers-of-two">
+                    <h2>🔢 Powers of Two & Data Units</h2>
+                    <p class="section-intro">Essential for quick capacity estimation. Know these by heart for interviews.</p>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Power</th>
+                                    <th>Exact Value</th>
+                                    <th>Approx Value</th>
+                                    <th>Short Name</th>
+                                    <th>Bytes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>2^10</td><td>1,024</td><td>~1 Thousand</td><td>1 KB</td><td>Kilobyte</td></tr>
+                                <tr><td>2^20</td><td>1,048,576</td><td>~1 Million</td><td>1 MB</td><td>Megabyte</td></tr>
+                                <tr><td>2^30</td><td>1,073,741,824</td><td>~1 Billion</td><td>1 GB</td><td>Gigabyte</td></tr>
+                                <tr><td>2^40</td><td>1,099,511,627,776</td><td>~1 Trillion</td><td>1 TB</td><td>Terabyte</td></tr>
+                                <tr><td>2^50</td><td>1,125,899,906,842,624</td><td>~1 Quadrillion</td><td>1 PB</td><td>Petabyte</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="info-card">
+                            <h3>Quick Mental Math</h3>
+                            <ul class="list">
+                                <li>1 Million = 10^6 ≈ 2^20</li>
+                                <li>1 Billion = 10^9 ≈ 2^30</li>
+                                <li>1 Trillion = 10^12 ≈ 2^40</li>
+                                <li>Seconds/day ≈ 100K (86,400)</li>
+                                <li>Seconds/year ≈ 30M (31.5M)</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Common Object Sizes</h3>
+                            <ul class="list">
+                                <li>Tweet: ~500 bytes</li>
+                                <li>JSON API response: 1-10 KB</li>
+                                <li>Web page: 2-5 MB</li>
+                                <li>HD Photo: 2-5 MB</li>
+                                <li>HD Video (1 min): 100-150 MB</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Character Encodings</h3>
+                            <ul class="list">
+                                <li>ASCII: 1 byte/char</li>
+                                <li>UTF-8: 1-4 bytes/char</li>
+                                <li>UUID: 36 chars = 36 bytes</li>
+                                <li>MD5 hash: 32 hex chars</li>
+                                <li>SHA-256: 64 hex chars</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Compression Ratios</h3>
+                            <span class="badge blue">Bandwidth Estimation</span>
+                            <ul class="list">
+                                <li><strong>gzip (text/JSON):</strong> 70-90% reduction, ~100 MB/s</li>
+                                <li><strong>Brotli:</strong> 75-95% reduction, slower compress</li>
+                                <li><strong>Snappy:</strong> 20-50% reduction, 500+ MB/s</li>
+                                <li><strong>LZ4:</strong> 40-60% reduction, 800+ MB/s</li>
+                                <li><strong>Zstd:</strong> 60-85% reduction, 400+ MB/s</li>
+                                <li><strong>Images (WebP vs PNG):</strong> 25-35% smaller</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Database Row Sizes</h3>
+                            <span class="badge green">Storage Estimation</span>
+                            <ul class="list">
+                                <li>User record: 500B - 2KB</li>
+                                <li>Transaction record: 200B - 1KB</li>
+                                <li>Log entry: 100B - 500B</li>
+                                <li>Session data: 1-10 KB</li>
+                                <li>Index overhead: 10-30% of data</li>
+                                <li>JSONB document: varies (1KB-100KB)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TIME CONVERSIONS -->
+                <section class="content-section" id="time-conversions">
+                    <h2>⏱️ Time Conversions for Estimation</h2>
+                    <div class="grid grid-3">
+                        <div class="benchmark-card">
+                            <h4>Seconds per Day</h4>
+                            <div class="value">86,400</div>
+                            <div class="unit">≈ 100K</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Seconds per Month</h4>
+                            <div class="value">2.6M</div>
+                            <div class="unit">30 days</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Seconds per Year</h4>
+                            <div class="value">31.5M</div>
+                            <div class="unit">≈ 30M</div>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>RPS Estimation Shortcut</strong>
+                        If you have X requests/day: RPS ≈ X / 100,000. For monthly: RPS ≈ X / 2,600,000. For yearly: RPS ≈ X / 30,000,000.
+                    </div>
+                </section>
+
+                <!-- AVAILABILITY & SLAs -->
+                <section class="content-section" id="availability">
+                    <h2>🎯 Availability & SLA Numbers</h2>
+                    <p class="section-intro">Understanding "nines" of availability is critical for system design. Know these numbers cold—interviewers love asking about them.</p>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Availability</th>
+                                    <th>Downtime/Year</th>
+                                    <th>Downtime/Month</th>
+                                    <th>Downtime/Week</th>
+                                    <th>Typical Use</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>99% (two nines)</strong></td><td>3.65 days</td><td>7.31 hours</td><td>1.68 hours</td><td>Internal tools, batch jobs</td></tr>
+                                <tr><td><strong>99.9% (three nines)</strong></td><td>8.77 hours</td><td>43.8 minutes</td><td>10.1 minutes</td><td>Standard SaaS, business apps</td></tr>
+                                <tr><td><strong>99.95%</strong></td><td>4.38 hours</td><td>21.9 minutes</td><td>5.04 minutes</td><td>AWS EC2/RDS SLA</td></tr>
+                                <tr><td><strong>99.99% (four nines)</strong></td><td>52.6 minutes</td><td>4.38 minutes</td><td>1.01 minutes</td><td>E-commerce, financial APIs</td></tr>
+                                <tr><td><strong>99.999% (five nines)</strong></td><td>5.26 minutes</td><td>26.3 seconds</td><td>6.05 seconds</td><td>Telecom, payment systems</td></tr>
+                                <tr><td><strong>99.9999% (six nines)</strong></td><td>31.5 seconds</td><td>2.63 seconds</td><td>0.6 seconds</td><td>Air traffic, medical devices</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Availability Formulas</h3>
+                            <span class="badge green">Critical for Interviews</span>
+                            <ul class="list">
+                                <li><strong>Availability</strong> = Uptime / (Uptime + Downtime)</li>
+                                <li><strong>Availability</strong> = MTBF / (MTBF + MTTR)</li>
+                                <li><strong>MTBF</strong> = Mean Time Between Failures</li>
+                                <li><strong>MTTR</strong> = Mean Time To Recovery</li>
+                                <li><strong>Series:</strong> A_total = A₁ × A₂ × A₃...</li>
+                                <li><strong>Parallel:</strong> A_total = 1 - (1-A₁)(1-A₂)...</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Redundancy Impact</h3>
+                            <span class="badge blue">Example Calculations</span>
+                            <ul class="list">
+                                <li>Single server (99.9%): 8.77 hrs/year down</li>
+                                <li>2 servers parallel: 1 - (0.001)² = 99.9999%</li>
+                                <li>3 servers parallel: 1 - (0.001)³ = 99.9999999%</li>
+                                <li>2 in series (99.9% each): 99.8% total</li>
+                                <li>Adding components in series reduces availability</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="benchmark-card">
+                            <h4>AWS S3 SLA</h4>
+                            <div class="value">99.99%</div>
+                            <div class="unit">availability</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>AWS S3 Durability</h4>
+                            <div class="value">11 nines</div>
+                            <div class="unit">99.999999999%</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>AWS RDS Multi-AZ</h4>
+                            <div class="value">99.95%</div>
+                            <div class="unit">SLA commitment</div>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Availability vs Durability</strong>
+                        <ul class="list">
+                            <li><strong>Availability:</strong> System is operational and accessible (can I access it now?)</li>
+                            <li><strong>Durability:</strong> Data is not lost (will my data survive failures?)</li>
+                            <li>S3: 99.99% available but 99.999999999% durable (data survives even during outages)</li>
+                            <li>High durability + low availability = data safe but temporarily inaccessible</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- DATABASE BENCHMARKS -->
+                <section class="content-section" id="database-benchmarks">
+                    <h2>🗄️ Relational Database Benchmarks</h2>
+                    <p class="section-intro">Typical throughput for properly configured, indexed databases. Actual numbers depend on hardware, query complexity, and data model.</p>
+
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Database</th>
+                                    <th>Reads/sec</th>
+                                    <th>Writes/sec</th>
+                                    <th>Transactions/sec</th>
+                                    <th>Sweet Spot</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>PostgreSQL</strong></td>
+                                    <td>10K-50K (simple)</td>
+                                    <td>5K-20K</td>
+                                    <td>1K-10K TPS</td>
+                                    <td>Complex queries, ACID compliance</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MySQL</strong></td>
+                                    <td>10K-50K (simple)</td>
+                                    <td>5K-25K</td>
+                                    <td>1K-15K TPS</td>
+                                    <td>Read-heavy web apps</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Aurora PostgreSQL</strong></td>
+                                    <td>100K+ (read replicas)</td>
+                                    <td>30K-50K</td>
+                                    <td>10K-50K TPS</td>
+                                    <td>Cloud-native, auto-scaling reads</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CockroachDB</strong></td>
+                                    <td>10K-30K</td>
+                                    <td>5K-15K</td>
+                                    <td>2K-10K TPS</td>
+                                    <td>Global distribution, strong consistency</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cloud Spanner</strong></td>
+                                    <td>10K+ per node</td>
+                                    <td>2K-10K per node</td>
+                                    <td>1K-5K TPS per node</td>
+                                    <td>Global transactions, SQL semantics</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Latency Expectations</h3>
+                            <span class="badge green">Point Query</span>
+                            <span class="badge blue">Index Scan</span>
+                            <ul class="list">
+                                <li>Simple SELECT by PK: 1-5 ms</li>
+                                <li>Index scan (100 rows): 5-20 ms</li>
+                                <li>Full table scan (1M rows): 1-10 sec</li>
+                                <li>Complex JOIN (no index): 100ms - seconds</li>
+                                <li>INSERT single row: 2-10 ms</li>
+                                <li>Batch INSERT (1000 rows): 50-200 ms</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Connection Limits</h3>
+                            <span class="badge orange">Pooling Required</span>
+                            <ul class="list">
+                                <li>PostgreSQL default: 100 connections</li>
+                                <li>PostgreSQL max practical: 500-1000</li>
+                                <li>MySQL default: 151 connections</li>
+                                <li>Connection pool: 10-50 per app instance</li>
+                                <li>PgBouncer can handle 10K+ connections</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Scaling Rule of Thumb</strong>
+                        A single PostgreSQL server can handle most applications up to ~10K TPS. Beyond that, consider read replicas, sharding, or purpose-built distributed databases. Vertical scaling (bigger machine) is often cheaper than horizontal for moderate loads.
+                    </div>
+                </section>
+
+                <!-- NOSQL BENCHMARKS -->
+                <section class="content-section" id="nosql-benchmarks">
+                    <h2>📊 NoSQL Database Benchmarks</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Database</th>
+                                    <th>Reads/sec</th>
+                                    <th>Writes/sec</th>
+                                    <th>Latency (p99)</th>
+                                    <th>Best For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>MongoDB</strong></td>
+                                    <td>20K-100K</td>
+                                    <td>10K-50K</td>
+                                    <td>5-20 ms</td>
+                                    <td>Flexible schema, documents</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cassandra</strong></td>
+                                    <td>50K-200K per node</td>
+                                    <td>50K-200K per node</td>
+                                    <td>5-15 ms</td>
+                                    <td>Write-heavy, time-series</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DynamoDB</strong></td>
+                                    <td>Unlimited (provisioned)</td>
+                                    <td>Unlimited (provisioned)</td>
+                                    <td>1-10 ms</td>
+                                    <td>Serverless, predictable latency</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ScyllaDB</strong></td>
+                                    <td>1M+ per node</td>
+                                    <td>500K+ per node</td>
+                                    <td>1-5 ms</td>
+                                    <td>Cassandra-compatible, high throughput</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>HBase</strong></td>
+                                    <td>10K-100K per region</td>
+                                    <td>10K-50K per region</td>
+                                    <td>10-50 ms</td>
+                                    <td>Hadoop ecosystem, wide columns</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Elasticsearch</strong></td>
+                                    <td>1K-10K queries/sec</td>
+                                    <td>10K-50K docs/sec</td>
+                                    <td>10-100 ms (search)</td>
+                                    <td>Full-text search, analytics</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>DynamoDB Capacity Units</h3>
+                            <span class="badge purple">Provisioned Mode</span>
+                            <ul class="list">
+                                <li>1 RCU = 1 strongly consistent read/sec (4KB)</li>
+                                <li>1 RCU = 2 eventually consistent reads/sec</li>
+                                <li>1 WCU = 1 write/sec (1KB)</li>
+                                <li>On-demand: pay per request</li>
+                                <li>Burst capacity: 300 sec of unused throughput</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Cassandra Tuning</h3>
+                            <span class="badge green">Write Optimized</span>
+                            <ul class="list">
+                                <li>Replication factor: typically 3</li>
+                                <li>Consistency: ONE, QUORUM, ALL</li>
+                                <li>Compaction affects read latency</li>
+                                <li>1 node can handle 3K-30K ops/sec sustained</li>
+                                <li>SSTable bloom filters improve read perf</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CACHE BENCHMARKS -->
+                <section class="content-section" id="cache-benchmarks">
+                    <h2>🚀 Cache Performance Benchmarks</h2>
+                    
+                    <div class="grid grid-3">
+                        <div class="benchmark-card">
+                            <h4>Redis GET</h4>
+                            <div class="value">100K-500K</div>
+                            <div class="unit">ops/sec (single node)</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Redis SET</h4>
+                            <div class="value">100K-300K</div>
+                            <div class="unit">ops/sec (single node)</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Redis Latency</h4>
+                            <div class="value">< 1 ms</div>
+                            <div class="unit">p99 (same DC)</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Memcached GET</h4>
+                            <div class="value">200K-1M</div>
+                            <div class="unit">ops/sec (single node)</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>ElastiCache Redis</h4>
+                            <div class="value">500K+</div>
+                            <div class="unit">ops/sec (cluster mode)</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Local Cache (Caffeine)</h4>
+                            <div class="value">100M+</div>
+                            <div class="unit">ops/sec (in-process)</div>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cache Type</th>
+                                    <th>Throughput</th>
+                                    <th>Latency</th>
+                                    <th>Max Size</th>
+                                    <th>Use Case</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Redis (single)</strong></td>
+                                    <td>100K-500K ops/sec</td>
+                                    <td>0.1-1 ms</td>
+                                    <td>~25GB effective</td>
+                                    <td>Sessions, rate limiting, leaderboards</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Redis Cluster</strong></td>
+                                    <td>Linear with nodes</td>
+                                    <td>0.5-2 ms</td>
+                                    <td>Terabytes</td>
+                                    <td>Large-scale caching, pub/sub</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Memcached</strong></td>
+                                    <td>200K-1M ops/sec</td>
+                                    <td>0.1-0.5 ms</td>
+                                    <td>Limited by RAM</td>
+                                    <td>Simple key-value, multi-threaded</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CDN Edge Cache</strong></td>
+                                    <td>Millions RPS (global)</td>
+                                    <td>1-50 ms</td>
+                                    <td>Petabytes distributed</td>
+                                    <td>Static assets, API responses</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Cache Hit Rate Target</strong>
+                        Aim for 95%+ cache hit rate for read-heavy workloads. Each cache miss typically costs 10-100× more than a cache hit. Monitor hit rate, eviction rate, and memory usage continuously.
+                        <br><br>
+                        <strong>Formulas:</strong>
+                        <ul class="list">
+                            <li><strong>Hit Rate</strong> = Cache Hits / (Cache Hits + Cache Misses) × 100%</li>
+                            <li><strong>Miss Rate</strong> = 1 - Hit Rate</li>
+                            <li><strong>Effective Latency</strong> = (Hit Rate × Cache Latency) + (Miss Rate × DB Latency)</li>
+                            <li><strong>Example:</strong> 95% hit rate, 1ms cache, 50ms DB → (0.95 × 1) + (0.05 × 50) = 3.45ms avg</li>
+                            <li><strong>Throughput Gain</strong> = 1 / (1 - Hit Rate × (1 - Cache Time/DB Time))</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- OBJECT STORAGE -->
+                <section class="content-section" id="object-storage">
+                    <h2>☁️ Object Storage Benchmarks (S3/GCS/Azure Blob)</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Operation</th>
+                                    <th>Latency</th>
+                                    <th>Throughput Limit</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>S3 GET (first byte)</strong></td><td>100-200 ms</td><td>5,500 GET/sec per prefix</td><td>Can partition prefixes to scale</td></tr>
+                                <tr><td><strong>S3 PUT</strong></td><td>100-200 ms</td><td>3,500 PUT/sec per prefix</td><td>Multipart for >100MB</td></tr>
+                                <tr><td><strong>S3 LIST</strong></td><td>100-500 ms</td><td>5,500/sec</td><td>Returns up to 1000 keys</td></tr>
+                                <tr><td><strong>S3 DELETE</strong></td><td>100-200 ms</td><td>3,500/sec per prefix</td><td>Batch delete: 1000 objects/request</td></tr>
+                                <tr><td><strong>S3 Transfer (within region)</strong></td><td>N/A</td><td>Up to 100 Gbps per instance</td><td>Use Transfer Acceleration for cross-region</td></tr>
+                                <tr><td><strong>GCS GET</strong></td><td>50-150 ms</td><td>5,000 reads/sec per object</td><td>Turbo replication available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>S3 Limits & Best Practices</h3>
+                            <span class="badge orange">Partition Strategy</span>
+                            <ul class="list">
+                                <li>Max object size: 5TB</li>
+                                <li>Multipart upload: 5MB-5GB parts</li>
+                                <li>Max parts: 10,000 per upload</li>
+                                <li>Use random prefixes to distribute load</li>
+                                <li>S3 Select: Filter at storage layer</li>
+                                <li>Bucket limit: 100 per account (soft)</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Storage Classes & Costs</h3>
+                            <span class="badge purple">Cost Optimization</span>
+                            <ul class="list">
+                                <li>S3 Standard: ~$0.023/GB/month</li>
+                                <li>S3 Intelligent-Tiering: Auto-optimize</li>
+                                <li>S3 Glacier Instant: ~$0.004/GB</li>
+                                <li>S3 Glacier Deep Archive: ~$0.00099/GB</li>
+                                <li>Retrieval costs vary by tier</li>
+                                <li>PUT/GET requests: $0.005 per 1000</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>S3 Scaling Tip</strong>
+                        S3 automatically scales to high request rates. For >3,500 PUT or >5,500 GET per second on a single prefix, distribute objects across multiple prefixes (e.g., hash-based prefixing). Use S3 Transfer Acceleration for uploads from distant locations.
+                    </div>
+                </section>
+
+                <!-- DISK I/O -->
+                <section class="content-section" id="disk-io">
+                    <h2>💾 Disk I/O Benchmarks</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Storage Type</th>
+                                    <th>Sequential Read</th>
+                                    <th>Sequential Write</th>
+                                    <th>Random Read IOPS</th>
+                                    <th>Random Write IOPS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>HDD (7200 RPM)</strong></td>
+                                    <td>100-200 MB/s</td>
+                                    <td>100-150 MB/s</td>
+                                    <td>75-150 IOPS</td>
+                                    <td>75-150 IOPS</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SATA SSD</strong></td>
+                                    <td>500-550 MB/s</td>
+                                    <td>400-500 MB/s</td>
+                                    <td>50K-100K IOPS</td>
+                                    <td>30K-80K IOPS</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NVMe SSD</strong></td>
+                                    <td>3-7 GB/s</td>
+                                    <td>2-5 GB/s</td>
+                                    <td>500K-1M IOPS</td>
+                                    <td>300K-800K IOPS</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS EBS gp3</strong></td>
+                                    <td>125-1000 MB/s</td>
+                                    <td>125-1000 MB/s</td>
+                                    <td>3K-16K IOPS</td>
+                                    <td>3K-16K IOPS</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS EBS io2</strong></td>
+                                    <td>Up to 4 GB/s</td>
+                                    <td>Up to 4 GB/s</td>
+                                    <td>Up to 256K IOPS</td>
+                                    <td>Up to 256K IOPS</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Instance Store (NVMe)</strong></td>
+                                    <td>Up to 7.5 GB/s</td>
+                                    <td>Up to 3.9 GB/s</td>
+                                    <td>Up to 2.4M IOPS</td>
+                                    <td>Up to 1.4M IOPS</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>IOPS vs Throughput</h3>
+                            <ul class="list">
+                                <li>IOPS matters for small random I/O (database)</li>
+                                <li>Throughput matters for large sequential I/O (analytics)</li>
+                                <li>4KB block size standard for IOPS measurement</li>
+                                <li>Throughput = IOPS × Block Size</li>
+                                <li>Queue depth affects achievable IOPS</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Cloud Storage Tiers</h3>
+                            <ul class="list">
+                                <li>S3 Standard: First byte 100-200ms</li>
+                                <li>S3 Glacier: Minutes to hours</li>
+                                <li>EBS: Network-attached, 1ms latency</li>
+                                <li>Instance store: Local, sub-ms latency</li>
+                                <li>EFS: Shared, 1-10ms latency</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NETWORK BANDWIDTH -->
+                <section class="content-section" id="network-bandwidth">
+                    <h2>🌐 Network Bandwidth & Latency</h2>
+                    
+                    <div class="grid grid-4">
+                        <div class="benchmark-card">
+                            <h4>1 Gbps Network</h4>
+                            <div class="value">125 MB/s</div>
+                            <div class="unit">theoretical max</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>10 Gbps Network</h4>
+                            <div class="value">1.25 GB/s</div>
+                            <div class="unit">theoretical max</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>25 Gbps (AWS)</h4>
+                            <div class="value">3.1 GB/s</div>
+                            <div class="unit">modern instances</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>100 Gbps (AWS)</h4>
+                            <div class="value">12.5 GB/s</div>
+                            <div class="unit">p4d, c6gn instances</div>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Route</th>
+                                    <th>Latency (Round Trip)</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Same rack</td><td>~0.5 ms</td><td>Minimal hops, high bandwidth</td></tr>
+                                <tr><td>Same datacenter</td><td>0.5-1 ms</td><td>Top of rack switches</td></tr>
+                                <tr><td>Same region (AZs)</td><td>1-2 ms</td><td>AWS availability zones</td></tr>
+                                <tr><td>Cross-region (US)</td><td>30-70 ms</td><td>US East ↔ US West</td></tr>
+                                <tr><td>US ↔ Europe</td><td>70-100 ms</td><td>Transatlantic cable</td></tr>
+                                <tr><td>US ↔ Asia</td><td>150-200 ms</td><td>Pacific route</td></tr>
+                                <tr><td>Global worst case</td><td>200-300 ms</td><td>Multiple hops, congestion</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Bandwidth Calculation</h3>
+                            <ul class="list">
+                                <li>1 Gbps = 125 MB/s = 125,000 KB/s</li>
+                                <li>10 Gbps = 1.25 GB/s (practical: ~1 GB/s)</li>
+                                <li>TCP overhead: ~3-5% for headers</li>
+                                <li>Encryption overhead: ~5-10%</li>
+                                <li>Network utilization target: 70-80%</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Connection Limits</h3>
+                            <ul class="list">
+                                <li>TCP connections per IP: ~65K (port range)</li>
+                                <li>Practical concurrent: 10K-100K per server</li>
+                                <li>File descriptors: ulimit -n (1M possible)</li>
+                                <li>TIME_WAIT: 60-120 sec hold</li>
+                                <li>Connection reuse critical at scale</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CDN BENCHMARKS -->
+                <section class="content-section" id="cdn-benchmarks">
+                    <h2>🌍 CDN Performance Benchmarks</h2>
+                    <p class="section-intro">CDNs are critical for global latency reduction and origin offloading. Know these numbers for video streaming and static asset delivery designs.</p>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>CDN Provider</th>
+                                    <th>Edge Locations</th>
+                                    <th>Cache Hit Latency</th>
+                                    <th>Throughput</th>
+                                    <th>Best For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>CloudFront</strong></td>
+                                    <td>450+ PoPs</td>
+                                    <td>1-50 ms (edge)</td>
+                                    <td>100+ Tbps capacity</td>
+                                    <td>AWS integration, Lambda@Edge</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cloudflare</strong></td>
+                                    <td>300+ cities</td>
+                                    <td>1-30 ms</td>
+                                    <td>172+ Tbps</td>
+                                    <td>DDoS protection, Workers</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Akamai</strong></td>
+                                    <td>4,000+ PoPs</td>
+                                    <td>1-50 ms</td>
+                                    <td>250+ Tbps</td>
+                                    <td>Enterprise, media streaming</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fastly</strong></td>
+                                    <td>80+ PoPs</td>
+                                    <td>1-25 ms</td>
+                                    <td>150+ Tbps</td>
+                                    <td>Real-time purge, edge compute</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="benchmark-card">
+                            <h4>Cache Hit Ratio Target</h4>
+                            <div class="value">95%+</div>
+                            <div class="unit">for static content</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Origin Offload</h4>
+                            <div class="value">80-99%</div>
+                            <div class="unit">traffic served from edge</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Global Latency Reduction</h4>
+                            <div class="value">50-200 ms</div>
+                            <div class="unit">saved per request</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>CDN Caching Strategy</h3>
+                            <ul class="list">
+                                <li>Static assets: TTL 1 day - 1 year</li>
+                                <li>API responses: TTL 1 sec - 5 min</li>
+                                <li>Personalized content: No cache or vary headers</li>
+                                <li>Versioned URLs: Long TTL (immutable)</li>
+                                <li>Stale-while-revalidate: Reduce latency spikes</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>CDN Cost Model</h3>
+                            <ul class="list">
+                                <li>Data transfer: $0.02-0.12/GB</li>
+                                <li>Requests: $0.01 per 10K (varies)</li>
+                                <li>Origin shield: Reduces origin hits</li>
+                                <li>Reserved capacity: 20-40% savings</li>
+                                <li>Egress to origin often free</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>CDN Hit Rate Formula</strong>
+                        <ul class="list">
+                            <li><strong>Hit Rate</strong> = Requests served from edge / Total requests × 100%</li>
+                            <li><strong>Origin Load</strong> = Total requests × (1 - Hit Rate)</li>
+                            <li><strong>Bandwidth Savings</strong> = Total bandwidth × Hit Rate</li>
+                            <li><strong>Example:</strong> 10M requests/day, 95% hit rate → Only 500K requests hit origin</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- SERVER CAPACITY -->
+                <section class="content-section" id="server-capacity">
+                    <h2>🖥️ Server Capacity Benchmarks</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Server Type</th>
+                                    <th>RPS (Simple)</th>
+                                    <th>RPS (Complex)</th>
+                                    <th>Concurrent Conn</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Node.js (Express)</strong></td>
+                                    <td>10K-30K</td>
+                                    <td>1K-5K</td>
+                                    <td>10K-50K</td>
+                                    <td>Single-threaded, async I/O</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Go (net/http)</strong></td>
+                                    <td>50K-100K</td>
+                                    <td>10K-30K</td>
+                                    <td>100K+</td>
+                                    <td>Goroutines, efficient scheduler</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Java (Spring Boot)</strong></td>
+                                    <td>10K-50K</td>
+                                    <td>2K-10K</td>
+                                    <td>10K-50K</td>
+                                    <td>Thread pool, JVM tuning needed</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Python (FastAPI + uvicorn)</strong></td>
+                                    <td>5K-20K</td>
+                                    <td>1K-5K</td>
+                                    <td>5K-20K</td>
+                                    <td>Async, single worker</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rust (Actix-web)</strong></td>
+                                    <td>100K-300K</td>
+                                    <td>20K-50K</td>
+                                    <td>100K+</td>
+                                    <td>Zero-cost abstractions</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NGINX (static)</strong></td>
+                                    <td>100K-500K</td>
+                                    <td>N/A</td>
+                                    <td>500K+</td>
+                                    <td>Event-driven, worker processes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="info-card">
+                            <h3>CPU-Bound Workloads</h3>
+                            <ul class="list">
+                                <li>1 core ≈ 1K-10K simple requests/sec</li>
+                                <li>JSON serialization: ~100K ops/sec/core</li>
+                                <li>Encryption (AES-GCM): ~1 GB/s/core</li>
+                                <li>Compression (gzip): ~100 MB/s/core</li>
+                                <li>Hash (SHA-256): ~500 MB/s/core</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Memory Considerations</h3>
+                            <ul class="list">
+                                <li>HTTP connection: ~10-50 KB</li>
+                                <li>WebSocket connection: ~20-100 KB</li>
+                                <li>Thread stack: 1-8 MB (default)</li>
+                                <li>Goroutine: ~2-8 KB</li>
+                                <li>JVM heap: 25-50% of RAM recommended</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Scaling Rules</h3>
+                            <ul class="list">
+                                <li>Horizontal: Easier, more resilient</li>
+                                <li>Vertical: Simpler, hits ceiling</li>
+                                <li>Target 70% CPU utilization</li>
+                                <li>Memory headroom: 20-30%</li>
+                                <li>Auto-scale on p95 latency, not average</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SERVERLESS / LAMBDA -->
+                <section class="content-section" id="serverless">
+                    <h2>⚡ Serverless & Lambda Benchmarks</h2>
+                    <p class="section-intro">Serverless platforms have unique characteristics. Understanding cold starts and concurrency limits is crucial for system design.</p>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Platform</th>
+                                    <th>Cold Start</th>
+                                    <th>Warm Latency</th>
+                                    <th>Max Concurrency</th>
+                                    <th>Max Timeout</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>AWS Lambda</strong></td>
+                                    <td>100ms-3s (varies by runtime)</td>
+                                    <td>1-10 ms</td>
+                                    <td>1,000 default (10K+ possible)</td>
+                                    <td>15 minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS Lambda (Provisioned)</strong></td>
+                                    <td><100 ms</td>
+                                    <td>1-5 ms</td>
+                                    <td>As configured</td>
+                                    <td>15 minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Google Cloud Functions</strong></td>
+                                    <td>100ms-2s</td>
+                                    <td>5-20 ms</td>
+                                    <td>3,000 per region</td>
+                                    <td>9 minutes (Gen1), 60 min (Gen2)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Azure Functions</strong></td>
+                                    <td>200ms-2s</td>
+                                    <td>5-20 ms</td>
+                                    <td>200 per app (Consumption)</td>
+                                    <td>5-10 minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cloudflare Workers</strong></td>
+                                    <td>0 ms (always warm)</td>
+                                    <td><1 ms</td>
+                                    <td>Unlimited (isolates)</td>
+                                    <td>30 sec (CPU time)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-4">
+                        <div class="benchmark-card">
+                            <h4>Lambda Cold Start (Node.js)</h4>
+                            <div class="value">100-300 ms</div>
+                            <div class="unit">typical</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Lambda Cold Start (Java)</h4>
+                            <div class="value">1-3 sec</div>
+                            <div class="unit">without SnapStart</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Lambda Cold Start (Python)</h4>
+                            <div class="value">150-400 ms</div>
+                            <div class="unit">typical</div>
+                        </div>
+                        <div class="benchmark-card">
+                            <h4>Lambda Memory</h4>
+                            <div class="value">128MB-10GB</div>
+                            <div class="unit">CPU scales with memory</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Lambda Limits</h3>
+                            <span class="badge orange">Know These</span>
+                            <ul class="list">
+                                <li>Memory: 128 MB - 10,240 MB</li>
+                                <li>Payload: 6 MB sync, 256 KB async</li>
+                                <li>Deployment package: 50 MB (250 MB unzipped)</li>
+                                <li>Tmp storage: 512 MB - 10 GB</li>
+                                <li>Env variables: 4 KB total</li>
+                                <li>Concurrent executions: 1,000 default</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Cold Start Mitigation</h3>
+                            <span class="badge green">Best Practices</span>
+                            <ul class="list">
+                                <li>Use Provisioned Concurrency for latency-critical</li>
+                                <li>Keep functions warm with scheduled pings</li>
+                                <li>Minimize deployment package size</li>
+                                <li>Use SnapStart for Java (100ms cold starts)</li>
+                                <li>Initialize outside handler (reuse connections)</li>
+                                <li>Use lightweight runtimes (Go, Rust, Node.js)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Serverless Cost Formula</strong>
+                        <ul class="list">
+                            <li><strong>Lambda Cost</strong> = (Requests × $0.0000002) + (GB-seconds × $0.0000166667)</li>
+                            <li><strong>GB-seconds</strong> = Memory (GB) × Execution time (seconds) × Invocations</li>
+                            <li><strong>Example:</strong> 1M requests/month, 256MB, 200ms avg = $0.20 + $0.83 = ~$1.03/month</li>
+                            <li>Free tier: 1M requests + 400K GB-seconds/month</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- API GATEWAYS -->
+                <section class="content-section" id="api-gateways">
+                    <h2>🚪 API Gateway Benchmarks</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Gateway</th>
+                                    <th>Requests/sec</th>
+                                    <th>Latency Added</th>
+                                    <th>Connections</th>
+                                    <th>Best For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>AWS API Gateway (REST)</strong></td>
+                                    <td>10K RPS default (can increase)</td>
+                                    <td>10-30 ms</td>
+                                    <td>Managed</td>
+                                    <td>Serverless, Lambda integration</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS API Gateway (HTTP)</strong></td>
+                                    <td>10K+ RPS</td>
+                                    <td>5-15 ms</td>
+                                    <td>Managed</td>
+                                    <td>Lower latency, simpler features</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kong</strong></td>
+                                    <td>50K-100K RPS</td>
+                                    <td>1-5 ms</td>
+                                    <td>100K+</td>
+                                    <td>Plugin ecosystem, self-hosted</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NGINX (reverse proxy)</strong></td>
+                                    <td>100K-500K RPS</td>
+                                    <td><1 ms</td>
+                                    <td>500K+</td>
+                                    <td>Simple proxying, high throughput</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Envoy</strong></td>
+                                    <td>50K-200K RPS</td>
+                                    <td>1-3 ms</td>
+                                    <td>100K+</td>
+                                    <td>Service mesh, observability</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Traefik</strong></td>
+                                    <td>30K-80K RPS</td>
+                                    <td>1-5 ms</td>
+                                    <td>50K+</td>
+                                    <td>Kubernetes native, auto-discovery</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Gateway Overhead</strong>
+                        API gateways add latency for auth, rate limiting, and routing. Budget 5-30ms for managed gateways, 1-5ms for self-hosted. At high RPS, gateway can become the bottleneck—scale horizontally or use regional deployments.
+                    </div>
+                </section>
+
+                <!-- LOAD BALANCERS -->
+                <section class="content-section" id="load-balancers">
+                    <h2>⚖️ Load Balancer Benchmarks</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Load Balancer</th>
+                                    <th>Connections/sec</th>
+                                    <th>Throughput</th>
+                                    <th>Latency</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>AWS ALB</strong></td>
+                                    <td>Auto-scales</td>
+                                    <td>100K+ RPS</td>
+                                    <td>1-5 ms</td>
+                                    <td>L7, HTTP/HTTPS, path routing</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS NLB</strong></td>
+                                    <td>Millions/sec</td>
+                                    <td>100+ Gbps</td>
+                                    <td><1 ms</td>
+                                    <td>L4, TCP/UDP, static IP</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>HAProxy</strong></td>
+                                    <td>100K-1M/sec</td>
+                                    <td>40+ Gbps</td>
+                                    <td><1 ms</td>
+                                    <td>L4/L7, highly configurable</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NGINX Plus</strong></td>
+                                    <td>100K+ RPS</td>
+                                    <td>10+ Gbps</td>
+                                    <td>1-2 ms</td>
+                                    <td>L7, active health checks</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Google Cloud LB</strong></td>
+                                    <td>Auto-scales</td>
+                                    <td>1M+ RPS</td>
+                                    <td>1-10 ms</td>
+                                    <td>Global anycast, L4/L7</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>L4 vs L7</h3>
+                            <ul class="list">
+                                <li>L4 (NLB): Faster, TCP/UDP only</li>
+                                <li>L7 (ALB): Path routing, SSL termination</li>
+                                <li>L4: Can't inspect HTTP headers</li>
+                                <li>L7: WebSocket, gRPC support</li>
+                                <li>Use L4 for max performance, L7 for features</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Scaling Considerations</h3>
+                            <ul class="list">
+                                <li>ALB pre-warm for traffic spikes</li>
+                                <li>NLB handles sudden spikes better</li>
+                                <li>Cross-zone adds latency (~1ms)</li>
+                                <li>Health check interval: 5-30 sec</li>
+                                <li>Connection draining: 30-300 sec</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MESSAGE QUEUES -->
+                <section class="content-section" id="message-queues">
+                    <h2>📬 Message Queue Benchmarks</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Queue</th>
+                                    <th>Throughput</th>
+                                    <th>Latency</th>
+                                    <th>Durability</th>
+                                    <th>Best For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Kafka</strong></td>
+                                    <td>1M+ msgs/sec per broker</td>
+                                    <td>2-10 ms (p99)</td>
+                                    <td>Replicated log</td>
+                                    <td>Event streaming, replay</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>RabbitMQ</strong></td>
+                                    <td>20K-50K msgs/sec</td>
+                                    <td>1-10 ms</td>
+                                    <td>Persistent queues</td>
+                                    <td>Complex routing, RPC</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS SQS</strong></td>
+                                    <td>3K msgs/sec (standard)</td>
+                                    <td>1-10 ms</td>
+                                    <td>Managed, replicated</td>
+                                    <td>Serverless, decoupling</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS SQS FIFO</strong></td>
+                                    <td>300 msgs/sec (batched: 3K)</td>
+                                    <td>10-50 ms</td>
+                                    <td>Exactly-once</td>
+                                    <td>Ordered processing</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Redis Streams</strong></td>
+                                    <td>100K+ msgs/sec</td>
+                                    <td><1 ms</td>
+                                    <td>AOF persistence</td>
+                                    <td>Lightweight streaming</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NATS</strong></td>
+                                    <td>10M+ msgs/sec</td>
+                                    <td><1 ms</td>
+                                    <td>Optional (JetStream)</td>
+                                    <td>Low latency pub/sub</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Kafka Sizing</h3>
+                            <ul class="list">
+                                <li>Partition: unit of parallelism</li>
+                                <li>1 partition: ~10 MB/s throughput</li>
+                                <li>Consumers ≤ Partitions for parallelism</li>
+                                <li>Retention: 7 days default, TB scale</li>
+                                <li>Replication factor: 3 for durability</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Message Size Impact</h3>
+                            <ul class="list">
+                                <li>Small msgs (<1KB): Optimize for count</li>
+                                <li>Large msgs (>1MB): Optimize for throughput</li>
+                                <li>Kafka max: 1MB default (configurable)</li>
+                                <li>SQS max: 256KB (extended: 2GB via S3)</li>
+                                <li>Compression: 2-10× size reduction</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- EVENT STREAMING -->
+                <section class="content-section" id="event-streaming">
+                    <h2>📡 Event Streaming Benchmarks</h2>
+                    
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Platform</th>
+                                    <th>Events/sec</th>
+                                    <th>Latency</th>
+                                    <th>Retention</th>
+                                    <th>Use Case</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Kafka (Confluent)</strong></td>
+                                    <td>Millions/sec</td>
+                                    <td>2-50 ms</td>
+                                    <td>Configurable (infinite)</td>
+                                    <td>Event sourcing, CDC</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS Kinesis Data Streams</strong></td>
+                                    <td>1K-1M records/sec/shard</td>
+                                    <td>70-200 ms</td>
+                                    <td>24h-365 days</td>
+                                    <td>Real-time analytics</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AWS EventBridge</strong></td>
+                                    <td>10K+ events/sec</td>
+                                    <td>~500 ms</td>
+                                    <td>24h replay</td>
+                                    <td>Event-driven architecture</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Google Pub/Sub</strong></td>
+                                    <td>1M+ msgs/sec</td>
+                                    <td>10-100 ms</td>
+                                    <td>7 days default</td>
+                                    <td>Global messaging</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Apache Pulsar</strong></td>
+                                    <td>1M+ msgs/sec</td>
+                                    <td>5-10 ms</td>
+                                    <td>Tiered storage</td>
+                                    <td>Multi-tenant, geo-replication</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Kinesis Shard Limits</strong>
+                        Each shard: 1 MB/s or 1000 records/sec write, 2 MB/s read. Scale by adding shards. Enhanced fan-out: 2 MB/s per consumer. Cost increases linearly with shards.
+                    </div>
+                </section>
+
+                <!-- CAPACITY ESTIMATION -->
+                <section class="content-section" id="capacity-estimation">
+                    <h2>📐 Capacity Estimation Examples</h2>
+                    <p class="section-intro">Practice these estimation patterns for system design interviews.</p>
+                    
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Twitter-like System (500M users)</h3>
+                            <span class="badge purple">Daily Active: 100M</span>
+                            <ul class="list">
+                                <li>Tweets/day: 100M users × 2 tweets = 200M</li>
+                                <li>Write TPS: 200M / 86400 ≈ 2,300 TPS</li>
+                                <li>Reads/day: 100M × 100 reads = 10B</li>
+                                <li>Read TPS: 10B / 86400 ≈ 115K TPS</li>
+                                <li>Storage/year: 200M × 500B × 365 = 36TB</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>YouTube-like System (2B users)</h3>
+                            <span class="badge orange">Daily Active: 500M</span>
+                            <ul class="list">
+                                <li>Videos watched/day: 500M × 5 = 2.5B</li>
+                                <li>Uploads/day: 500K videos</li>
+                                <li>Storage/day: 500K × 100MB = 50TB</li>
+                                <li>Bandwidth: 2.5B × 100MB / 86400 = 29 PB/day</li>
+                                <li>CDN crucial: 29 PB = ~2.7 Tbps average</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>URL Shortener (100M URLs/month)</h3>
+                            <span class="badge green">Read Heavy</span>
+                            <ul class="list">
+                                <li>Write TPS: 100M / 2.6M sec ≈ 40 TPS</li>
+                                <li>Read:Write ratio: 100:1</li>
+                                <li>Read TPS: 40 × 100 = 4,000 TPS</li>
+                                <li>Storage: 100M × 500B = 50GB/month</li>
+                                <li>5 years: 50GB × 60 = 3TB</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Chat System (50M users)</h3>
+                            <span class="badge blue">Real-time</span>
+                            <ul class="list">
+                                <li>Concurrent users (10%): 5M</li>
+                                <li>Messages/user/day: 50</li>
+                                <li>Total msgs/day: 50M × 50 = 2.5B</li>
+                                <li>Peak TPS: 2.5B / 86400 × 3 = 87K</li>
+                                <li>WebSocket connections: 5M concurrent</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Estimation Formula Cheat Sheet</strong>
+                        <ul class="list">
+                            <li><strong>QPS:</strong> Daily requests ÷ 86,400 (multiply by 2-3× for peak)</li>
+                            <li><strong>Storage:</strong> Objects × Size × Retention × Replication factor</li>
+                            <li><strong>Bandwidth:</strong> QPS × Average response size</li>
+                            <li><strong>Servers:</strong> Peak QPS ÷ RPS per server (at 70% utilization)</li>
+                        </ul>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Little's Law (Critical!)</h3>
+                            <span class="badge purple">Memorize This</span>
+                            <ul class="list">
+                                <li><strong>L = λ × W</strong></li>
+                                <li><strong>L</strong> = Average number of items in system</li>
+                                <li><strong>λ</strong> = Average arrival rate (requests/sec)</li>
+                                <li><strong>W</strong> = Average time in system (latency)</li>
+                                <li><strong>Example:</strong> 1000 RPS, 100ms latency → 100 concurrent requests</li>
+                                <li>Use to size connection pools, thread pools, queues</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Amdahl's Law</h3>
+                            <span class="badge orange">Parallelization Limits</span>
+                            <ul class="list">
+                                <li><strong>Speedup = 1 / ((1-P) + P/N)</strong></li>
+                                <li><strong>P</strong> = Parallelizable portion (0-1)</li>
+                                <li><strong>N</strong> = Number of processors</li>
+                                <li>90% parallel, 10 cores → 5.26× speedup (not 10×)</li>
+                                <li>Serial portion limits maximum speedup</li>
+                                <li>Applies to distributed systems too</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Rule of 72 for Growth</strong>
+                        Time to double = 72 / Growth rate %. Example: 10% monthly growth → doubles in ~7 months. Plan capacity 6-12 months ahead for fast-growing systems.
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="info-card">
+                            <h3>Pareto Principle (80/20 Rule)</h3>
+                            <span class="badge purple">Data Distribution</span>
+                            <ul class="list">
+                                <li><strong>Caching:</strong> 20% of data → 80% of reads</li>
+                                <li><strong>Users:</strong> 20% of users → 80% of traffic</li>
+                                <li><strong>Features:</strong> 20% of features → 80% of usage</li>
+                                <li><strong>Errors:</strong> 20% of bugs → 80% of crashes</li>
+                                <li><strong>Implication:</strong> Cache the hot 20% for massive gains</li>
+                                <li><strong>Formula:</strong> Cache size ≈ 20% of total data for ~80% hit rate</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Zipf's Law (Power Law)</h3>
+                            <span class="badge orange">Access Patterns</span>
+                            <ul class="list">
+                                <li>Frequency ∝ 1/rank (most popular item accessed most)</li>
+                                <li>Item #1: 2× more access than #2</li>
+                                <li>Item #1: 10× more access than #10</li>
+                                <li>Top 1% items: ~30% of traffic</li>
+                                <li>Top 10% items: ~65% of traffic</li>
+                                <li>Hot keys cause sharding challenges</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Applying 80/20 in System Design</strong>
+                        <ul class="list">
+                            <li><strong>Cache sizing:</strong> Start with 20% of working set, monitor hit rate, adjust</li>
+                            <li><strong>Sharding:</strong> Hot keys (celebrities, viral content) need special handling</li>
+                            <li><strong>Read replicas:</strong> Most traffic is reads; scale reads separately</li>
+                            <li><strong>Optimization:</strong> Profile first, optimize the 20% causing 80% of latency</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- QUICK REFERENCE -->
+                <section class="content-section" id="quick-reference">
+                    <h2>📋 Quick Reference Card</h2>
+                    <p class="section-intro">Bookmark these numbers for quick recall during interviews.</p>
+                    
+                    <div class="grid grid-3">
+                        <div class="info-card">
+                            <h3>Latency Hierarchy</h3>
+                            <ul class="list">
+                                <li>L1 cache: 0.5 ns</li>
+                                <li>L2 cache: 7 ns</li>
+                                <li>RAM: 100 ns</li>
+                                <li>SSD random: 150 μs</li>
+                                <li>HDD seek: 10 ms</li>
+                                <li>Same DC round trip: 500 μs</li>
+                                <li>Cross-continent: 150 ms</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Throughput Anchors</h3>
+                            <ul class="list">
+                                <li>Redis: 100K-500K ops/sec</li>
+                                <li>PostgreSQL: 10K-50K QPS</li>
+                                <li>Kafka: 1M msgs/sec/broker</li>
+                                <li>Web server: 10K-100K RPS</li>
+                                <li>Load balancer: 100K-1M RPS</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Size References</h3>
+                            <ul class="list">
+                                <li>UUID: 36 bytes</li>
+                                <li>Tweet: 280 chars ≈ 500B</li>
+                                <li>JSON response: 1-10 KB</li>
+                                <li>Image thumbnail: 10-50 KB</li>
+                                <li>HD photo: 2-5 MB</li>
+                                <li>1 min video: 100-150 MB</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Time Math</h3>
+                            <ul class="list">
+                                <li>1 day ≈ 100K seconds</li>
+                                <li>1 month ≈ 2.6M seconds</li>
+                                <li>1 year ≈ 30M seconds</li>
+                                <li>1M requests/day ≈ 12 RPS</li>
+                                <li>1B requests/day ≈ 12K RPS</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Scaling Rules</h3>
+                            <ul class="list">
+                                <li>Target 70% resource utilization</li>
+                                <li>Peak = 2-3× average traffic</li>
+                                <li>Cache hit rate: target 95%+</li>
+                                <li>Read replicas: add for reads</li>
+                                <li>Sharding: add for writes</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Network Math</h3>
+                            <ul class="list">
+                                <li>1 Gbps = 125 MB/s</li>
+                                <li>10 Gbps = 1.25 GB/s</li>
+                                <li>TCP port range: 65K</li>
+                                <li>HTTP overhead: ~1KB/request</li>
+                                <li>WebSocket: 2-6 bytes/frame</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Availability Nines</h3>
+                            <ul class="list">
+                                <li>99%: 3.65 days/year down</li>
+                                <li>99.9%: 8.77 hours/year</li>
+                                <li>99.99%: 52.6 min/year</li>
+                                <li>99.999%: 5.26 min/year</li>
+                                <li>Parallel: 1-(1-A)²</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Key Formulas</h3>
+                            <ul class="list">
+                                <li>Little's Law: L = λ × W</li>
+                                <li>Hit Rate: Hits/(Hits+Misses)</li>
+                                <li>MTBF/(MTBF+MTTR)</li>
+                                <li>Throughput = IOPS × Block Size</li>
+                                <li>Servers = Peak QPS / RPS × 1.4</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Common Limits</h3>
+                            <ul class="list">
+                                <li>PG connections: 100-1000</li>
+                                <li>Lambda concurrent: 1000</li>
+                                <li>S3 prefix: 3500 PUT/5500 GET</li>
+                                <li>API Gateway: 10K RPS</li>
+                                <li>SQS FIFO: 300 msg/sec</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Interview Tip</strong>
+                        Always state your assumptions explicitly. Round numbers generously (100K instead of 86,400). Focus on orders of magnitude—being within 2× is usually sufficient. Start with back-of-envelope calculations before diving into component design.
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const toggles = document.querySelectorAll(".mobile-toggle");
+        toggles.forEach((button) => {
+            button.addEventListener("click", () => {
+                const targetId = button.getAttribute("data-toggle-target");
+                const nav = document.getElementById(targetId);
+                const isActive = nav.classList.toggle("active");
+                button.setAttribute("aria-expanded", String(isActive));
+            });
+        });
+
+        const navLinks = document.querySelectorAll(".nav-link");
+        navLinks.forEach((link) => link.addEventListener("click", () => {
+            if (window.innerWidth <= 1200) {
+                document.getElementById("primary-nav").classList.remove("active");
+                toggles.forEach((button) => button.setAttribute("aria-expanded", "false"));
+            }
+        }));
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                document.getElementById("primary-nav").classList.remove("active");
+                toggles.forEach((button) => button.setAttribute("aria-expanded", "false"));
+            }
+        });
+    </script>
+</body>
+</html>
+
