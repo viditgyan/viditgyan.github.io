@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Datatypes: The Ultimate Reference</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Source+Code+Pro:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1d4ed8;
+            --bg-light: #f3f4ff;
+            --bg-end: #f2fff8;
+            --text-dark: #0f172a;
+            --muted: #475569;
+            --code-bg: #e0e7ff;
+            --accordion-bg: #fff;
+            --header-bg: #eff6ff;
+            --border-color: rgba(37, 99, 235, 0.15);
+            --surface: rgba(255, 255, 255, 0.97);
+            --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+            --accent-soft: rgba(37, 99, 235, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--bg-light), var(--bg-end));
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--surface);
+            color: var(--text-dark);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-radius: 0 0 24px 24px;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary-color), #14b8a6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--muted);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1rem;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: transform 0.2s ease;
+        }
+
+        .back-link:hover {
+            transform: translateX(-4px);
+        }
+
+        main {
+            max-width: 960px;
+            margin: 0 auto 2rem;
+            padding: 0 1rem;
+        }
+
+        .tab-container {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: var(--surface);
+            border-radius: 16px 16px 0 0;
+            padding: 0.5rem 0.5rem 0;
+        }
+
+        .tab-button {
+            background-color: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.2s ease;
+            flex-shrink: 0;
+            color: var(--muted);
+        }
+
+        .tab-button:hover {
+            background-color: var(--accent-soft);
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background-color: var(--accordion-bg);
+            border-color: var(--border-color);
+            border-bottom-color: var(--accordion-bg);
+            color: var(--primary-color);
+            box-shadow: 0 -4px 12px rgba(37, 99, 235, 0.1);
+        }
+
+        .tab-content {
+            background-color: var(--surface);
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 18px 18px;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            margin-top: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .accordion-header {
+            width: 100%;
+            text-align: left;
+            background-color: var(--accordion-bg);
+            border: none;
+            padding: 1rem 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            color: var(--text-dark);
+        }
+        
+        .accordion-header:hover {
+            background-color: var(--header-bg);
+            transform: translateX(5px);
+        }
+
+        .plus-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .accordion-item.active .plus-icon {
+            transform: rotate(45deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            padding-bottom: 0;
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+        }
+
+        .accordion-item.active .accordion-content {
+            max-height: 600px;
+            padding-bottom: 1rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        table th, table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        table th {
+            background: linear-gradient(135deg, var(--primary-color), #0ea5e9);
+            color: #fff;
+        }
+
+        table tr:nth-child(even) {
+            background-color: var(--header-bg);
+        }
+
+        table tr:hover {
+            background-color: var(--accent-soft);
+        }
+        
+        code {
+            font-family: 'Source Code Pro', monospace;
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: var(--secondary-color);
+            font-size: 0.9em;
+        }
+        
+        .type-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .primitive-icon { color: #0ea5e9; }
+        .reference-icon { color: var(--primary-color); }
+        .question-icon { color: #f43f5e; }
+        .concurrency-icon { color: #14b8a6; }
+
+        .memory-model-diagram {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+            flex-wrap: wrap;
+        }
+
+        .memory-model-block {
+            border: 2px solid var(--primary-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 45%;
+            min-width: 280px;
+            position: relative;
+            background: var(--header-bg);
+        }
+
+        .memory-model-block h4 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .memory-model-item {
+            background-color: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+        }
+
+        .memory-model-item span {
+            font-size: 0.85em;
+            color: var(--muted);
+        }
+
+        ul {
+            padding-left: 1.5rem;
+        }
+
+        ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--surface);
+            color: var(--muted);
+            margin-top: 2rem;
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        @media (max-width: 768px) {
+            .tab-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+            }
+            
+            .memory-model-block {
+                width: 100%;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-link">← Back to Hub</a>
+        <h1>Java Datatypes: The Ultimate Reference</h1>
+        <p>An interactive guide covering primitive, wrapper, collection, and memory management concepts.</p>
+    </header>
+
+    <main>
+        <div class="tab-container">
+            <button class="tab-button" data-tab-id="primitives">Primitives</button>
+            <button class="tab-button" data-tab-id="wrappers">Wrappers</button>
+            <button class="tab-button" data-tab-id="collections">Collections</button>
+            <button class="tab-button" data-tab-id="concurrency">Concurrency</button>
+            <button class="tab-button" data-tab-id="memory">Memory Model</button>
+            <button class="tab-button active" data-tab-id="qa">Q&A</button>
+        </div>
+
+        <div id="primitives" class="tab-content">
+            <h2><span class="type-icon primitive-icon">⚡</span> Primitive Datatypes (Stack Memory)</h2>
+            <p>Primitive data types store their values directly on the <strong>stack</strong>. They are simple, predefined, and offer high performance with fixed sizes.</p>
+            <ul>
+                <li><strong><code>boolean</code></strong>: Represents a single bit (`true`/`false`), though JVM-dependent, often stored as a byte.</li>
+                <li><strong><code>byte</code></strong>: 8-bit signed integer (-128 to 127).</li>
+                <li><strong><code>short</code></strong>: 16-bit signed integer (-32,768 to 32,767).</li>
+                <li><strong><code>int</code></strong>: 32-bit signed integer. The default integer type.</li>
+                <li><strong><code>long</code></strong>: 64-bit signed integer for very large numbers.</li>
+                <li><strong><code>float</code></strong>: 32-bit single-precision floating-point number (IEEE 754).</li>
+                <li><strong><code>double</code></strong>: 64-bit double-precision floating-point number (IEEE 754), offering higher precision.</li>
+                <li><strong><code>char</code></strong>: 16-bit unsigned Unicode character.</li>
+            </ul>
+        </div>
+
+        <div id="wrappers" class="tab-content">
+            <h2><span class="type-icon reference-icon">📦</span> Wrapper Classes (Heap Memory)</h2>
+            <p>For every primitive type, Java provides a corresponding wrapper class to enable its use as an object (e.g., in Collections). This process is called <strong>autoboxing</strong>, and the objects are stored on the <strong>heap</strong>.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Primitive Type</th>
+                        <th>Wrapper Class</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>byte</code></td><td><code>Byte</code></td></tr>
+                    <tr><td><code>short</code></td><td><code>Short</code></td></tr>
+                    <tr><td><code>int</code></td><td><code>Integer</code></td></tr>
+                    <tr><td><code>long</code></td><td><code>Long</code></td></tr>
+                    <tr><td><code>float</code></td><td><code>Float</code></td></tr>
+                    <tr><td><code>double</code></td><td><code>Double</code></td></tr>
+                    <tr><td><code>char</code></td><td><code>Character</code></td></tr>
+                    <tr><td><code>boolean</code></td><td><code>Boolean</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="collections" class="tab-content">
+            <h2><span class="type-icon reference-icon">📂</span> Data Structures & Collections (Heap Memory)</h2>
+            <p>These reference types are objects stored dynamically on the <strong>heap</strong>, referencing other objects or data structures.</p>
+            <div class="accordion-container">
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <code>String</code> and <code>Arrays</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h3><code>String</code></h3>
+                        <p>An <strong>immutable</strong> object internally using a <code>byte[]</code> array. Stored in the heap, with literals using the <strong>String Constant Pool</strong> for memory optimization.</p>
+                        <h3><code>Arrays</code></h3>
+                        <p>Fixed-size, contiguous blocks of memory on the heap. Stores values directly (for primitives) or references (for objects).</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        List Implementations
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h3><code>ArrayList</code></h3>
+                        <p>A resizable array backed by an <code>Object[]</code>. Resizing involves creating a new, larger array on the heap and copying elements over. Fast random access, slow insertions/deletions.</p>
+                        <h3><code>LinkedList</code></h3>
+                        <p>A doubly-linked list where each <code>Node</code> object points to the next and previous nodes. Nodes are non-contiguous on the heap. Fast insertions/deletions, slow random access.</p>
+                        <h3><code>Vector</code> and <code>Stack</code></h3>
+                        <p>Legacy synchronized classes. <code>Vector</code> is a synchronized <code>ArrayList</code>, and <code>Stack</code> extends <code>Vector</code>. Slower due to synchronization overhead.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Map and Set Implementations
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h3><code>HashMap</code> / <code>HashSet</code></h3>
+                        <p>Both use a hash table (<strong>array of buckets on the heap</strong>). Collisions use a linked list or, since Java 8, a balanced <strong>binary search tree</strong>. <code>HashSet</code> stores elements as <code>HashMap</code> keys.</p>
+                        <h3><code>TreeMap</code> / <code>TreeSet</code></h3>
+                        <p>Both use a <strong>red-black tree</strong> for balanced, sorted storage. <code>TreeMap</code> stores sorted key-value pairs, while <code>TreeSet</code> stores unique, sorted elements.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Queue and Deque Implementations
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h3><code>PriorityQueue</code></h3>
+                        <p>A queue that orders elements by priority. Implemented as a <strong>binary heap</strong> backed by a dynamic array.</p>
+                        <h3><code>ArrayDeque</code></h3>
+                        <p>A modern, fast, non-synchronized double-ended queue, backed by a resizable array.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Modern Java Types
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h3><code>Enum</code></h3>
+                        <p>A special class type where constants are <code>public static final</code> references to enum objects on the heap.</p>
+                        <h3><code>Record</code> (JDK 16+)</h3>
+                        <p>An immutable data-carrier class with final fields. Stored on the heap with optimized memory layout.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="concurrency" class="tab-content">
+            <h2><span class="type-icon concurrency-icon">🔄</span> Concurrency and Thread Safety</h2>
+            <p>Topics around managing and ensuring thread safety are crucial for robust application development.</p>
+            <div class="accordion-container">
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Keywords: <code>synchronized</code> and <code>volatile</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h3><code>synchronized</code></h3>
+                        <p>Used to control access to shared resources by multiple threads. It provides <strong>mutual exclusion</strong> by allowing only one thread to execute a synchronized block or method at a time.</p>
+                        <h3><code>volatile</code></h3>
+                        <p>Guarantees that changes to a variable by one thread are immediately visible to all other threads. It ensures <strong>visibility</strong> but not atomicity for compound operations (e.g., <code>i++</code>).</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <code>ConcurrentHashMap</code> vs. <code>Hashtable</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>Hashtable</code>:</strong> Synchronizes on the entire map, leading to poor performance with high concurrency.</li>
+                            <li><strong><code>ConcurrentHashMap</code>:</strong> Uses fine-grained locking (divides data into segments), allowing multiple threads to read and write concurrently. Significantly faster for concurrent access.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        Fail-Fast vs. Fail-Safe Iterators
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Fail-Fast:</strong> Iterators (e.g., <code>ArrayList</code>) throw <code>ConcurrentModificationException</code> if the collection is structurally modified during iteration.</li>
+                            <li><strong>Fail-Safe:</strong> Iterators (e.g., <code>CopyOnWriteArrayList</code>) operate on a copy of the collection, so modifications to the original don't affect the iterator.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="memory" class="tab-content">
+            <h2>Memory Model: Stack vs Heap</h2>
+            <p>Understanding the fundamental difference in how Java manages memory is critical. The <strong>Stack</strong> is for method execution and local variables, while the <strong>Heap</strong> is for objects.</p>
+            
+            <div class="memory-model-diagram">
+                <div class="memory-model-block">
+                    <h4>Stack Memory</h4>
+                    <p><strong>(Fast, Fixed Size, LIFO)</strong></p>
+                    <div class="memory-model-item">
+                        <code>main()</code> method call<br>
+                        <span>(contains local var references)</span>
+                    </div>
+                    <div class="memory-model-item">
+                        <code>temp()</code> method call<br>
+                        <span>(stores its own primitives/references)</span>
+                    </div>
+                    <p style="color: var(--muted); font-size: 0.9rem; margin-top: 1rem;">... Each thread has its own stack</p>
+                </div>
+                <div class="memory-model-block">
+                    <h4>Heap Memory</h4>
+                    <p><strong>(Slower, Dynamic Size)</strong></p>
+                    <div class="memory-model-item">
+                        <code>new String("Hello")</code><br>
+                        <span>(Object data)</span>
+                    </div>
+                    <div class="memory-model-item">
+                        <code>new ArrayList()</code><br>
+                        <span>(Object data)</span>
+                    </div>
+                    <p style="color: var(--muted); font-size: 0.9rem; margin-top: 1rem;">... Shared among all threads</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3>Key Differences:</h3>
+                <ul>
+                    <li><strong>Stack:</strong> Stores method calls and references to objects. Automatically managed by the JVM. Fast access but limited size.</li>
+                    <li><strong>Heap:</strong> Stores the actual objects. Managed by the Garbage Collector. Slower access but much larger.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="qa" class="tab-content active">
+            <h2><span class="type-icon question-icon">❓</span> Quick View: Q&A</h2>
+            <p>Essential questions and concise answers on core Java topics for quick revision.</p>
+            <div class="accordion-container">
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>==</code> vs <code>.equals()</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>==</code> Operator:</strong> Compares object references (memory addresses). It checks if two variables point to the exact same object in memory.</li>
+                            <li><strong><code>.equals()</code> Method:</strong> Compares the actual content or value of the objects. It can be overridden to provide custom comparison logic.</li>
+                            <li><strong>Rule of thumb:</strong> Use <code>==</code> for primitives. Use <code>.equals()</code> for objects to compare value, unless you need to check for the same memory location.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> String, StringBuilder, and StringBuffer
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>String</code>:</strong> Immutable and final. New objects are created for any modification. It is thread-safe and stored in the string pool for literals.</li>
+                            <li><strong><code>StringBuilder</code>:</strong> Mutable and not thread-safe. Faster than <code>StringBuffer</code> for single-threaded environments because it is not synchronized.</li>
+                            <li><strong><code>StringBuffer</code>:</strong> Mutable and thread-safe (methods are synchronized). Slower than <code>StringBuilder</code> due to the overhead of locking.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Why is String Immutable?
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Security:</strong> Critical for storing sensitive information like passwords, as the value cannot be altered.</li>
+                            <li><strong>Caching:</strong> Its hashcode is cached at creation, making it an efficient key for HashMaps.</li>
+                            <li><strong>Thread Safety:</strong> The immutability ensures it is inherently thread-safe, as its state cannot change after construction.</li>
+                            <li><strong>String Pool:</strong> Enables memory optimization by reusing identical string literals.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>ArrayList</code> vs <code>LinkedList</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>ArrayList</code>:</strong> Backed by a dynamic array. Best for quick element retrieval (random access). Manipulations like insertion/deletion in the middle are slow due to element shifting.</li>
+                            <li><strong><code>LinkedList</code>:</strong> Implemented as a doubly-linked list. Best for frequent insertions and deletions, especially at the beginning or middle. Retrieval by index is slower as it must traverse from the start or end.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> How does <code>HashMap</code> work?
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li>Uses a hash table (an array of buckets). The <code>hashCode()</code> of the key determines the bucket index.</li>
+                            <li>A <strong>collision</strong> (different keys with the same hash) is handled by chaining entries in a linked list within the bucket.</li>
+                            <li>Since Java 8, long linked lists convert to balanced <strong>binary search trees</strong> to improve performance from O(n) to O(log n).</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>Comparable</code> vs <code>Comparator</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>Comparable</code>:</strong> Defines a "natural ordering" for a class. Must be implemented by the class itself (e.g., <code>String</code> and wrapper classes). Uses the <code>compareTo()</code> method.</li>
+                            <li><strong><code>Comparator</code>:</strong> Defines a custom sorting order. It is a functional interface that can be implemented externally to compare two objects. Uses the <code>compare()</code> method.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Abstract Class vs. Interface
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Abstract Class:</strong> Can have both abstract (no body) and concrete methods. Can have constructors and instance variables (final, non-final, etc.). A class can only extend one abstract class.</li>
+                            <li><strong>Interface:</strong> Defines a contract for behavior. (Pre-Java 8) only abstract methods and public static final variables. (Java 8+) allows <code>default</code> and <code>static</code> methods. A class can implement multiple interfaces.</li>
+                            <li><strong>Usage:</strong> Use an abstract class when you have related classes sharing a common base with shared implementation. Use an interface to define behavior that can be implemented by unrelated classes.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Checked vs. Unchecked Exceptions
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Checked Exceptions:</strong> Must be explicitly handled using <code>try-catch</code> or declared with <code>throws</code>. Inherit from <code>Exception</code>. E.g., <code>IOException</code>.</li>
+                            <li><strong>Unchecked Exceptions:</strong> Do not require explicit handling. Inherit from <code>RuntimeException</code>. Represent programming bugs. E.g., <code>NullPointerException</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>final</code>, <code>finally</code>, and <code>finalize()</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>final</code> keyword:</strong> Declares constants, prevents method overriding, or prevents class inheritance.</li>
+                            <li><strong><code>finally</code> block:</strong> Guarantees code execution in exception handling, regardless of whether an exception was thrown.</li>
+                            <li><strong><code>finalize()</code> method:</strong> Deprecated and unreliable. Called by GC before an object is destroyed. Do not rely on it.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Thread States in Java
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>NEW:</strong> Created but not started.</li>
+                            <li><strong>RUNNABLE:</strong> Executing or ready to execute.</li>
+                            <li><strong>BLOCKED:</strong> Waiting for a monitor lock.</li>
+                            <li><strong>WAITING:</strong> Waiting indefinitely for another thread's action.</li>
+                            <li><strong>TIMED_WAITING:</strong> Waiting for a specified time interval.</li>
+                            <li><strong>TERMINATED:</strong> Finished execution.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>sleep()</code> vs <code>wait()</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>Thread.sleep()</code>:</strong> Pauses the current thread without releasing locks. Time-dependent.</li>
+                            <li><strong><code>Object.wait()</code>:</strong> Pauses the current thread and releases its lock. Time-independent, requires <code>notify()</code> or <code>notifyAll()</code> to resume, and must be called within a synchronized block.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> How to trigger Garbage Collection?
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>You can <em>request</em> a garbage collection run by calling <code>System.gc()</code> or <code>Runtime.getRuntime().gc()</code>, but the JVM decides if and when to execute it. Its behavior is not guaranteed.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> How is GC related to memory leaks?
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>A <strong>memory leak</strong> occurs when objects that are no longer needed are still reachable from a root object. The Garbage Collector only reclaims objects that are unreachable. For example, a long-lived <code>static Map</code> can hold references to unneeded objects, preventing their collection.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>map()</code> vs <code>flatMap()</code> in Streams
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>map()</code>:</strong> Applies a function to each element and returns a stream of the results. The size remains the same.</li>
+                            <li><strong><code>flatMap()</code>:</strong> Applies a function that returns a stream for each element. The resulting streams are flattened into a single, unified stream. Useful for processing nested collections.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>Optional.isPresent()</code> vs <code>Optional.ifPresent()</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong><code>Optional.isPresent()</code>:</strong> Returns <code>true</code> or <code>false</code> to check for a value's presence, often used with an <code>if/else</code>.</li>
+                            <li><strong><code>Optional.ifPresent()</code>:</strong> Takes a <code>Consumer</code> and executes it only if a value is present, avoiding explicit null checks and encouraging a functional approach.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Functional Interface and <code>@FunctionalInterface</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Functional Interface:</strong> An interface with exactly one abstract method.</li>
+                            <li><strong><code>@FunctionalInterface</code> Annotation:</strong> Provides compile-time checks to ensure the interface meets the criteria.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Inversion of Control (IoC) and Dependency Injection (DI)
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>IoC:</strong> A design principle where a framework controls the flow of a program.</li>
+                            <li><strong>DI:</strong> A specific implementation of IoC where objects receive dependencies from an external source (e.g., Spring container), promoting loose coupling.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Singleton Design Pattern
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Purpose:</strong> Restricts a class to a single object instance.</li>
+                            <li><strong>Implementation:</strong> Can be done via lazy or eager initialization, or more robustly with an <code>enum</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> <code>Spring Boot</code> vs. <code>Spring</code>
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Spring:</strong> A comprehensive, modular framework requiring more manual configuration.</li>
+                            <li><strong>Spring Boot:</strong> An opinionated framework simplifying Spring setup with minimal configuration, embedded servers, and "convention over configuration."</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="type-icon question-icon">❓</span> Fail-Fast vs Fail-Safe Iterators
+                        <span class="plus-icon">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Fail-Fast:</strong> Iterators (like <code>ArrayList.iterator()</code>) that throw a <code>ConcurrentModificationException</code> immediately if the collection is structurally modified during iteration (except by the iterator's own methods).</li>
+                            <li><strong>Fail-Safe:</strong> Iterators (like <code>ConcurrentHashMap.iterator()</code>) that operate on a copy of the collection, so modifications to the original do not affect the iterator. They do not throw <code>ConcurrentModificationException</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Java Datatypes Reference | Part of the Architecture & Systems Hub</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+            function showTab(tabId) {
+                tabs.forEach(tab => tab.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                document.querySelector(`[data-tab-id="${tabId}"]`).classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab-id');
+                    showTab(tabId);
+                });
+            });
+            
+            // Set the initially active tab (Q&A)
+            showTab('qa');
+
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const accordionItem = header.parentElement;
+                    const content = header.nextElementSibling;
+                    const plusIcon = header.querySelector('.plus-icon');
+
+                    // Check if this accordion item is already active
+                    const isActive = accordionItem.classList.contains('active');
+
+                    // Close all accordion items
+                    document.querySelectorAll('.accordion-item').forEach(item => {
+                        item.classList.remove('active');
+                        item.querySelector('.accordion-content').style.maxHeight = '0';
+                        item.querySelector('.plus-icon').textContent = '+';
+                    });
+
+                    // If it wasn't active, open it now
+                    if (!isActive) {
+                        accordionItem.classList.add('active');
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        plusIcon.textContent = '–';
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
+
