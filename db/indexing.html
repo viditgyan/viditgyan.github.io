@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Indexing Deep Dive - Interview Reference</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.7;color:#2c3e50;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh}
+        .container{max-width:1300px;margin:0 auto;padding:25px}
+        .header{background:rgba(255,255,255,0.97);border-radius:20px;padding:35px;margin-bottom:35px;box-shadow:0 15px 40px rgba(0,0,0,0.2);text-align:center}
+        .header h1{font-size:2.6rem;margin-bottom:12px;background:linear-gradient(135deg,#e94560,#0f3460);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .header p{color:#7f8c8d;font-size:1.15rem}
+        .nav-pills{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:25px}
+        .nav-pills a{background:linear-gradient(135deg,#e94560,#0f3460);color:#fff;padding:10px 20px;border-radius:25px;text-decoration:none;font-weight:600;font-size:0.9rem;transition:all 0.3s}
+        .nav-pills a:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(233,69,96,0.4)}
+        .section{background:rgba(255,255,255,0.97);border-radius:18px;padding:35px;margin-bottom:30px;box-shadow:0 10px 35px rgba(0,0,0,0.15)}
+        .section h2{color:#0f3460;font-size:1.9rem;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #e94560}
+        .section h3{color:#e94560;font-size:1.4rem;margin:25px 0 15px}
+        .section h4{color:#0f3460;font-size:1.15rem;margin:20px 0 12px}
+        .index-card{background:#f8f9fa;border-radius:14px;padding:28px;margin-bottom:25px;border-left:5px solid #e94560;transition:all 0.3s}
+        .index-card:hover{transform:translateX(5px);box-shadow:0 8px 25px rgba(0,0,0,0.1)}
+        .index-card.hash{border-left-color:#3498db}
+        .index-card.geo{border-left-color:#27ae60}
+        .index-card.lsm{border-left-color:#9b59b6}
+        .index-card.bitmap{border-left-color:#f39c12}
+        .index-card.bloom{border-left-color:#1abc9c}
+        .index-card.inverted{border-left-color:#e74c3c}
+        .card-title{font-size:1.5rem;color:#2c3e50;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .card-title .icon{font-size:1.8rem}
+        .subtitle{color:#7f8c8d;font-style:italic;margin-bottom:18px;font-size:1.05rem}
+        table{width:100%;border-collapse:collapse;margin:20px 0;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.08)}
+        th,td{padding:14px 18px;text-align:left;border-bottom:1px solid #ecf0f1}
+        th{background:linear-gradient(135deg,#0f3460,#1a1a2e);color:#fff;font-weight:600}
+        tr:hover{background:#f8f9fa}
+        .tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;margin:3px}
+        .tag-yes{background:#d4edda;color:#155724}
+        .tag-no{background:#f8d7da;color:#721c24}
+        .tag-partial{background:#fff3cd;color:#856404}
+        .complexity{font-family:'Fira Code',monospace;background:#2c3e50;color:#1abc9c;padding:3px 10px;border-radius:5px;font-size:0.85rem}
+        .how-it-works{background:linear-gradient(135deg,#667eea15,#764ba215);border-radius:12px;padding:22px;margin:18px 0;border:1px solid #667eea30}
+        .how-it-works h4{color:#667eea;margin-bottom:12px}
+        .query-support{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:15px 0}
+        .query-item{background:#fff;padding:12px 16px;border-radius:10px;border-left:4px solid #27ae60;font-size:0.95rem}
+        .query-item.unsupported{border-left-color:#e74c3c;opacity:0.7}
+        .query-item strong{display:block;color:#2c3e50;margin-bottom:4px}
+        .query-item span{color:#7f8c8d;font-size:0.85rem}
+        .interview-box{background:linear-gradient(135deg,#e94560,#0f3460);color:#fff;padding:22px;border-radius:14px;margin:20px 0}
+        .interview-box h4{color:#fff;margin-bottom:12px;font-size:1.1rem}
+        .interview-box ul{margin-left:20px}
+        .interview-box li{margin:8px 0}
+        .comparison-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:20px 0}
+        .compare-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.08)}
+        .compare-card h5{color:#0f3460;margin-bottom:12px;font-size:1.1rem}
+        .pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:15px 0}
+        .pros,.cons{padding:15px;border-radius:10px}
+        .pros{background:#d4edda;border-left:4px solid #27ae60}
+        .cons{background:#f8d7da;border-left:4px solid #e74c3c}
+        .pros h5,.cons h5{margin-bottom:10px;font-size:1rem}
+        .pros li{color:#155724}
+        .cons li{color:#721c24}
+        ul,ol{margin-left:20px}
+        li{margin:6px 0}
+        code{background:#2c3e50;color:#1abc9c;padding:2px 8px;border-radius:4px;font-family:'Fira Code',monospace;font-size:0.9rem}
+        .visual-box{background:#1a1a2e;color:#ecf0f1;padding:20px;border-radius:12px;font-family:'Fira Code',monospace;font-size:0.85rem;overflow-x:auto;margin:15px 0;line-height:1.5;white-space:pre}
+        .decision-table{margin:25px 0}
+        .decision-row{display:grid;grid-template-columns:1fr 2fr 1fr;gap:15px;padding:15px;background:#f8f9fa;border-radius:10px;margin:10px 0;align-items:center}
+        .decision-row:hover{background:#e9ecef}
+        .use-case{font-weight:600;color:#0f3460}
+        .recommendation{color:#27ae60;font-weight:600}
+        @media(max-width:768px){.header h1{font-size:1.8rem}.section{padding:20px}.pros-cons,.decision-row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🗂️ Database Indexing Deep Dive</h1>
+        <p>Comprehensive Index Types Reference for Engineering Interviews</p>
+        <nav class="nav-pills">
+            <a href="#btree">B-Tree/B+Tree</a>
+            <a href="#hash">Hash Index</a>
+            <a href="#lsm">LSM Tree</a>
+            <a href="#bitmap">Bitmap</a>
+            <a href="#geospatial">Geospatial</a>
+            <a href="#bloom">Bloom Filter</a>
+            <a href="#inverted">Inverted Index</a>
+            <a href="#brin">BRIN</a>
+            <a href="#gin">GIN/GiST</a>
+            <a href="#comparison">Comparison Matrix</a>
+            <a href="#decision">Decision Guide</a>
+            <a href="#interview">Interview Questions</a>
+        </nav>
+    </div>
+
+    <!-- B-TREE / B+ TREE -->
+    <section class="section" id="btree">
+        <h2>B-Tree & B+ Tree Indexes</h2>
+        
+        <div class="index-card">
+            <div class="card-title"><span class="icon">🌳</span> B+ Tree Index</div>
+            <p class="subtitle">The workhorse of relational databases - balanced tree with all values in leaf nodes</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <p>B+ Tree is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in <code>O(log n)</code> time.</p>
+                <ul>
+                    <li><strong>Internal Nodes:</strong> Contain only keys (routing information) and pointers to child nodes. Keys act as separators.</li>
+                    <li><strong>Leaf Nodes:</strong> Contain all actual key-value pairs (or key-pointer pairs to data). Connected via sibling pointers forming a linked list.</li>
+                    <li><strong>Fanout:</strong> High fanout (typically 100-500 children per node) keeps tree height low (usually 3-4 levels for billions of records).</li>
+                    <li><strong>Node Size:</strong> Typically sized to match disk page size (4KB-16KB) to minimize I/O operations.</li>
+                    <li><strong>Splitting:</strong> When a node overflows, it splits into two nodes, and the middle key propagates up.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">              [50]                    ← Internal Node (routing only)
+             /    \
+      [25,35]      [75,90]            ← Internal Nodes
+     /   |   \    /   |   \
+[10,20]→[25,30]→[35,45]→[50,60]→[75,80]→[90,95]  ← Leaf Nodes (linked)
+           ↑ All data lives here, connected for range scans</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Equality (=)</strong><span>O(log n) - traverse tree to leaf</span></div>
+                <div class="query-item"><strong>Range (&lt;, &gt;, BETWEEN)</strong><span>O(log n + k) - find start, scan leaves</span></div>
+                <div class="query-item"><strong>ORDER BY</strong><span>Free if index order matches</span></div>
+                <div class="query-item"><strong>MIN/MAX</strong><span>O(log n) - leftmost/rightmost leaf</span></div>
+                <div class="query-item"><strong>PREFIX LIKE 'abc%'</strong><span>Treated as range scan</span></div>
+                <div class="query-item"><strong>GROUP BY</strong><span>Efficient with sorted data</span></div>
+                <div class="query-item unsupported"><strong>LIKE '%abc'</strong><span>❌ Cannot use index</span></div>
+                <div class="query-item unsupported"><strong>Function on column</strong><span>❌ WHERE UPPER(col) = 'X'</span></div>
+            </div>
+
+            <h4>Why B+ Tree Supports Range Queries</h4>
+            <ul>
+                <li><strong>Sorted Order:</strong> Keys are stored in sorted order at every level.</li>
+                <li><strong>Leaf Linking:</strong> Sibling pointers between leaf nodes allow sequential scanning without revisiting parent nodes.</li>
+                <li><strong>Locality:</strong> Adjacent keys are stored in same or adjacent disk pages, minimizing I/O.</li>
+            </ul>
+
+            <h4>Why B+ Tree Supports Sorting</h4>
+            <ul>
+                <li>Data is inherently sorted in leaf nodes.</li>
+                <li>For <code>ORDER BY col ASC</code>, simply scan leaves left-to-right.</li>
+                <li>For <code>ORDER BY col DESC</code>, scan right-to-left (some DBs store reverse pointers).</li>
+                <li><strong>Caveat:</strong> Multi-column index <code>(a, b)</code> can satisfy <code>ORDER BY a, b</code> or <code>ORDER BY a DESC, b DESC</code> but NOT <code>ORDER BY a ASC, b DESC</code> without additional sort.</li>
+            </ul>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h5>✅ Strengths</h5>
+                    <ul>
+                        <li>Excellent for range queries and sorting</li>
+                        <li>Predictable O(log n) performance</li>
+                        <li>Good cache utilization due to locality</li>
+                        <li>Supports partial/prefix matching</li>
+                        <li>Industry standard, battle-tested</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h5>❌ Limitations</h5>
+                    <ul>
+                        <li>Write amplification during splits</li>
+                        <li>Random I/O for updates</li>
+                        <li>Space overhead (~30-40% typical)</li>
+                        <li>Not optimal for point lookups vs hash</li>
+                        <li>Leftmost prefix rule for composite indexes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h4>Composite Index Behavior</h4>
+            <p>For index on <code>(a, b, c)</code>:</p>
+            <table>
+                <tr><th>Query</th><th>Index Usage</th><th>Explanation</th></tr>
+                <tr><td><code>WHERE a = 1</code></td><td><span class="tag tag-yes">Full</span></td><td>Uses leftmost column</td></tr>
+                <tr><td><code>WHERE a = 1 AND b = 2</code></td><td><span class="tag tag-yes">Full</span></td><td>Uses first two columns</td></tr>
+                <tr><td><code>WHERE a = 1 AND b = 2 AND c = 3</code></td><td><span class="tag tag-yes">Full</span></td><td>Uses all columns</td></tr>
+                <tr><td><code>WHERE b = 2</code></td><td><span class="tag tag-no">None</span></td><td>Skips leftmost - full scan</td></tr>
+                <tr><td><code>WHERE a = 1 AND c = 3</code></td><td><span class="tag tag-partial">Partial</span></td><td>Uses 'a', then filter 'c'</td></tr>
+                <tr><td><code>WHERE a > 1 AND b = 2</code></td><td><span class="tag tag-partial">Partial</span></td><td>Range on 'a' stops 'b' optimization</td></tr>
+            </table>
+
+            <div class="interview-box">
+                <h4>🎯 Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: Explain why B+ Tree is preferred over B-Tree for databases.</strong><br>
+                    <em>A:</em> (1) All data in leaf nodes enables efficient sequential scans - just follow sibling pointers. (2) Internal nodes store only keys, allowing higher fanout (more children per node), resulting in lower tree height. (3) Better cache utilization since frequently accessed internal nodes can stay in memory. (4) Range queries are O(log n + k) vs O(k log n) for B-Tree.</li>
+                    
+                    <li><strong>Q: How does a B+ Tree handle concurrent access? Discuss latch crabbing/coupling.</strong><br>
+                    <em>A:</em> Latch crabbing (crab-walking): Acquire latch on child before releasing parent latch. For reads: acquire shared latches going down, release parent when child is latched. For writes: acquire exclusive latches; release ancestors only when child is "safe" (won't split/merge). Optimistic approach: assume no splits, acquire shared latches down, upgrade to exclusive at leaf; restart if split needed. B-link trees add sibling pointers to handle concurrent splits without holding parent latches.</li>
+                    
+                    <li><strong>Q: What is the impact of page size on B+ Tree performance?</strong><br>
+                    <em>A:</em> Larger pages (16KB vs 4KB): Higher fanout → lower tree height → fewer I/Os for traversal. But: more wasted space if pages are partially filled, larger I/O per read, more lock contention. Smaller pages: better for OLTP with random access, less wasted space. SSD vs HDD: SSDs favor smaller pages (fast random access), HDDs favor larger pages (amortize seek time). Typical: 4KB-16KB aligned with OS page size.</li>
+                    
+                    <li><strong>Q: Explain write amplification in B+ Trees and how it compares to LSM Trees.</strong><br>
+                    <em>A:</em> B+ Tree: Each update rewrites entire page (~4-16KB) even for small change. Split cascades up to root. Write amplification ≈ 10-30x. LSM Tree: Writes go to MemTable (in-memory), flushed as SSTable. Compaction rewrites data multiple times across levels. Write amplification ≈ 10-30x (similar). Key difference: B+ Tree has random writes, LSM has sequential writes. LSM better for write-heavy, B+ Tree better for read-heavy with updates.</li>
+                    
+                    <li><strong>Q: How would you design an index for <code>WHERE status = 'active' AND created_at > ?</code> with high selectivity on status?</strong><br>
+                    <em>A:</em> If status='active' is highly selective (few active rows): Create index on <code>(status, created_at)</code>. Status equality first, then range on created_at works perfectly. If status='active' returns many rows: Consider partial index <code>CREATE INDEX ... WHERE status = 'active'</code> to exclude inactive rows. Alternative: Separate indexes if query patterns vary. For very low selectivity on status, created_at index alone might be better if range is narrow.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- HASH INDEX -->
+    <section class="section" id="hash">
+        <h2>Hash Index</h2>
+        
+        <div class="index-card hash">
+            <div class="card-title"><span class="icon">#️⃣</span> Hash Index</div>
+            <p class="subtitle">O(1) point lookups using hash function - perfect for equality searches</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <p>Hash index applies a hash function to the key to compute a bucket location where the value (or pointer to data) is stored.</p>
+                <ul>
+                    <li><strong>Hash Function:</strong> Maps key to fixed-size hash value (e.g., MurmurHash, xxHash). Must be deterministic and distribute uniformly.</li>
+                    <li><strong>Buckets:</strong> Array of slots. <code>bucket = hash(key) % num_buckets</code></li>
+                    <li><strong>Collision Handling:</strong>
+                        <ul>
+                            <li><em>Chaining:</em> Each bucket holds a linked list of entries</li>
+                            <li><em>Open Addressing:</em> Probe to next slot (linear, quadratic, or double hashing)</li>
+                            <li><em>Extendible Hashing:</em> Dynamic bucket splitting using prefix bits</li>
+                        </ul>
+                    </li>
+                    <li><strong>Rehashing:</strong> When load factor exceeds threshold (~0.7), double buckets and rehash all entries.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Hash Function: h(key) = key % 8
+
+Key: 42  → h(42) = 2  → Bucket[2]
+Key: 18  → h(18) = 2  → Bucket[2] (collision - chain or probe)
+Key: 73  → h(73) = 1  → Bucket[1]
+
+Buckets: [0][ ]  [1][73]  [2][42→18]  [3][ ]  [4][ ]  [5][ ]  [6][ ]  [7][ ]
+                              ↑ chained collision</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Equality (=)</strong><span>O(1) average - direct bucket access</span></div>
+                <div class="query-item"><strong>IN (list)</strong><span>O(k) - k separate lookups</span></div>
+                <div class="query-item unsupported"><strong>Range (&lt;, &gt;)</strong><span>❌ Hash destroys order</span></div>
+                <div class="query-item unsupported"><strong>ORDER BY</strong><span>❌ No ordering preserved</span></div>
+                <div class="query-item unsupported"><strong>LIKE patterns</strong><span>❌ Prefix matching impossible</span></div>
+                <div class="query-item unsupported"><strong>MIN/MAX</strong><span>❌ Must scan all buckets</span></div>
+            </div>
+
+            <h4>Why Hash Cannot Support Range Queries</h4>
+            <ul>
+                <li><strong>Order Destruction:</strong> Hash function intentionally scatters adjacent keys to different buckets for uniform distribution.</li>
+                <li><strong>Example:</strong> <code>hash(100) = 7, hash(101) = 3, hash(102) = 5</code> - no relationship between key order and bucket order.</li>
+                <li><strong>Consequence:</strong> Finding all keys between 100-200 requires scanning ALL buckets.</li>
+            </ul>
+
+            <h4>Consistent Hashing (Distributed Systems)</h4>
+            <p>For distributed databases (DynamoDB, Cassandra), consistent hashing provides:</p>
+            <ul>
+                <li><strong>Minimal Redistribution:</strong> Adding/removing node only moves K/n keys (K=total keys, n=nodes)</li>
+                <li><strong>Virtual Nodes:</strong> Each physical node has multiple positions on hash ring for better balance</li>
+                <li><strong>Ring Structure:</strong> Nodes and keys placed on hash ring; key goes to first node clockwise</li>
+            </ul>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h5>✅ Strengths</h5>
+                    <ul>
+                        <li>O(1) average case for lookups</li>
+                        <li>Excellent for primary key access</li>
+                        <li>Simple implementation</li>
+                        <li>Memory-efficient for small datasets</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h5>❌ Limitations</h5>
+                    <ul>
+                        <li>No range query support</li>
+                        <li>No ordering support</li>
+                        <li>Collision handling overhead</li>
+                        <li>Rehashing is expensive</li>
+                        <li>O(n) worst case with bad hash/collisions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h4>Database-Specific Hash Index Support</h4>
+            <table>
+                <tr><th>Database</th><th>Hash Index Support</th><th>Notes</th></tr>
+                <tr><td>PostgreSQL</td><td><span class="tag tag-yes">Yes</span></td><td>Crash-safe since v10; memory-only before</td></tr>
+                <tr><td>MySQL (Memory)</td><td><span class="tag tag-yes">Yes</span></td><td>MEMORY engine only, not InnoDB</td></tr>
+                <tr><td>Redis</td><td><span class="tag tag-yes">Native</span></td><td>Primary data structure</td></tr>
+                <tr><td>Oracle</td><td><span class="tag tag-partial">Limited</span></td><td>Hash clusters, not general indexes</td></tr>
+                <tr><td>MongoDB</td><td><span class="tag tag-yes">Yes</span></td><td>Hashed shard keys for distribution</td></tr>
+            </table>
+
+            <div class="interview-box">
+                <h4>🎯 Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: Design a distributed hash table that handles node failures gracefully.</strong><br>
+                    <em>A:</em> Use consistent hashing with virtual nodes (vnodes). Each physical node owns multiple positions on hash ring for better load distribution. Replication factor of 3: each key stored on 3 consecutive nodes clockwise. Use vector clocks or version vectors for conflict resolution. Implement anti-entropy protocol (Merkle trees) for replica synchronization. Handle failures via hinted handoff: temporarily store writes for failed node, replay when it recovers. Gossip protocol for membership detection.</li>
+                    
+                    <li><strong>Q: Explain the trade-offs between chaining and open addressing for collision resolution.</strong><br>
+                    <em>A:</em> <u>Chaining:</u> Simpler implementation, handles high load factors well, cache-unfriendly (pointer chasing), no clustering, supports deletion easily. <u>Open Addressing:</u> Better cache locality (data in contiguous memory), suffers from clustering (linear probing) or complex probing sequences, performance degrades sharply above 70% load factor, deletion requires tombstones. Choice: Chaining for variable-size entries or high load; Open addressing for fixed-size, cache-sensitive workloads (CPU caches).</li>
+                    
+                    <li><strong>Q: Why doesn't InnoDB support hash indexes?</strong><br>
+                    <em>A:</em> InnoDB's B+ Tree already provides O(log n) equality lookups, which is efficient enough. B+ Tree additionally supports range queries, ORDER BY, and partial key lookups that hash cannot. Adding hash indexes would double storage overhead without significant benefit. InnoDB's Adaptive Hash Index (AHI) automatically builds in-memory hash indexes for frequently accessed B+ Tree pages, getting benefits without explicit hash indexes.</li>
+                    
+                    <li><strong>Q: How would you implement a time-decaying hash for rate limiting?</strong><br>
+                    <em>A:</em> Sliding window approach: Use hash map with key = user_id, value = (count, window_start_time). On request: if current_time - window_start > window_size, reset count. Alternatively, use multiple buckets for sub-windows and sum them. Token bucket in Redis: INCR with EXPIRE combines count and TTL. For distributed: Redis MULTI/EXEC for atomicity, or use Lua scripts. Consider probabilistic counting (HyperLogLog) for high-cardinality rate limiting with memory constraints.</li>
+                    
+                    <li><strong>Q: Compare extendible hashing vs linear hashing for dynamic datasets.</strong><br>
+                    <em>A:</em> <u>Extendible Hashing:</u> Uses directory of pointers to buckets, doubles directory on overflow (not buckets). Global depth and local depth track hash prefix bits. Pros: Only split overflowing bucket. Cons: Directory can grow large, indirection overhead. <u>Linear Hashing:</u> Splits buckets in fixed order (round-robin), not necessarily the overflowing one. Uses split pointer tracking next bucket to split. Pros: No directory, predictable growth. Cons: May have overflow chains. Extendible better for skewed distributions; Linear better for uniform.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- LSM TREE -->
+    <section class="section" id="lsm">
+        <h2>LSM Tree (Log-Structured Merge Tree)</h2>
+        
+        <div class="index-card lsm">
+            <div class="card-title"><span class="icon">📝</span> LSM Tree</div>
+            <p class="subtitle">Write-optimized structure - converts random writes to sequential I/O</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>MemTable:</strong> In-memory sorted structure (usually Red-Black tree or skip list). All writes go here first.</li>
+                    <li><strong>WAL (Write-Ahead Log):</strong> Sequential log for durability before MemTable write.</li>
+                    <li><strong>SSTable (Sorted String Table):</strong> When MemTable fills up, it's flushed to disk as immutable, sorted SSTable.</li>
+                    <li><strong>Levels:</strong> SSTables organized in levels (L0, L1, L2...). L0 may overlap; L1+ are non-overlapping within level.</li>
+                    <li><strong>Compaction:</strong> Background process merges SSTables to:
+                        <ul>
+                            <li>Remove deleted/overwritten entries</li>
+                            <li>Reduce read amplification</li>
+                            <li>Move data to higher levels</li>
+                        </ul>
+                    </li>
+                    <li><strong>Bloom Filters:</strong> Each SSTable has bloom filter to skip files that definitely don't contain a key.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Write Path:                          Read Path:
+
+Client → WAL → MemTable              Client → MemTable (check first)
+              ↓ (flush when full)           ↓ (miss)
+         L0: [SST][SST][SST]              L0 SSTables (may overlap)
+              ↓ (compaction)               ↓ (miss, use bloom filter)
+         L1: [  SSTable  ]                L1 (binary search within level)
+              ↓                            ↓
+         L2: [    SSTable    ]            L2 (continue down)
+              ↓
+         L3: [      SSTable      ]
+
+Write Amplification: Data written multiple times during compactions
+Read Amplification: May check multiple SSTables for one key</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Point Lookup (=)</strong><span>Check MemTable → L0 → L1... with bloom filters</span></div>
+                <div class="query-item"><strong>Range Scan</strong><span>Merge iterators from all levels (expensive)</span></div>
+                <div class="query-item"><strong>Write/Insert</strong><span>O(1) to MemTable - extremely fast</span></div>
+                <div class="query-item"><strong>Prefix Scan</strong><span>Supported - data is sorted within SSTables</span></div>
+                <div class="query-item unsupported"><strong>Random Updates</strong><span>⚠️ Creates tombstones, cleaned in compaction</span></div>
+            </div>
+
+            <h4>Compaction Strategies</h4>
+            <table>
+                <tr><th>Strategy</th><th>Description</th><th>Trade-off</th></tr>
+                <tr><td><strong>Size-Tiered (STCS)</strong></td><td>Merge similarly-sized SSTables</td><td>Good writes, space amplification up to 2x</td></tr>
+                <tr><td><strong>Leveled (LCS)</strong></td><td>Each level is 10x previous; strict non-overlap</td><td>Better reads, higher write amplification</td></tr>
+                <tr><td><strong>FIFO</strong></td><td>Drop oldest SSTables (TTL data)</td><td>Time-series data, no merging overhead</td></tr>
+                <tr><td><strong>Universal</strong></td><td>RocksDB hybrid approach</td><td>Configurable, balances read/write/space</td></tr>
+            </table>
+
+            <h4>Amplification Factors</h4>
+            <ul>
+                <li><strong>Write Amplification:</strong> Total bytes written to storage / bytes written by application. Leveled: ~10-30x</li>
+                <li><strong>Read Amplification:</strong> Number of disk reads per query. Can be 1 (bloom filter hit) to many (worst case)</li>
+                <li><strong>Space Amplification:</strong> Storage used / actual data size. STCS can be 2x during compaction</li>
+            </ul>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h5>✅ Strengths</h5>
+                    <ul>
+                        <li>Excellent write throughput</li>
+                        <li>Sequential I/O only</li>
+                        <li>SSD-friendly</li>
+                        <li>Good for write-heavy workloads</li>
+                        <li>Compression-friendly (sorted data)</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h5>❌ Limitations</h5>
+                    <ul>
+                        <li>Write amplification from compaction</li>
+                        <li>Read amplification (check multiple levels)</li>
+                        <li>Compaction can cause latency spikes</li>
+                        <li>Space amplification during compaction</li>
+                        <li>Not ideal for read-heavy point lookups</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h4>Databases Using LSM Trees</h4>
+            <p><code>Cassandra</code>, <code>ScyllaDB</code>, <code>RocksDB</code>, <code>LevelDB</code>, <code>HBase</code>, <code>CockroachDB</code>, <code>TiKV</code>, <code>InfluxDB</code>, <code>MongoDB (WiredTiger)</code></p>
+
+            <div class="interview-box">
+                <h4>🎯 Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: Compare write amplification between B+ Tree and LSM Tree. When would you choose each?</strong><br>
+                    <em>A:</em> Both have ~10-30x write amplification but differ in I/O pattern. B+ Tree: random writes, each update rewrites a page. LSM: sequential writes, data rewritten during compaction. Choose B+ Tree for: read-heavy workloads, need for consistent latency, in-place updates, strong consistency requirements. Choose LSM for: write-heavy workloads (logs, time-series, IoT), append-mostly patterns, SSD storage (sequential writes extend SSD life), eventual consistency acceptable.</li>
+                    
+                    <li><strong>Q: How do bloom filters reduce read amplification in LSM trees?</strong><br>
+                    <em>A:</em> Without bloom filters: point lookup must check MemTable, then potentially ALL SSTables at each level until key found or confirmed missing. With bloom filters: each SSTable has a bloom filter. Before reading SSTable from disk, check bloom filter in memory. If bloom filter says "not present" → skip that SSTable (no disk I/O). False positives cause unnecessary reads, but false negatives never occur. Typical 1% false positive rate reduces disk reads by 99% for non-existent keys. Memory cost: ~10 bits per key for 1% FP rate.</li>
+                    
+                    <li><strong>Q: Design a compaction strategy for a system with 90% reads and 10% writes.</strong><br>
+                    <em>A:</em> Use Leveled Compaction (LCS) for read-heavy workloads. Rationale: LCS maintains non-overlapping SSTables per level (except L0), guaranteeing at most one SSTable per level to check for a key. Read amplification: O(1) per level vs O(n) for STCS. Trade-off: Higher write amplification (~10x vs ~4x for STCS). Additional optimizations: Larger bloom filters (lower FP rate), increase block cache for hot data, consider compression (reduces I/O at CPU cost), use direct I/O to bypass OS cache if using dedicated block cache.</li>
+                    
+                    <li><strong>Q: Explain how Cassandra's STCS vs LCS affects SLA guarantees.</strong><br>
+                    <em>A:</em> <u>STCS (Size-Tiered):</u> Compacts similarly-sized SSTables. Pros: Lower write amplification, good write throughput. Cons: Can have many overlapping SSTables → variable read latency, up to 2x space amplification during compaction (need space for old + new SSTables). p99 latency unpredictable. <u>LCS (Leveled):</u> Fixed size SSTables, no overlap within level. Pros: Predictable read latency (bounded SSTables to check), ~10% space amplification. Cons: Higher write amplification, compaction can cause latency spikes. For SLA: LCS provides more consistent p99 latency; STCS better for write throughput if latency variance acceptable.</li>
+                    
+                    <li><strong>Q: How would you tune RocksDB for a time-series workload with TTL?</strong><br>
+                    <em>A:</em> Enable FIFO compaction for pure time-series with TTL - drops oldest SSTables entirely when space limit reached (no merge overhead). If queries span time ranges, use Date-Tiered compaction or partition by time window. Set <code>compaction_options_fifo.ttl</code> to auto-expire old data. Use column families to separate hot (recent) from cold data. Enable compression (ZSTD) - time-series compresses well. Tune write buffer size for batch ingestion patterns. Consider universal compaction with periodic_compaction_seconds for stale data cleanup. Monitor compaction pending bytes to avoid write stalls.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- BITMAP INDEX -->
+    <section class="section" id="bitmap">
+        <h2>Bitmap Index</h2>
+        
+        <div class="index-card bitmap">
+            <div class="card-title"><span class="icon">🔢</span> Bitmap Index</div>
+            <p class="subtitle">Bit vectors for low-cardinality columns - extremely fast for AND/OR operations</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>Bit Vector:</strong> For each distinct value, create a bitmap where bit[i] = 1 if row i has that value.</li>
+                    <li><strong>Low Cardinality:</strong> Works best when column has few distinct values (status, gender, country, boolean flags).</li>
+                    <li><strong>Bitwise Operations:</strong> Complex conditions become fast CPU operations (AND, OR, NOT, XOR).</li>
+                    <li><strong>Compression:</strong> Sparse bitmaps compress well with run-length encoding (RLE) or WAH/EWAH.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Column "Status": [Active, Inactive, Active, Pending, Active, Inactive, Pending]
+Row IDs:             0        1        2        3        4        5        6
+
+Bitmap for "Active":   1 0 1 0 1 0 0
+Bitmap for "Inactive": 0 1 0 0 0 1 0
+Bitmap for "Pending":  0 0 0 1 0 0 1
+
+Query: WHERE status = 'Active' AND region = 'US'
+       Active_bitmap AND US_bitmap = Result (single CPU instruction per 64 rows)</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Equality (=)</strong><span>Direct bitmap lookup</span></div>
+                <div class="query-item"><strong>IN (list)</strong><span>OR multiple bitmaps</span></div>
+                <div class="query-item"><strong>Complex AND/OR</strong><span>Bitwise operations - very fast</span></div>
+                <div class="query-item"><strong>NOT</strong><span>Bit inversion</span></div>
+                <div class="query-item"><strong>COUNT</strong><span>popcount() on result bitmap</span></div>
+                <div class="query-item unsupported"><strong>Range on bitmap col</strong><span>⚠️ Requires OR of many bitmaps</span></div>
+                <div class="query-item unsupported"><strong>High cardinality</strong><span>❌ One bitmap per value - wasteful</span></div>
+            </div>
+
+            <h4>When to Use Bitmap Index</h4>
+            <ul>
+                <li>Low cardinality columns (< 100-1000 distinct values)</li>
+                <li>Read-heavy, analytical workloads (OLAP)</li>
+                <li>Complex multi-column filter conditions</li>
+                <li>Data warehouse fact table dimensions</li>
+                <li>Ad-hoc query patterns unknown at design time</li>
+            </ul>
+
+            <h4>Bitmap Compression Techniques</h4>
+            <table>
+                <tr><th>Technique</th><th>Description</th><th>Use Case</th></tr>
+                <tr><td><strong>RLE</strong></td><td>Run-Length Encoding: store (value, count)</td><td>Long runs of 0s or 1s</td></tr>
+                <tr><td><strong>WAH</strong></td><td>Word-Aligned Hybrid: 31-bit words, literal or fill</td><td>General purpose</td></tr>
+                <tr><td><strong>Roaring</strong></td><td>Hybrid of arrays, bitmaps, runs per chunk</td><td>Modern standard (Lucene, Druid)</td></tr>
+            </table>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h5>✅ Strengths</h5>
+                    <ul>
+                        <li>Extremely fast for multi-column filters</li>
+                        <li>CPU-efficient bitwise operations</li>
+                        <li>Excellent compression for low cardinality</li>
+                        <li>Great for OLAP/analytics</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h5>❌ Limitations</h5>
+                    <ul>
+                        <li>Poor for high cardinality (many distinct values)</li>
+                        <li>Expensive to update (rewrite entire bitmap)</li>
+                        <li>Not suitable for OLTP</li>
+                        <li>Lock contention on concurrent writes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="interview-box">
+                <h4>🎯 Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: At what cardinality threshold does a B-Tree outperform a bitmap index?</strong><br>
+                    <em>A:</em> General rule: Bitmap indexes are effective when cardinality is &lt; 1% of row count (e.g., &lt; 100 distinct values for 10K rows). Above ~100-1000 distinct values, B-Tree typically wins. Factors: (1) Bitmap size = num_distinct × num_rows bits. High cardinality → many sparse bitmaps → poor compression. (2) B-Tree size scales with num_rows × key_size, independent of cardinality. (3) Update cost: Bitmap requires rewriting entire bitmap; B-Tree updates single leaf. For OLTP with updates, B-Tree wins at much lower cardinality threshold.</li>
+                    
+                    <li><strong>Q: Explain how Roaring Bitmaps achieve better performance than WAH.</strong><br>
+                    <em>A:</em> Roaring divides bitmap into 65536-bit chunks (containers). Each container uses optimal format based on density: (1) Array container: For sparse chunks (&lt;4096 set bits), stores sorted list of 16-bit integers. (2) Bitmap container: For dense chunks, stores raw 65536-bit bitmap. (3) Run container: For runs of consecutive values, stores (start, length) pairs. Benefits over WAH: Better random access (WAH requires linear scan for bit access), better cache performance (smaller containers fit in cache), operations can skip entire containers, hybrid format adapts to data distribution. Used by Lucene, Druid, Spark, and ClickHouse.</li>
+                    
+                    <li><strong>Q: Design an indexing strategy for a fact table with 10 dimension columns, each with 5-50 distinct values.</strong><br>
+                    <em>A:</em> Perfect use case for bitmap indexes. Strategy: (1) Create bitmap index on each dimension column - low cardinality means compact bitmaps. (2) Use Roaring bitmap compression for each. (3) Query execution: AND/OR dimension bitmaps together using SIMD bitwise operations, then fetch only matching row IDs. (4) Consider pre-computed bitmap intersections for common filter combinations. (5) Store bitmaps column-by-column for better compression and cache utilization. (6) For time-based queries, combine with date partitioning - only load relevant partition bitmaps. This is exactly how Druid, ClickHouse, and Pinot handle OLAP queries.</li>
+                    
+                    <li><strong>Q: How do OLAP databases like Druid use bitmap indexes for real-time analytics?</strong><br>
+                    <em>A:</em> Druid architecture: (1) Data ingested into segments, each containing bitmap index per dimension. (2) At query time, filter conditions translated to bitmap operations (AND for conjunction, OR for disjunction). (3) Resulting bitmap indicates matching row IDs. (4) Metrics aggregated only for matching rows using column-oriented storage. (5) Real-time nodes ingest streaming data into in-memory segments with bitmap indexes. (6) Background task merges real-time segments into immutable historical segments with optimized compressed bitmaps. (7) Query spans both real-time and historical segments, combining results. Key insight: Bitmaps enable "late materialization" - filter first, then fetch only needed columns.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- GEOSPATIAL INDEXES -->
+    <section class="section" id="geospatial">
+        <h2>Geospatial Indexes</h2>
+
+        <div class="index-card geo">
+            <div class="card-title"><span class="icon">🌍</span> GeoHash</div>
+            <p class="subtitle">Hierarchical grid encoding - reduces 2D location to 1D string</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>Recursive Subdivision:</strong> Earth is divided into 32 cells (base32 encoded). Each character adds precision.</li>
+                    <li><strong>Interleaving:</strong> Alternately divides longitude (even bits) and latitude (odd bits).</li>
+                    <li><strong>Prefix Property:</strong> Nearby locations share common prefixes (mostly).</li>
+                    <li><strong>Precision:</strong> 
+                        <ul>
+                            <li>1 char: ±2500km</li>
+                            <li>4 chars: ±20km</li>
+                            <li>6 chars: ±610m</li>
+                            <li>8 chars: ±19m</li>
+                            <li>12 chars: ±3.7cm</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Location: (37.7749, -122.4194) San Francisco
+
+Step 1: Divide world into 32 cells → 's' (contains SF)
+Step 2: Divide 's' into 32 cells → '9' 
+Step 3: Continue... → '9q8yy'
+
+GeoHash: 9q8yyk8... (more chars = more precision)
+
+Nearby locations:
+  9q8yyk8 ← Our location
+  9q8yyk9 ← Adjacent cell (close!)
+  9q8yykb ← Adjacent cell
+  dp3w... ← Completely different (Chicago)
+
+Problem: Edge cells - two adjacent points across cell boundary have different prefixes!</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Proximity (nearby)</strong><span>Prefix search on geohash</span></div>
+                <div class="query-item"><strong>Bounding Box</strong><span>Find all geohashes in box</span></div>
+                <div class="query-item"><strong>Point in Polygon</strong><span>Approximate with geohash cells</span></div>
+                <div class="query-item unsupported"><strong>Exact Distance</strong><span>⚠️ Requires post-filtering</span></div>
+            </div>
+
+            <h4>GeoHash Edge Problem</h4>
+            <ul>
+                <li>Adjacent points across cell boundaries have completely different prefixes</li>
+                <li><strong>Solution:</strong> Query current cell AND 8 neighboring cells</li>
+                <li>Must post-filter results with actual distance calculation</li>
+            </ul>
+        </div>
+
+        <div class="index-card geo">
+            <div class="card-title"><span class="icon">🔲</span> Quadtree</div>
+            <p class="subtitle">Recursive spatial decomposition - divides space into 4 quadrants</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>Recursive Division:</strong> Space divided into 4 equal quadrants (NE, NW, SE, SW).</li>
+                    <li><strong>Adaptive:</strong> Subdivide only where data exists - sparse areas stay coarse.</li>
+                    <li><strong>Node Types:</strong>
+                        <ul>
+                            <li>Internal nodes: 4 child pointers</li>
+                            <li>Leaf nodes: actual points/objects</li>
+                        </ul>
+                    </li>
+                    <li><strong>Max Depth/Capacity:</strong> Stop subdividing at max depth or when points per node &lt; threshold.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Initial Space:         After subdivision:
+┌─────────────┐        ┌──────┬──────┐
+│             │        │      │  •   │
+│      •      │        │      ├──┬───┤
+│  •       •  │  →     │      │• │ • │
+│             │        ├──────┼──┴───┤
+│     •       │        │   •  │      │
+└─────────────┘        └──────┴──────┘
+
+Quadrants are only subdivided where multiple points exist.</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Point Query</strong><span>Traverse tree to leaf</span></div>
+                <div class="query-item"><strong>Range/Window Query</strong><span>Recursively check overlapping quadrants</span></div>
+                <div class="query-item"><strong>Nearest Neighbor</strong><span>Priority queue traversal</span></div>
+                <div class="query-item"><strong>Spatial Join</strong><span>Compare trees level by level</span></div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h5>✅ Strengths</h5>
+                    <ul>
+                        <li>Adapts to data distribution</li>
+                        <li>Simple implementation</li>
+                        <li>Good for clustered data</li>
+                        <li>Easy to visualize/debug</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h5>❌ Limitations</h5>
+                    <ul>
+                        <li>Unbalanced for skewed data</li>
+                        <li>Points on boundaries need special handling</li>
+                        <li>Wasted space in sparse regions</li>
+                        <li>Not disk-optimized (pointer chasing)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="index-card geo">
+            <div class="card-title"><span class="icon">📦</span> R-Tree</div>
+            <p class="subtitle">Balanced tree for spatial objects - minimum bounding rectangles</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>MBR (Minimum Bounding Rectangle):</strong> Each node contains MBR that encompasses all children.</li>
+                    <li><strong>Balanced:</strong> Like B-Tree, all leaves at same depth.</li>
+                    <li><strong>Overlap Allowed:</strong> Unlike B-Tree, sibling MBRs can overlap.</li>
+                    <li><strong>Insertion:</strong> Choose subtree that requires least MBR enlargement.</li>
+                    <li><strong>Splitting:</strong> When node overflows, split to minimize total MBR area/overlap.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">R-Tree Structure:
+            ┌─────────────────────────┐
+            │     Root MBR            │
+            │ ┌─────────┐ ┌─────────┐ │
+            │ │ Child 1 │ │ Child 2 │ │
+            │ │  MBR    │ │  MBR    │ │
+            │ └─────────┘ └─────────┘ │
+            └─────────────────────────┘
+                 /              \
+┌───────────────┐        ┌───────────────┐
+│ Objects A,B,C │        │ Objects D,E,F │
+│ in their MBRs │        │ in their MBRs │
+└───────────────┘        └───────────────┘
+
+Variants:
+  R*-Tree: Optimized insertion/splitting algorithms
+  R+-Tree: No overlap between sibling nodes (clips objects)</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Intersection</strong><span>Find objects intersecting query box</span></div>
+                <div class="query-item"><strong>Containment</strong><span>Objects fully within region</span></div>
+                <div class="query-item"><strong>Nearest Neighbor</strong><span>Priority queue with MBR distances</span></div>
+                <div class="query-item"><strong>Spatial Join</strong><span>Synchronized tree traversal</span></div>
+                <div class="query-item"><strong>Complex Shapes</strong><span>Polygons, lines, not just points</span></div>
+            </div>
+
+            <h4>Comparison: Quadtree vs R-Tree</h4>
+            <table>
+                <tr><th>Aspect</th><th>Quadtree</th><th>R-Tree</th></tr>
+                <tr><td>Balance</td><td>Unbalanced (data-dependent)</td><td>Always balanced</td></tr>
+                <tr><td>Object Types</td><td>Primarily points</td><td>Points, lines, polygons</td></tr>
+                <tr><td>Split Strategy</td><td>Fixed (4 quadrants)</td><td>Heuristic (minimize overlap)</td></tr>
+                <tr><td>Memory</td><td>Higher for sparse data</td><td>More compact</td></tr>
+                <tr><td>Implementation</td><td>Simple</td><td>Complex (split algorithms)</td></tr>
+                <tr><td>Disk I/O</td><td>Not optimized</td><td>Designed for disk pages</td></tr>
+            </table>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h5>✅ Strengths</h5>
+                    <ul>
+                        <li>Handles any spatial object (not just points)</li>
+                        <li>Guaranteed O(log n) height</li>
+                        <li>Designed for disk-based storage</li>
+                        <li>Industry standard (PostGIS, Oracle Spatial)</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h5>❌ Limitations</h5>
+                    <ul>
+                        <li>MBR overlap reduces efficiency</li>
+                        <li>Complex insertion/splitting logic</li>
+                        <li>Sensitive to insertion order</li>
+                        <li>Degrades with highly overlapping objects</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="index-card geo">
+            <div class="card-title"><span class="icon">🔷</span> S2 Geometry (Google)</div>
+            <p class="subtitle">Hierarchical spherical cells - maps sphere to cube faces</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>Cube Projection:</strong> Earth projected onto 6 cube faces.</li>
+                    <li><strong>Hilbert Curve:</strong> Each face filled with Hilbert curve for locality preservation.</li>
+                    <li><strong>Cell Hierarchy:</strong> 30 levels of subdivision (level 30 ≈ 1cm² cells).</li>
+                    <li><strong>Cell ID:</strong> 64-bit integer encoding face + position on Hilbert curve.</li>
+                    <li><strong>Covering:</strong> Regions represented as union of cells at various levels.</li>
+                </ul>
+            </div>
+
+            <h4>S2 vs GeoHash</h4>
+            <table>
+                <tr><th>Aspect</th><th>GeoHash</th><th>S2</th></tr>
+                <tr><td>Shape</td><td>Rectangles (distorted at poles)</td><td>Spherical cells (uniform area)</td></tr>
+                <tr><td>Edge Discontinuities</td><td>Common (Hilbert lacks)</td><td>Minimized by Hilbert curve</td></tr>
+                <tr><td>Encoding</td><td>Base32 string</td><td>64-bit integer</td></tr>
+                <tr><td>Precision</td><td>Up to 12 characters</td><td>30 levels</td></tr>
+                <tr><td>Used By</td><td>Redis, MongoDB, Elasticsearch</td><td>Google Maps, Uber H3 (similar)</td></tr>
+            </table>
+
+            <div class="interview-box">
+                <h4>🎯 Geospatial Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: Design "find all restaurants within 5km" feature for a food delivery app. Which spatial index would you choose and why?</strong><br>
+                    <em>A:</em> Use GeoHash with precision 6 (~610m cells) stored in Redis/Elasticsearch. Algorithm: (1) Compute user's geohash, (2) Query geohash prefix + 8 neighboring cells (handles edge problem), (3) Post-filter with Haversine formula for exact 5km radius. Why GeoHash: Simple to implement, works with standard B-Tree indexes (prefix search), Redis GEOADD/GEORADIUS built-in support. For higher precision or polygonal regions (delivery zones), use PostGIS with R-Tree. Trade-off: GeoHash is O(1) lookup but requires neighbor expansion; R-Tree is O(log n) but handles complex shapes.</li>
+                    
+                    <li><strong>Q: Explain the edge problem in GeoHash and how you would handle "find nearest" queries.</strong><br>
+                    <em>A:</em> Edge problem: Two points 1 meter apart across a cell boundary have completely different geohash prefixes (e.g., "9q8y" vs "9q8z"). They don't share a common prefix despite being adjacent. Solution for nearest neighbor: (1) Start with user's geohash cell, (2) Expand to 8 neighboring cells (compute neighbor geohashes using bit manipulation), (3) Query all 9 cells, (4) Calculate actual distances using Haversine/Vincenty formula, (5) If no results, expand to next ring of neighbors. Optimization: Use geohash precision that covers expected search radius. Alternative: S2 Geometry uses Hilbert curve which has fewer edge discontinuities.</li>
+                    
+                    <li><strong>Q: Compare R-Tree vs Quadtree for a ride-sharing app tracking millions of moving vehicles.</strong><br>
+                    <em>A:</em> <u>Quadtree:</u> Simpler, adaptive subdivision, but unbalanced for clustered data (downtown vs suburbs). Updates require tree restructuring. Better for static data. <u>R-Tree:</u> Balanced, guaranteed O(log n) height, handles moving objects via MBR updates, but complex split algorithms. <u>Recommendation:</u> Neither is ideal for moving objects. Use: (1) GeoHash in Redis with TTL for real-time positions (simple, fast updates), (2) Rebuild index periodically or on-demand. (3) For matching: spatial grid with hash map (constant-time cell lookup), vehicles update their cell on move. Uber uses H3 hexagonal grid cells for efficient nearest-driver queries with predictable cell neighbor relationships.</li>
+                    
+                    <li><strong>Q: How does Uber's H3 differ from Google's S2? What problem does hexagonal tiling solve?</strong><br>
+                    <em>A:</em> <u>S2:</u> Spherical cells from cube projection, uses Hilbert curve, cells are quadrilaterals (varying shapes near cube edges). <u>H3:</u> Icosahedral projection, hexagonal cells with 12 pentagons at vertices. <u>Hexagon advantages:</u> (1) All neighbors equidistant from center (6 neighbors at same distance), unlike squares (4 edge + 4 corner at different distances). (2) Better approximation of circles for radius queries. (3) Gradual distance increase when moving to neighbors (no diagonal jumps). (4) More uniform area than S2 cells near projection boundaries. H3 is purpose-built for ride-sharing use cases: finding nearest drivers, surge pricing zones, ETA calculations.</li>
+                    
+                    <li><strong>Q: Design a geo-sharded database for a global app with low-latency requirements per region.</strong><br>
+                    <em>A:</em> Architecture: (1) Shard by geographic region using geohash prefix or bounding box. Each region (US-West, EU, APAC) has dedicated database cluster. (2) Use global load balancer (Cloudflare, AWS Global Accelerator) to route users to nearest region. (3) Within region, further shard by finer geohash if needed. (4) Cross-region queries (e.g., user traveling): Read from local shard, fallback to origin region for user data. (5) Replication: Async replication between regions for disaster recovery, sync replication within region for consistency. (6) Data locality: User profile lives in "home" region, replicated read-only elsewhere. (7) Global entities (e.g., product catalog): Multi-master with conflict resolution or single-master with read replicas. Tools: CockroachDB (geo-partitioning), Spanner (global consistency), or application-level sharding with PostgreSQL.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOOM FILTER -->
+    <section class="section" id="bloom">
+        <h2>Bloom Filter</h2>
+        
+        <div class="index-card bloom">
+            <div class="card-title"><span class="icon">🌸</span> Bloom Filter</div>
+            <p class="subtitle">Probabilistic membership test - "definitely not" or "probably yes"</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>Bit Array:</strong> m bits, all initially 0.</li>
+                    <li><strong>k Hash Functions:</strong> Each element hashed k times, setting k bits to 1.</li>
+                    <li><strong>Lookup:</strong> Hash the query k times. If ALL k positions are 1 → "maybe present". If ANY is 0 → "definitely not present".</li>
+                    <li><strong>No Deletion:</strong> Cannot remove elements (clearing bit might affect other elements).</li>
+                    <li><strong>False Positive Rate:</strong> <code>p ≈ (1 - e^(-kn/m))^k</code> where n = elements inserted.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Bloom Filter (m=10 bits, k=3 hash functions):
+
+Insert "apple":  h1("apple")=2, h2("apple")=5, h3("apple")=8
+  [0,0,1,0,0,1,0,0,1,0]  ← bits 2,5,8 set to 1
+
+Insert "banana": h1("banana")=1, h2("banana")=5, h3("banana")=9
+  [0,1,1,0,0,1,0,0,1,1]  ← bits 1,5,9 set (5 already 1)
+
+Query "cherry": h1("cherry")=2, h2("cherry")=4, h3("cherry")=8
+  Check bits 2,4,8: [1,0,1] → bit 4 is 0 → DEFINITELY NOT PRESENT ✓
+
+Query "grape": h1("grape")=2, h2("grape")=5, h3("grape")=8
+  Check bits 2,5,8: [1,1,1] → all 1 → MAYBE PRESENT (false positive!)</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Membership Test</strong><span>"Is X in set?" - O(k) time</span></div>
+                <div class="query-item unsupported"><strong>Enumerate Elements</strong><span>❌ Cannot list contents</span></div>
+                <div class="query-item unsupported"><strong>Count Elements</strong><span>❌ Only approximate (Counting Bloom Filter variant)</span></div>
+                <div class="query-item unsupported"><strong>Delete Element</strong><span>❌ Standard bloom, use Counting BF variant</span></div>
+            </div>
+
+            <h4>Sizing a Bloom Filter</h4>
+            <table>
+                <tr><th>Target False Positive Rate</th><th>Bits per Element (m/n)</th><th>Optimal k</th></tr>
+                <tr><td>10% (0.1)</td><td>4.8 bits</td><td>3</td></tr>
+                <tr><td>1% (0.01)</td><td>9.6 bits</td><td>7</td></tr>
+                <tr><td>0.1% (0.001)</td><td>14.4 bits</td><td>10</td></tr>
+                <tr><td>0.01%</td><td>19.2 bits</td><td>13</td></tr>
+            </table>
+
+            <h4>Use Cases in Databases</h4>
+            <ul>
+                <li><strong>LSM Trees:</strong> Skip SSTables that definitely don't contain a key</li>
+                <li><strong>Distributed Joins:</strong> Pre-filter rows before expensive network transfer</li>
+                <li><strong>Cache:</strong> Avoid cache misses for non-existent keys</li>
+                <li><strong>Duplicate Detection:</strong> Stream deduplication (e.g., ad click fraud)</li>
+                <li><strong>Spell Checkers:</strong> Fast "word exists" check</li>
+            </ul>
+
+            <h4>Variants</h4>
+            <table>
+                <tr><th>Variant</th><th>Feature</th><th>Trade-off</th></tr>
+                <tr><td><strong>Counting Bloom Filter</strong></td><td>Supports deletion (counters instead of bits)</td><td>4x memory</td></tr>
+                <tr><td><strong>Cuckoo Filter</strong></td><td>Deletion, better space efficiency</td><td>Slightly higher lookup cost</td></tr>
+                <tr><td><strong>Quotient Filter</strong></td><td>Resizable, supports deletion</td><td>More complex</td></tr>
+                <tr><td><strong>Blocked Bloom Filter</strong></td><td>Cache-line aligned blocks</td><td>Better CPU cache performance</td></tr>
+            </table>
+
+            <div class="interview-box">
+                <h4>🎯 Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: Design a system to detect duplicate URLs in a web crawler processing 1 billion URLs/day.</strong><br>
+                    <em>A:</em> Two-tier approach: (1) Bloom filter as first pass: Size for 10 billion URLs (10-day window) at 1% FP rate = ~12GB memory. Check bloom filter before crawling - if "maybe present", check exact store. (2) Exact dedup in Redis or RocksDB for confirmed URLs with TTL. (3) Distributed: Partition bloom filter by URL hash across machines, or use counting bloom filter for URL expiration. (4) Handle false positives: Accept 1% missed URLs (re-crawl is acceptable) or use secondary exact check only for bloom filter positives. (5) Persistence: Periodically snapshot bloom filter to disk for restart recovery.</li>
+                    
+                    <li><strong>Q: How would you implement a distributed bloom filter across multiple nodes?</strong><br>
+                    <em>A:</em> Options: (1) <u>Partitioned:</u> Each node owns a slice of hash space. Route insert/lookup by hash(key) % num_nodes. Pros: Linear scaling. Cons: Node failure loses data, requires consistent hashing for rebalancing. (2) <u>Replicated:</u> Full bloom filter on each node. Inserts broadcast to all, lookups local. Pros: Fault tolerant, fast reads. Cons: Doesn't scale storage, write amplification. (3) <u>Hybrid:</u> Partition with replication factor. (4) Implementation: Use Redis with SETBIT/GETBIT operations, or implement custom with gRPC. For very large filters: use blocked bloom filter aligned to cache lines, distribute blocks across nodes.</li>
+                    
+                    <li><strong>Q: Explain when you would choose a Cuckoo Filter over a Bloom Filter.</strong><br>
+                    <em>A:</em> Choose Cuckoo Filter when: (1) Need deletion support - Cuckoo stores fingerprints that can be removed. (2) Better space efficiency at low FP rates (&lt;3%) - Cuckoo uses ~12 bits/item vs Bloom's ~10 bits at 1% FP, but Cuckoo wins at lower rates. (3) Need faster lookups - Cuckoo checks only 2 locations vs k hash functions. (4) Point lookups dominate - Cuckoo has predictable performance. Choose Bloom Filter when: (1) No deletion needed. (2) Higher FP rates acceptable (Bloom simpler). (3) Need theoretical guarantees - Bloom's FP rate is well-characterized. (4) Simpler implementation preferred. Note: Cuckoo filters can fail insertion if table is too full (typically ~95% capacity).</li>
+                    
+                    <li><strong>Q: A bloom filter for 100M elements with 1% false positive rate needs how much memory?</strong><br>
+                    <em>A:</em> Formula: m = -n × ln(p) / (ln(2))² where n=elements, p=FP rate. Calculation: m = -100M × ln(0.01) / (ln(2))² = -100M × (-4.605) / 0.480 = 959 million bits ≈ <strong>120 MB</strong>. Optimal k (hash functions) = (m/n) × ln(2) = 9.6 × 0.693 ≈ 7 hash functions. Rule of thumb: ~10 bits per element for 1% FP rate. So 100M × 10 bits = 1 billion bits ≈ 125 MB (close to exact calculation).</li>
+                    
+                    <li><strong>Q: How do databases like HBase use bloom filters to optimize read performance?</strong><br>
+                    <em>A:</em> HBase stores data in HFiles (similar to SSTables). Without bloom filter: Point lookup must check ALL HFiles in a region that might contain the row key. With bloom filter: Each HFile has an associated bloom filter loaded in memory. On read: (1) Check bloom filter - if negative, skip HFile entirely (no disk I/O). (2) If positive, read HFile's block index, then data block. HBase supports ROW (filter on row key) and ROWCOL (filter on row+column qualifier) bloom filters. ROWCOL is larger but better for wide rows with many columns. Configuration: <code>BLOOMFILTER => 'ROW'</code> in table schema. Impact: Can reduce disk reads by 10-100x for point lookups on tables with many HFiles.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- INVERTED INDEX -->
+    <section class="section" id="inverted">
+        <h2>Inverted Index</h2>
+        
+        <div class="index-card inverted">
+            <div class="card-title"><span class="icon">📚</span> Inverted Index</div>
+            <p class="subtitle">Term-to-document mapping - the heart of full-text search engines</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>Dictionary:</strong> Sorted list of all unique terms (words) in the corpus.</li>
+                    <li><strong>Posting List:</strong> For each term, a list of document IDs (and positions) where it appears.</li>
+                    <li><strong>Tokenization:</strong> Text → tokens (words, n-grams, etc.)</li>
+                    <li><strong>Normalization:</strong> Lowercasing, stemming (running→run), lemmatization</li>
+                    <li><strong>Stop Words:</strong> Remove common words (the, is, at) to save space</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Documents:
+  Doc1: "The quick brown fox"
+  Doc2: "The quick rabbit"  
+  Doc3: "Brown fox jumps"
+
+Inverted Index (after stop word removal, lowercasing):
+┌──────────┬─────────────────────────────────────┐
+│   Term   │     Posting List (doc_id:positions) │
+├──────────┼─────────────────────────────────────┤
+│  brown   │ [Doc1:2, Doc3:0]                    │
+│  fox     │ [Doc1:3, Doc3:1]                    │
+│  jumps   │ [Doc3:2]                            │
+│  quick   │ [Doc1:1, Doc2:1]                    │
+│  rabbit  │ [Doc2:2]                            │
+└──────────┴─────────────────────────────────────┘
+
+Query: "quick brown"
+  → Intersect posting lists: quick ∩ brown = [Doc1]</div>
+
+            <h4>Supported Query Types</h4>
+            <div class="query-support">
+                <div class="query-item"><strong>Term Search</strong><span>Direct posting list lookup</span></div>
+                <div class="query-item"><strong>Boolean (AND/OR/NOT)</strong><span>Set operations on posting lists</span></div>
+                <div class="query-item"><strong>Phrase Search</strong><span>Position intersection</span></div>
+                <div class="query-item"><strong>Wildcard</strong><span>Prefix tree on dictionary</span></div>
+                <div class="query-item"><strong>Fuzzy Search</strong><span>Edit distance on terms</span></div>
+                <div class="query-item"><strong>Relevance Ranking</strong><span>TF-IDF, BM25 scoring</span></div>
+            </div>
+
+            <h4>Scoring Algorithms</h4>
+            <ul>
+                <li><strong>TF-IDF:</strong> Term Frequency × Inverse Document Frequency
+                    <ul>
+                        <li>TF: How often term appears in document</li>
+                        <li>IDF: log(N/df) - penalizes common terms</li>
+                    </ul>
+                </li>
+                <li><strong>BM25:</strong> Improved TF-IDF with saturation and document length normalization
+                    <code>score = IDF × (tf × (k1 + 1)) / (tf + k1 × (1 - b + b × docLen/avgDocLen))</code>
+                </li>
+            </ul>
+
+            <h4>Index Structures</h4>
+            <table>
+                <tr><th>Structure</th><th>Purpose</th><th>Used For</th></tr>
+                <tr><td><strong>Term Dictionary</strong></td><td>Term → Posting list pointer</td><td>FST (Finite State Transducer) in Lucene</td></tr>
+                <tr><td><strong>Posting Lists</strong></td><td>DocIDs per term</td><td>Compressed (delta + VByte/PFOR)</td></tr>
+                <tr><td><strong>Term Vectors</strong></td><td>Per-document term frequencies</td><td>More Like This, highlighting</td></tr>
+                <tr><td><strong>Doc Values</strong></td><td>Columnar storage for sorting/aggregation</td><td>Fast sorting, faceting</td></tr>
+            </table>
+
+            <h4>Databases Using Inverted Indexes</h4>
+            <p><code>Elasticsearch</code>, <code>Apache Solr</code>, <code>Apache Lucene</code>, <code>PostgreSQL (GIN)</code>, <code>MongoDB (text index)</code>, <code>Algolia</code>, <code>Meilisearch</code></p>
+
+            <div class="interview-box">
+                <h4>🎯 Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: Design a search system that can handle 10K queries/second with sub-100ms latency.</strong><br>
+                    <em>A:</em> Architecture: (1) Horizontal sharding: Split index by document hash or time range across N shards. Each shard handles 10K/N QPS. (2) Replication: Each shard has 2-3 replicas for fault tolerance and read scaling. (3) Query routing: Scatter-gather pattern - query all shards in parallel, merge results. (4) Caching: Query result cache (Redis) for repeated queries, filter cache for common filters. (5) Hardware: SSDs for index storage, enough RAM for posting lists and filter caches. (6) Optimization: Use doc values for sorting/aggregation, limit result set size, use early termination for top-K queries. (7) Monitoring: p99 latency per shard, identify slow shards. With 10 shards × 3 replicas, each replica handles ~333 QPS which is comfortable for Elasticsearch.</li>
+                    
+                    <li><strong>Q: Explain how Elasticsearch achieves near real-time search despite using immutable segments.</strong><br>
+                    <em>A:</em> ES uses a "refresh" mechanism: (1) Documents are first written to in-memory buffer (not searchable). (2) Every 1 second (default), buffer is written to a new segment and opened for search - this is "refresh". Segment is immutable but initially only in filesystem cache (not fsync'd). (3) Segments are periodically merged in background to reduce segment count. (4) Every 5 seconds (or on request), translog is fsync'd for durability. Near real-time = 1 second delay between write and searchable. Trade-off: Shorter refresh interval = more segments = slower searches and more merging. Can force refresh with <code>?refresh=true</code> on write (expensive, use sparingly).</li>
+                    
+                    <li><strong>Q: Compare TF-IDF vs BM25. When would you choose each?</strong><br>
+                    <em>A:</em> <u>TF-IDF:</u> score = TF × IDF. TF (term frequency) increases linearly - document with term 10x is scored 10x higher. No document length normalization in basic form. <u>BM25:</u> Adds saturation (diminishing returns for TF - 10 occurrences isn't 10x better than 1) and document length normalization (short docs with term matches rank higher than long docs). Parameters k1 (TF saturation, typically 1.2) and b (length normalization, typically 0.75). <u>Choose TF-IDF:</u> Simple use cases, when document length is uniform, academic/legacy systems. <u>Choose BM25:</u> Default choice for modern search, variable document lengths, when relevance matters. BM25 is default in Elasticsearch/Lucene. For most cases, BM25 outperforms TF-IDF with minimal tuning.</li>
+                    
+                    <li><strong>Q: How would you implement typeahead/autocomplete at scale?</strong><br>
+                    <em>A:</em> Approaches by scale: (1) <u>Small (&lt;100K suggestions):</u> Trie in memory with prefix lookup. (2) <u>Medium:</u> Elasticsearch completion suggester (FST-based, memory-efficient). (3) <u>Large scale:</u> Edge n-gram tokenization - index "search" as ["s", "se", "sea", "sear", "searc", "search"]. Query is simple prefix match. (4) Ranking: Combine text match with popularity (query frequency), freshness, personalization. (5) Architecture: Dedicated autocomplete index separate from main search (smaller, faster refresh). (6) Caching: CDN edge caching for popular prefixes, Redis for personalized suggestions. (7) Optimization: Limit to top-K results, use filter context for user/context restrictions. Latency target: &lt;50ms for responsive UX.</li>
+                    
+                    <li><strong>Q: Design a search ranking system that incorporates user behavior signals.</strong><br>
+                    <em>A:</em> Two-phase ranking: (1) <u>Retrieval (Phase 1):</u> BM25 or semantic search to get top 1000 candidates. Fast, index-based. (2) <u>Re-ranking (Phase 2):</u> ML model scores candidates using features. <u>Features:</u> Text relevance (BM25), click-through rate (CTR) on this query-doc pair, dwell time, recency, document quality (PageRank-style), personalization (user's past clicks, embeddings). <u>Model:</u> Learning-to-rank (LambdaMART, RankNet) or neural (BERT-based cross-encoder). <u>Architecture:</u> Log clicks and impressions → Feature pipeline (Spark/Flink) → Training data → Model training → Deploy to serving (TensorFlow Serving). <u>Feedback loop:</u> A/B test new models, monitor NDCG, CTR. <u>Cold start:</u> Fall back to popularity for new users/items.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- BRIN INDEX -->
+    <section class="section" id="brin">
+        <h2>BRIN (Block Range Index)</h2>
+        
+        <div class="index-card">
+            <div class="card-title"><span class="icon">📊</span> BRIN Index</div>
+            <p class="subtitle">Lightweight index storing min/max per block range - ideal for naturally ordered data</p>
+            
+            <div class="how-it-works">
+                <h4>How It Works Internally</h4>
+                <ul>
+                    <li><strong>Block Ranges:</strong> Groups consecutive table pages (e.g., 128 pages per range).</li>
+                    <li><strong>Summary:</strong> Stores min/max values for each range.</li>
+                    <li><strong>Scan:</strong> Check range summaries first, skip ranges that can't contain target values.</li>
+                    <li><strong>Tiny Size:</strong> For 1TB table, BRIN might be only 1MB vs 20GB for B-Tree.</li>
+                </ul>
+            </div>
+
+            <div class="visual-box">Table Pages: [0-127] [128-255] [256-383] [384-511] ...
+
+BRIN Index (on timestamp column):
+┌────────────┬────────────────────────────────────┐
+│ Page Range │       Min - Max Value              │
+├────────────┼────────────────────────────────────┤
+│   0-127    │ 2024-01-01 00:00 - 2024-01-01 12:00│
+│  128-255   │ 2024-01-01 12:00 - 2024-01-02 00:00│
+│  256-383   │ 2024-01-02 00:00 - 2024-01-02 12:00│
+└────────────┴────────────────────────────────────┘
+
+Query: WHERE timestamp = '2024-01-01 18:00'
+  → Check summaries → Only scan pages 128-255</div>
+
+            <h4>When BRIN Works Well</h4>
+            <ul>
+                <li><strong>Physically Ordered Data:</strong> Append-only tables (logs, time-series, events)</li>
+                <li><strong>Correlation:</strong> Column values correlate with physical row order</li>
+                <li><strong>Large Tables:</strong> Where B-Tree index would be prohibitively large</li>
+                <li><strong>Range Queries:</strong> Date ranges, numeric ranges on ordered data</li>
+            </ul>
+
+            <h4>When BRIN Fails</h4>
+            <ul>
+                <li><strong>Randomly Ordered Data:</strong> Updates that scatter values across pages</li>
+                <li><strong>Point Queries:</strong> May still scan many pages if ranges overlap heavily</li>
+                <li><strong>Frequently Updated Tables:</strong> Correlation degrades over time</li>
+            </ul>
+
+            <div class="interview-box">
+                <h4>🎯 Interview Questions & Answers</h4>
+                <ul>
+                    <li><strong>Q: When would you choose BRIN over B-Tree for a time-series table?</strong><br>
+                    <em>A:</em> Choose BRIN when: (1) Table is append-only or mostly append (logs, events, metrics) - data is physically ordered by time. (2) Table is very large (100GB+) - BRIN index is 1000x smaller than B-Tree. (3) Queries are range-based on the ordered column (WHERE timestamp BETWEEN x AND y). (4) Can tolerate some false positives (scanning extra blocks). <u>Not suitable when:</u> Data is updated in place (destroys correlation), need point lookups (BRIN only eliminates blocks, not rows), data is randomly ordered. Example: 1TB table, BRIN ~1MB vs B-Tree ~20GB. BRIN eliminates 99% of blocks for typical time-range query.</li>
+                    
+                    <li><strong>Q: How does BRIN interact with table partitioning strategies?</strong><br>
+                    <em>A:</em> Complementary strategies: (1) Partition by time (monthly/weekly), BRIN index within each partition. Partition pruning eliminates entire partitions; BRIN eliminates blocks within remaining partitions. (2) BRIN works best when partition boundaries align with data ordering. Each partition has its own BRIN with tighter min/max ranges. (3) Consider: Partitioning provides hard boundaries (zero false positives), BRIN provides soft filtering within partitions. (4) For very large tables: Partition first (manageability, retention), then BRIN on timestamp within partitions if sub-partition queries are common. (5) Maintenance: BRIN on partitioned table only needs summarization on new/modified partitions.</li>
+                    
+                    <li><strong>Q: A BRIN index has become ineffective after many updates. What's your remediation strategy?</strong><br>
+                    <em>A:</em> Diagnosis: Check <code>pg_stats</code> correlation statistic. Value near 1.0 = good physical order; near 0 = random = BRIN ineffective. Remediation options: (1) <u>VACUUM:</u> Removes dead tuples but doesn't reorder. (2) <u>REINDEX:</u> <code>REINDEX INDEX brin_idx</code> - re-summarizes ranges but doesn't fix underlying disorder. (3) <u>CLUSTER:</u> <code>CLUSTER table USING brin_idx</code> - physically reorders table by index column. Expensive (full table rewrite, exclusive lock), but restores correlation. (4) <u>pg_repack:</u> Online table reorg without exclusive lock. (5) <u>Prevention:</u> For tables with updates, consider B-Tree instead, or partition by time and only update recent partition. (6) <u>Monitoring:</u> Track correlation over time, schedule CLUSTER during maintenance windows when it degrades below threshold.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- GIN/GiST -->
+    <section class="section" id="gin">
+        <h2>GIN & GiST Indexes (PostgreSQL)</h2>
+        
+        <div class="index-card">
+            <div class="card-title"><span class="icon">🔍</span> GIN (Generalized Inverted Index)</div>
+            <p class="subtitle">Inverted index for composite values - arrays, JSONB, full-text</p>
+            
+            <h4>How It Works</h4>
+            <ul>
+                <li>Extracts keys from composite values (array elements, JSON keys, text lexemes)</li>
+                <li>Creates inverted index: key → list of row pointers</li>
+                <li>Excellent for containment queries: <code>@&gt;</code>, <code>&lt;@</code>, <code>?</code>, <code>?&amp;</code></li>
+            </ul>
+
+            <h4>Use Cases</h4>
+            <ul>
+                <li><code>ARRAY</code> columns: "Find rows where tags contain 'urgent'"</li>
+                <li><code>JSONB</code>: "Find docs where metadata.author = 'X'"</li>
+                <li><code>tsvector</code>: Full-text search</li>
+                <li><code>HSTORE</code>: Key-value pairs</li>
+            </ul>
+        </div>
+
+        <div class="index-card">
+            <div class="card-title"><span class="icon">🌐</span> GiST (Generalized Search Tree)</div>
+            <p class="subtitle">Balanced tree framework for custom data types - geometry, ranges, text similarity</p>
+            
+            <h4>How It Works</h4>
+            <ul>
+                <li>Extensible tree structure - operators define how to split/search</li>
+                <li>Supports "lossy" indexing - may return false positives (recheck needed)</li>
+                <li>Used for: R-Tree (spatial), range types, trigram similarity</li>
+            </ul>
+
+            <h4>GIN vs GiST Comparison</h4>
+            <table>
+                <tr><th>Aspect</th><th>GIN</th><th>GiST</th></tr>
+                <tr><td>Build Time</td><td>Slower (3x)</td><td>Faster</td></tr>
+                <tr><td>Lookup Speed</td><td>Faster (3x)</td><td>Slower</td></tr>
+                <tr><td>Index Size</td><td>Larger (2-3x)</td><td>Smaller</td></tr>
+                <tr><td>Updates</td><td>Slower (pending list)</td><td>Faster</td></tr>
+                <tr><td>Best For</td><td>Static data, read-heavy</td><td>Dynamic data, mixed workload</td></tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- COMPARISON MATRIX -->
+    <section class="section" id="comparison">
+        <h2>Index Type Comparison Matrix</h2>
+        
+        <table>
+            <tr>
+                <th>Index Type</th>
+                <th>Equality</th>
+                <th>Range</th>
+                <th>Sort</th>
+                <th>Write Speed</th>
+                <th>Space</th>
+                <th>Best For</th>
+            </tr>
+            <tr>
+                <td><strong>B+ Tree</strong></td>
+                <td><span class="complexity">O(log n)</span></td>
+                <td><span class="tag tag-yes">Excellent</span></td>
+                <td><span class="tag tag-yes">Yes</span></td>
+                <td>Medium</td>
+                <td>Medium</td>
+                <td>General purpose, OLTP</td>
+            </tr>
+            <tr>
+                <td><strong>Hash</strong></td>
+                <td><span class="complexity">O(1)</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td>Fast</td>
+                <td>Low</td>
+                <td>Primary key lookups</td>
+            </tr>
+            <tr>
+                <td><strong>LSM Tree</strong></td>
+                <td><span class="complexity">O(log n)</span></td>
+                <td><span class="tag tag-partial">Yes*</span></td>
+                <td><span class="tag tag-yes">Yes</span></td>
+                <td>Very Fast</td>
+                <td>Medium</td>
+                <td>Write-heavy, time-series</td>
+            </tr>
+            <tr>
+                <td><strong>Bitmap</strong></td>
+                <td><span class="complexity">O(1)</span></td>
+                <td><span class="tag tag-partial">Poor</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td>Slow</td>
+                <td>Low*</td>
+                <td>Low cardinality, OLAP</td>
+            </tr>
+            <tr>
+                <td><strong>R-Tree</strong></td>
+                <td><span class="complexity">O(log n)</span></td>
+                <td><span class="tag tag-yes">Spatial</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td>Medium</td>
+                <td>Medium</td>
+                <td>Geospatial, 2D/3D objects</td>
+            </tr>
+            <tr>
+                <td><strong>GeoHash</strong></td>
+                <td><span class="complexity">O(1)</span></td>
+                <td><span class="tag tag-yes">Proximity</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td>Fast</td>
+                <td>Low</td>
+                <td>Point-in-radius queries</td>
+            </tr>
+            <tr>
+                <td><strong>Inverted</strong></td>
+                <td><span class="complexity">O(1)</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td><span class="tag tag-partial">By score</span></td>
+                <td>Medium</td>
+                <td>High</td>
+                <td>Full-text search</td>
+            </tr>
+            <tr>
+                <td><strong>BRIN</strong></td>
+                <td><span class="complexity">O(n/k)</span></td>
+                <td><span class="tag tag-yes">Ordered data</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td>Fast</td>
+                <td>Very Low</td>
+                <td>Append-only tables</td>
+            </tr>
+            <tr>
+                <td><strong>Bloom Filter</strong></td>
+                <td><span class="complexity">O(k)</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td><span class="tag tag-no">No</span></td>
+                <td>Fast</td>
+                <td>Very Low</td>
+                <td>Negative lookups</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- DECISION GUIDE -->
+    <section class="section" id="decision">
+        <h2>Index Selection Decision Guide</h2>
+        
+        <div class="decision-table">
+            <div class="decision-row">
+                <div class="use-case">Primary key lookups only</div>
+                <div>High-frequency point queries, no sorting or range needed</div>
+                <div class="recommendation">Hash Index</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">General OLTP workload</div>
+                <div>Mix of equality, range, and sorted queries</div>
+                <div class="recommendation">B+ Tree</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">Write-heavy ingestion</div>
+                <div>Logs, events, IoT data with mostly append operations</div>
+                <div class="recommendation">LSM Tree based DB</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">Time-series with range queries</div>
+                <div>Append-only, queries on time ranges, large tables</div>
+                <div class="recommendation">BRIN + B+ Tree</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">Low-cardinality filtering</div>
+                <div>Status flags, categories, boolean columns in analytics</div>
+                <div class="recommendation">Bitmap Index</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">Location-based "nearby" queries</div>
+                <div>Find points within radius, simple proximity</div>
+                <div class="recommendation">GeoHash / S2</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">Complex spatial objects</div>
+                <div>Polygons, intersections, containment queries</div>
+                <div class="recommendation">R-Tree (PostGIS)</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">Full-text search</div>
+                <div>Keyword search, relevance ranking, fuzzy matching</div>
+                <div class="recommendation">Inverted Index (Elasticsearch)</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">JSONB/Array containment</div>
+                <div>Find docs where array contains X, JSON field exists</div>
+                <div class="recommendation">GIN Index</div>
+            </div>
+            <div class="decision-row">
+                <div class="use-case">Skip non-existent keys</div>
+                <div>Reduce disk I/O for misses in LSM, distributed joins</div>
+                <div class="recommendation">Bloom Filter</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INTERVIEW QUESTIONS -->
+    <section class="section" id="interview">
+        <h2>Comprehensive Interview Questions & Answers</h2>
+
+        <div class="interview-box">
+            <h4>🎯 System Design Level Questions</h4>
+            <ul>
+                <li><strong>Q: Design the indexing strategy for a social media feed that needs to support: (a) user timeline, (b) hashtag search, (c) location-based discovery, (d) trending posts.</strong><br>
+                <em>A:</em> <u>(a) User Timeline:</u> B+ Tree on (user_id, created_at DESC) for efficient "latest posts by user". Fanout-on-write: pre-compute feed in Redis sorted set (score=timestamp). <u>(b) Hashtag Search:</u> Inverted index (Elasticsearch) mapping hashtag → post_ids with timestamp scoring. GIN index in PostgreSQL for JSONB tags array. <u>(c) Location Discovery:</u> GeoHash stored in Redis GEOADD for "posts near me". PostGIS R-Tree for complex geo queries. Index: (geohash_prefix, created_at). <u>(d) Trending:</u> Time-windowed counting with Count-Min Sketch or Redis Sorted Set with sliding window TTL. Pre-compute top-K hourly. No persistent index - computed aggregation.</li>
+                
+                <li><strong>Q: You're building a real-time analytics dashboard. Data is append-only with 1M rows/minute. Users query by time range and filter by 5 categorical dimensions.</strong><br>
+                <em>A:</em> Architecture: Use columnar OLAP database (ClickHouse, Druid, or Apache Pinot). Indexing: (1) Partition by time (hourly/daily) - partition pruning eliminates most data. (2) Bitmap indexes on each categorical dimension (low cardinality assumed) - enables fast AND/OR filtering. (3) No B-Tree needed - columnar scan + bitmap intersection is faster. (4) Sorted by timestamp within partitions for time-range efficiency. (5) Pre-aggregate common query patterns into materialized views. (6) For real-time: Use Kafka → Druid real-time ingestion, queries span both real-time and historical segments. At 1M/min = 16K/sec, single ClickHouse node handles this; shard for higher scale.</li>
+                
+                <li><strong>Q: Compare the storage engines of PostgreSQL, MySQL InnoDB, and Cassandra. How do their index structures affect their use cases?</strong><br>
+                <em>A:</em> <u>PostgreSQL:</u> Heap table + separate B+ Tree indexes. Supports GIN, GiST, BRIN. MVCC via tuple versioning in heap. Good for: complex queries, JSONB, geospatial. Trade-off: Index maintenance overhead, vacuum required. <u>MySQL InnoDB:</u> Clustered index (PK = data storage order). Secondary indexes store PK, require double lookup. Good for: PK-heavy access patterns, OLTP. Trade-off: Large PKs bloat secondary indexes, random PK inserts cause page splits. <u>Cassandra:</u> LSM Tree with SSTables. Partition key determines node, clustering key sorts within partition. Good for: Write-heavy, time-series, known access patterns. Trade-off: No joins, limited secondary indexes (use materialized views), eventual consistency. Choose based on: Read vs write ratio, query complexity, consistency requirements.</li>
+                
+                <li><strong>Q: A B+ Tree index on a 100GB table is causing write amplification issues. What alternatives would you consider?</strong><br>
+                <em>A:</em> Options: (1) <u>LSM-Tree based storage:</u> Switch to RocksDB/MyRocks for MySQL. Converts random writes to sequential. Trade-off: Read amplification, compaction overhead. (2) <u>Partitioning:</u> Split table by time/range. Writes concentrate on recent partition (smaller B-Tree), old partitions rarely modified. (3) <u>BRIN index:</u> If data is time-ordered, replace B-Tree with BRIN. 1000x smaller, minimal write overhead. Trade-off: Only for range queries on correlated data. (4) <u>Reduce index width:</u> Smaller keys = more keys per page = fewer splits. Remove unnecessary columns from composite index. (5) <u>Increase fill factor:</u> Leave room in pages for inserts (FILLFACTOR=70), reducing immediate splits. (6) <u>Write batching:</u> Accumulate writes in memory, bulk insert. Reduces random I/O pattern.</li>
+                
+                <li><strong>Q: Design an autocomplete system for a search box with 100M documents. How would you structure the index for sub-50ms latency?</strong><br>
+                <em>A:</em> Architecture: (1) <u>Index structure:</u> Trie or FST (Finite State Transducer) for prefix lookup. Elasticsearch completion suggester uses FST - memory-efficient, O(prefix_length) lookup. (2) <u>Data:</u> Extract titles, popular queries, entity names. Store (suggestion, weight/popularity, metadata). (3) <u>Ranking:</u> Combine prefix match score + popularity + freshness + personalization. (4) <u>Serving:</u> Keep FST in memory (~2-4GB for 100M suggestions). Replicate across edge nodes for geo-distribution. (5) <u>Latency budget:</u> Network ~20ms, lookup ~5ms, ranking ~10ms, serialization ~5ms = 40ms. (6) <u>Caching:</u> Cache popular prefixes at CDN edge (1-2 char prefixes cover most queries). (7) <u>Updates:</u> Rebuild FST periodically (hourly), or use hybrid with real-time Redis layer for trending terms.</li>
+            </ul>
+        </div>
+
+        <div class="interview-box" style="background:linear-gradient(135deg,#27ae60,#2ecc71)">
+            <h4>🔬 Deep Technical Questions</h4>
+            <ul>
+                <li><strong>Q: Explain the difference between clustered and non-clustered indexes at the page level. Why can a table have only one clustered index?</strong><br>
+                <em>A:</em> <u>Clustered index:</u> The leaf pages ARE the data pages. Data rows are physically stored in index key order. The B+ Tree leaf level contains the actual table data. <u>Non-clustered index:</u> Leaf pages contain index keys + pointers (row IDs or PKs) to the actual data pages stored separately in heap. <u>Why only one clustered:</u> Data can only be physically sorted ONE way. If clustered on column A, rows are stored in A order. Can't simultaneously be in B order. Multiple non-clustered indexes are fine because they're separate structures pointing to the same data. <u>InnoDB note:</u> PK is always clustered. Secondary indexes store PK values, requiring an extra lookup to clustered index (bookmark lookup).</li>
+                
+                <li><strong>Q: How does PostgreSQL's HOT (Heap-Only Tuple) optimization reduce index bloat?</strong><br>
+                <em>A:</em> Normally: UPDATE creates new tuple version, ALL indexes must add entry pointing to new tuple (even if indexed columns unchanged). HOT optimization: If (1) updated columns are NOT in any index, AND (2) new tuple fits on same page as old tuple, then: new tuple is created on same page, only heap is modified, no index entries added. Old tuple gets a "redirect" pointer to new tuple. Indexes still point to old location, follow redirect chain. Result: Dramatically reduces index bloat for UPDATE-heavy tables where indexed columns rarely change. Requirement: Ensure pages have free space (FILLFACTOR < 100). Check effectiveness: <code>pg_stat_user_tables.n_tup_hot_upd</code> vs <code>n_tup_upd</code>.</li>
+                
+                <li><strong>Q: Describe the trade-offs between different R-Tree split algorithms (linear, quadratic, R*-tree).</strong><br>
+                <em>A:</em> <u>Linear split (Guttman):</u> O(n) - pick two farthest entries as seeds, assign remaining by closest. Fast but poor quality splits (more overlap). <u>Quadratic split (Guttman):</u> O(n²) - pick seeds that waste most area if together, assign each entry to group needing least enlargement. Better quality, slower build. <u>R*-tree:</u> More sophisticated - considers overlap, margin, and area. Uses forced reinsert: before splitting overfull node, remove and reinsert 30% of entries. Results in better tree structure but complex implementation. <u>Trade-offs:</u> Linear = fast build, poor query; Quadratic = balanced; R* = slow build, best query performance. For read-heavy: R*-tree. For bulk loading: Linear with post-build optimization. Most implementations (PostGIS) use R*-tree variants.</li>
+                
+                <li><strong>Q: Why do LSM trees use bloom filters? Calculate the memory needed for a bloom filter with 1% false positive rate for 1 billion keys.</strong><br>
+                <em>A:</em> <u>Why:</u> LSM trees have multiple SSTables. Point lookup without bloom filter must check ALL SSTables until key found or all exhausted. With bloom filter: quickly eliminate SSTables that definitely don't contain the key. Only read SSTables where bloom filter says "maybe". Reduces disk I/O dramatically for non-existent keys. <u>Calculation:</u> Formula: m = -n × ln(p) / (ln(2))². For n=1 billion, p=0.01: m = -1×10⁹ × ln(0.01) / (0.693)² = -1×10⁹ × (-4.605) / 0.480 = 9.6 × 10⁹ bits = <strong>~1.2 GB</strong>. Optimal k = (m/n) × ln(2) = 9.6 × 0.693 ≈ 7 hash functions. Rule of thumb: ~10 bits per key for 1% FP, so 1B keys × 10 bits = 10 billion bits ≈ 1.25 GB.</li>
+                
+                <li><strong>Q: Explain how covering indexes eliminate table lookups. When would you NOT use a covering index?</strong><br>
+                <em>A:</em> <u>How:</u> A covering index includes ALL columns needed by the query (in SELECT, WHERE, ORDER BY). Query can be answered entirely from index without accessing the heap/table (index-only scan). Example: Index on (a, b, c), query <code>SELECT b, c WHERE a = 1</code> - all data in index. <u>When NOT to use:</u> (1) Wide indexes - if you include many columns, index becomes as large as table, negating benefits. (2) Frequently updated columns - every update modifies the index. (3) Low selectivity queries - if returning most of the table, sequential scan is faster. (4) Many different query patterns - can't cover all queries without excessive indexes. (5) Write-heavy workloads - each additional index column adds write overhead. Trade-off: Covering index = faster reads, larger storage, slower writes.</li>
+                
+                <li><strong>Q: How does the fill factor setting affect B+ Tree performance and maintenance?</strong><br>
+                <em>A:</em> Fill factor = percentage of page space to fill during index creation/rebuild. <u>Low fill factor (e.g., 70%):</u> Leaves 30% free space per page. Benefit: New inserts fit without page splits (especially for random inserts). Less immediate maintenance. Cost: Larger index size, more pages to scan. <u>High fill factor (e.g., 100%):</u> Packs pages fully. Benefit: Smaller index, better cache utilization, faster sequential scans. Cost: Any insert causes page split (write amplification). <u>Recommendations:</u> Sequential/append-only keys (auto-increment): 100% fill factor. Random keys (UUIDs): 70-90% fill factor. Read-heavy, rarely updated: 100%. Write-heavy with random inserts: 50-70%. PostgreSQL default: 90%. Rebuilt indexes reset to fill factor; ongoing inserts may fill pages beyond.</li>
+                
+                <li><strong>Q: Compare skip lists vs red-black trees for LSM tree memtables. Why did LevelDB choose skip lists?</strong><br>
+                <em>A:</em> Both provide O(log n) insert/search. <u>Red-Black Tree:</u> Deterministic balancing, guaranteed O(log n) worst case. Complex rotation logic. Cache-unfriendly (pointer chasing). Concurrent access requires complex locking or lock-free algorithms. <u>Skip List:</u> Probabilistic balancing, expected O(log n). Simple implementation. Better cache locality (sequential scanning). Easier to make lock-free (CAS on forward pointers). Range scans are natural (follow level-0 pointers). <u>Why LevelDB chose skip list:</u> (1) Simpler lock-free implementation for concurrent writes. (2) Better cache performance for range scans (flushing to SSTable). (3) Simpler code, easier to debug. (4) Probabilistic guarantees are "good enough" in practice. RocksDB, HBase, and most LSM implementations follow this choice.</li>
+            </ul>
+        </div>
+
+        <div class="interview-box" style="background:linear-gradient(135deg,#9b59b6,#8e44ad)">
+            <h4>⚡ Performance & Troubleshooting</h4>
+            <ul>
+                <li><strong>Q: A query with an index hint is slower than a full table scan. What could be happening?</strong><br>
+                <em>A:</em> Scenarios: (1) <u>Low selectivity:</u> Index returns many rows (>10-20% of table). Each index entry requires a separate heap lookup (random I/O). Sequential scan is one continuous read. (2) <u>Correlated columns:</u> Index order doesn't match heap order. Index scan jumps around heap pages (thrashing). (3) <u>Wide rows:</u> Fetching large rows from heap dominates, index overhead adds no benefit. (4) <u>Index-only scan not possible:</u> Need columns not in index, forcing heap access anyway. (5) <u>Outdated statistics:</u> Optimizer chose index based on stale stats, actual data distribution different. (6) <u>Buffer cache cold:</u> Index pages not cached, full scan benefits from sequential read-ahead. Fix: Run ANALYZE, check selectivity, consider covering index, or trust optimizer (remove hint).</li>
+                
+                <li><strong>Q: Your composite index (a, b, c) isn't being used for <code>WHERE a = 1 AND c = 3</code>. Why, and how would you fix it?</strong><br>
+                <em>A:</em> <u>Why:</u> B+ Tree composite indexes follow leftmost prefix rule. Index (a, b, c) is sorted by a, then b within a, then c within (a,b). Query <code>WHERE a = 1 AND c = 3</code> can use 'a' to narrow down, but 'c' values are scattered across different 'b' values within a=1. Can't efficiently seek to c=3 without knowing b. <u>What happens:</u> Index used for a=1 (partial), then filter on c=3 (not using index efficiently). <u>Fixes:</u> (1) Add index on (a, c) if this query pattern is common. (2) Reorder to (a, c, b) if b is less frequently filtered. (3) Include b in query if known: <code>WHERE a = 1 AND b = ? AND c = 3</code>. (4) Use separate indexes and let optimizer bitmap AND them (PostgreSQL). Principle: Equality columns first, then range columns, in order of selectivity.</li>
+                
+                <li><strong>Q: Index bloat is causing performance degradation. How do you detect it and what are your remediation options?</strong><br>
+                <em>A:</em> <u>Detection:</u> (1) <code>pgstattuple</code> extension: <code>SELECT * FROM pgstattuple('index_name')</code> - shows dead tuple ratio, free space. (2) Compare index size to estimated size: <code>pg_relation_size('index') vs pg_indexes</code>. Bloat if actual >> expected. (3) <code>pg_stat_user_indexes</code>: low idx_scan but high idx_tup_read/fetch ratio suggests inefficiency. (4) Tool: pgstattuple's <code>pgstatindex()</code> shows leaf_fragmentation. <u>Remediation:</u> (1) <code>REINDEX INDEX index_name</code> - rebuilds, requires exclusive lock. (2) <code>REINDEX CONCURRENTLY</code> (PG12+) - no lock but slower, needs space. (3) <code>pg_repack</code> - online rebuild without locks. (4) <code>VACUUM</code> - reclaims space within pages but doesn't shrink index. (5) For recurring bloat: Tune autovacuum (more aggressive), check for long-running transactions preventing cleanup.</li>
+                
+                <li><strong>Q: Explain index-only scans. What must be true for a query to use an index-only scan in PostgreSQL?</strong><br>
+                <em>A:</em> Index-only scan: Query answered entirely from index without heap access. <u>Requirements:</u> (1) <u>Covering index:</u> All columns in SELECT, WHERE, ORDER BY, GROUP BY must be in the index. (2) <u>Visibility:</u> PostgreSQL must know tuples are visible without checking heap. This requires visibility map to show pages are "all-visible" (all tuples visible to all transactions). Fresh after VACUUM. (3) <u>Index type:</u> B-Tree supports this; GIN/GiST have limitations. (4) <u>INCLUDE columns (PG11+):</u> Can add non-key columns to leaf pages: <code>CREATE INDEX ON t(a) INCLUDE (b, c)</code> - searchable on 'a', but 'b','c' available for index-only scan. <u>Check:</u> EXPLAIN shows "Index Only Scan". "Heap Fetches" in EXPLAIN ANALYZE shows fallbacks to heap (high number = need VACUUM).</li>
+                
+                <li><strong>Q: A GeoHash index is returning incorrect "nearest neighbor" results. What's likely wrong and how do you fix it?</strong><br>
+                <em>A:</em> <u>Likely causes:</u> (1) <u>Edge problem:</u> Query point near cell boundary. True nearest neighbor is in adjacent cell with different prefix. Querying only current cell prefix misses it. (2) <u>Precision mismatch:</u> GeoHash precision too coarse - cells larger than search radius. True nearest might be in same cell but far away. (3) <u>Only searching own cell:</u> Must search current cell + 8 neighbors to handle edge cases. <u>Fixes:</u> (1) Always query 9 cells (current + 8 neighbors). In Redis: GEORADIUS handles this automatically. (2) Post-filter with actual Haversine distance calculation - geohash is coarse filter only. (3) Use appropriate precision: 6 chars (~600m cells) for city-level, 8 chars (~20m) for street-level. (4) Consider S2 or H3 for better edge behavior (Hilbert curve reduces discontinuities). (5) For true k-NN: Use R-Tree (PostGIS) or expand search radius iteratively until k results found.</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer style="text-align:center;padding:40px;color:#ecf0f1">
+        <p>Database Indexing Deep Dive - Interview Preparation</p>
+        <p style="margin-top:10px"><a href="index.html" style="color:#e94560">← Back to Database Reference</a></p>
+    </footer>
+</div>
+</body>
+</html>
+
