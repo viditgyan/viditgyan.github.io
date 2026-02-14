@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Optimization Concepts - Staff/Principal Interview Prep</title>
+    <style>
+        :root {
+            --bg1: #0d0d1a;
+            --bg2: #1a1a2e;
+            --surface: rgba(26, 26, 46, 0.95);
+            --surface-light: rgba(40, 40, 70, 0.9);
+            --accent: #00d4ff;
+            --accent2: #ff6b6b;
+            --accent3: #4ecdc4;
+            --accent4: #ffe66d;
+            --text: #e8e8e8;
+            --text-muted: #a0a0b0;
+            --shadow: 0 20px 50px rgba(0, 212, 255, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+            line-height: 1.7;
+            color: var(--text);
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+        .header {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+            animation: pulse 8s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent3), var(--accent4));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            position: relative;
+            letter-spacing: -1px;
+        }
+
+        .header p { color: var(--text-muted); font-size: 1.1rem; position: relative; max-width: 800px; margin: 0 auto; }
+
+        .level-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent2), #ff8e53);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-top: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .layout { display: flex; gap: 24px; }
+
+        nav {
+            width: 280px;
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            background: var(--surface);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+
+        nav h3 {
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .nav-links { display: flex; flex-direction: column; gap: 6px; }
+
+        .nav-links a {
+            text-decoration: none;
+            background: var(--surface-light);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(78, 205, 196, 0.2));
+            border-left-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .nav-section { margin-bottom: 20px; }
+        .nav-section-title { color: var(--accent3); font-size: 0.75rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+        main {
+            flex: 1;
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 36px;
+            border: 1px solid rgba(0, 212, 255, 0.15);
+        }
+
+        section { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); }
+        section:last-child { border-bottom: none; }
+
+        section h2 {
+            font-size: 1.8rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .concept-num {
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            color: var(--bg1);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .intro { color: var(--text-muted); margin-bottom: 20px; font-size: 1rem; }
+
+        .concept-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .tag-cpu { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .tag-memory { background: rgba(78, 205, 196, 0.2); color: #4ecdc4; }
+        .tag-io { background: rgba(255, 230, 109, 0.2); color: #ffe66d; }
+        .tag-concurrency { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+        .tag-network { background: rgba(167, 139, 250, 0.2); color: #a78bfa; }
+        .tag-latency { background: rgba(251, 146, 60, 0.2); color: #fb923c; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+
+        .card {
+            background: var(--surface-light);
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .card h3 { font-size: 1.1rem; color: var(--accent3); margin-bottom: 12px; }
+        .card h4 { font-size: 0.95rem; color: var(--accent4); margin: 16px 0 8px 0; }
+
+        ul.list { padding-left: 20px; }
+        ul.list li { margin-bottom: 8px; color: var(--text-muted); }
+        ul.list li strong { color: var(--text); }
+
+        .code-block {
+            background: #0a0a14;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .code-block pre {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #e8e8e8;
+            line-height: 1.5;
+        }
+
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .function { color: #dcdcaa; }
+
+        .warning {
+            background: rgba(255, 107, 107, 0.15);
+            border-left: 4px solid var(--accent2);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .best-practice {
+            background: rgba(78, 205, 196, 0.15);
+            border-left: 4px solid var(--accent3);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .interview-tip {
+            background: rgba(255, 230, 109, 0.15);
+            border-left: 4px solid var(--accent4);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .interview-tip strong, .best-practice strong, .warning strong { color: var(--text); }
+
+        .table-wrapper { overflow-x: auto; margin: 16px 0; }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table th, .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(78, 205, 196, 0.3));
+            color: var(--text);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        .mental-model {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(167, 139, 250, 0.1));
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .mental-model h3 { color: var(--accent); margin-bottom: 12px; font-size: 1.2rem; }
+        .mental-model code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 1rem;
+            color: var(--accent4);
+        }
+
+        .resources { margin-top: 16px; }
+        .resources h4 { color: var(--accent); margin-bottom: 8px; font-size: 0.9rem; }
+        .resources a {
+            color: var(--accent3);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .resources a:hover { text-decoration: underline; }
+
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 1024px) {
+            .layout { flex-direction: column; }
+            nav { width: 100%; position: static; max-height: none; }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8rem; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Performance Optimization Concepts</h1>
+            <p>Deep-dive into industry-proven performance patterns used at Google, Netflix, Meta, and trading systems. Curated for Staff+ and Principal Architect interview preparation.</p>
+            <div class="level-badge">Staff / Principal Level</div>
+        </div>
+
+        <div class="mental-model">
+            <h3>🧠 Key Mental Model</h3>
+            <code>Latency = CPU + Memory + Contention + Coordination + Network</code>
+            <p style="margin-top: 12px; color: var(--text-muted);">Most wins come from <strong style="color: var(--accent);">memory access patterns</strong> and <strong style="color: var(--accent);">coordination overhead</strong>, not clever algorithms.</p>
+        </div>
+
+        <div class="layout">
+            <nav>
+                <h3>Concepts Index</h3>
+                <div class="nav-section">
+                    <div class="nav-section-title">Hardware Aware</div>
+                    <div class="nav-links">
+                        <a href="#cache-locality">1. Cache Locality Tuning</a>
+                        <a href="#branch-prediction">2. Branch Prediction</a>
+                        <a href="#numa">12. NUMA Awareness</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Data Movement</div>
+                    <div class="nav-links">
+                        <a href="#zero-copy">3. Zero-Copy</a>
+                        <a href="#memory-pooling">13. Memory Pooling</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Concurrency</div>
+                    <div class="nav-links">
+                        <a href="#lockless">4. Lockless Structures</a>
+                        <a href="#lock-minimization">6. Lock Minimization</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Cost Distribution</div>
+                    <div class="nav-links">
+                        <a href="#amortization">5. Amortization</a>
+                        <a href="#batching">8. Batching</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Latency & Resilience</div>
+                    <div class="nav-links">
+                        <a href="#tail-latency">7. Tail-Latency Awareness</a>
+                        <a href="#backpressure">10. Backpressure</a>
+                        <a href="#load-shedding">11. Load Shedding</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">I/O & Architecture</div>
+                    <div class="nav-links">
+                        <a href="#async-io">9. Async Non-Blocking I/O</a>
+                        <a href="#pgo">14. Profile-Guided Opt</a>
+                        <a href="#data-oriented">15. Data-Oriented Design</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Interview Prep</div>
+                    <div class="nav-links">
+                        <a href="#roadmap">Learning Roadmap</a>
+                        <a href="#decision-matrix">Decision Matrix</a>
+                        <a href="#interview-questions">Sample Questions</a>
+                    </div>
+                </div>
+            </nav>
+
+            <main>
+                <!-- Concept 1: Cache Locality -->
+                <section id="cache-locality">
+                    <h2><span class="concept-num">1</span> Cache Locality Tuning</h2>
+                    <p class="intro">Arrange data structures and access patterns to maximize CPU cache hits. L1 cache access is ~1ns vs ~100ns for main memory — a 100x difference that compounds in hot loops.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-cpu">CPU-bound</span>
+                        <span class="tag tag-memory">Memory</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Core Principles</h3>
+                            <ul class="list">
+                                <li><strong>Spatial locality:</strong> Access contiguous memory (arrays > linked lists)</li>
+                                <li><strong>Temporal locality:</strong> Reuse recently accessed data</li>
+                                <li><strong>Cache line size:</strong> 64 bytes on modern CPUs—align structs</li>
+                                <li><strong>False sharing:</strong> Separate frequently-modified fields to different cache lines</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>ClickHouse:</strong> Columnar (SoA) layout for SIMD-friendly scans</li>
+                                <li><strong>Redis:</strong> Flat structs for hot metadata paths</li>
+                                <li><strong>Game engines:</strong> ECS architecture, struct-of-arrays</li>
+                                <li><strong>HFT systems:</strong> Cache-line aligned order books</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Bad: Array of Structs (AoS) - poor cache utilization for column scans</span>
+<span class="keyword">struct</span> User { <span class="keyword">long</span> id; <span class="keyword">char</span> name[64]; <span class="keyword">int</span> age; <span class="keyword">double</span> balance; };
+User users[1000000];  <span class="comment">// Scanning ages touches 80 bytes per user</span>
+
+<span class="comment">// Good: Struct of Arrays (SoA) - cache-friendly for column operations</span>
+<span class="keyword">struct</span> Users {
+    <span class="keyword">long</span>   ids[1000000];      <span class="comment">// Contiguous IDs</span>
+    <span class="keyword">int</span>    ages[1000000];     <span class="comment">// Contiguous ages - 4 bytes per element</span>
+    <span class="keyword">double</span> balances[1000000]; <span class="comment">// Contiguous balances</span>
+};  <span class="comment">// Scanning ages: 16 elements per cache line</span></pre>
+                    </div>
+
+                    <div class="best-practice">
+                        <strong>When to Use:</strong> Hot loops, large dataset scans, compute-intensive paths, columnar analytics, real-time systems.
+                    </div>
+
+                    <div class="warning">
+                        <strong>Avoid When:</strong> I/O-bound or network-bound workloads where cache optimization won't move the needle. Don't over-optimize cold paths.
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Explain the difference between AoS vs SoA with concrete numbers. Know L1/L2/L3 cache sizes (~32KB/256KB/8MB). Mention prefetching and false sharing.
+                    </div>
+
+                    <div class="resources">
+                        <h4>📚 Learn More</h4>
+                        <a href="https://people.freebsd.org/~lstewart/articles/cpumemory.pdf" target="_blank">What Every Programmer Should Know About Memory (Drepper)</a> •
+                        <a href="https://www.youtube.com/watch?v=WDIkqP4JbkE" target="_blank">CPU Caches and Why You Care (CppCon)</a>
+                    </div>
+                </section>
+
+                <!-- Concept 2: Branch Prediction -->
+                <section id="branch-prediction">
+                    <h2><span class="concept-num">2</span> Branch Prediction Awareness</h2>
+                    <p class="intro">Modern CPUs predict branches to keep pipelines full. Mispredictions cost 10-20 cycles. Avoid unpredictable branches in hot paths or make them branchless.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-cpu">CPU-bound</span>
+                        <span class="tag tag-latency">Latency</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Techniques</h3>
+                            <ul class="list">
+                                <li><strong>Sort data:</strong> Make branches predictable</li>
+                                <li><strong>Branchless code:</strong> Use arithmetic instead of conditionals</li>
+                                <li><strong>Table lookups:</strong> Replace switch with arrays</li>
+                                <li><strong>CMOV instructions:</strong> Conditional moves avoid branches</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>Trading systems:</strong> Branchless order matching</li>
+                                <li><strong>Ad servers:</strong> Table-driven bid evaluation</li>
+                                <li><strong>Compression:</strong> Branchless Huffman decoding</li>
+                                <li><strong>Protocol parsers:</strong> State machines with jump tables</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Bad: Unpredictable branch in hot loop</span>
+<span class="keyword">for</span> (<span class="keyword">int</span> i = 0; i < n; i++) {
+    <span class="keyword">if</span> (data[i] >= 128)  <span class="comment">// ~50% taken - worst case for predictor</span>
+        sum += data[i];
+}
+
+<span class="comment">// Good: Branchless version</span>
+<span class="keyword">for</span> (<span class="keyword">int</span> i = 0; i < n; i++) {
+    <span class="keyword">int</span> mask = (data[i] - 128) >> 31;  <span class="comment">// All 1s if < 128, all 0s otherwise</span>
+    sum += ~mask & data[i];           <span class="comment">// Add only if >= 128</span>
+}
+
+<span class="comment">// Alternative: Sort first, then branch becomes predictable</span>
+Arrays.<span class="function">sort</span>(data);  <span class="comment">// Now branch is taken for latter half only</span></pre>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Reference the famous Stack Overflow question about sorted array performance. Explain pipeline stalls. Know when NOT to use branchless code (readability vs nanoseconds trade-off).
+                    </div>
+                </section>
+
+                <!-- Concept 3: Zero-Copy -->
+                <section id="zero-copy">
+                    <h2><span class="concept-num">3</span> Zero-Copy</h2>
+                    <p class="intro">Avoid copying data between kernel and user space, or between buffers. Critical for high-throughput systems where memory bandwidth is the bottleneck.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-io">I/O</span>
+                        <span class="tag tag-network">Network</span>
+                        <span class="tag tag-memory">Memory</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Mechanisms</h3>
+                            <ul class="list">
+                                <li><strong>sendfile():</strong> Direct file→socket transfer (Linux)</li>
+                                <li><strong>mmap:</strong> Map files directly into memory</li>
+                                <li><strong>splice/tee:</strong> Move data between pipes without copy</li>
+                                <li><strong>Direct I/O:</strong> Bypass page cache</li>
+                                <li><strong>RDMA:</strong> Direct memory access across network</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>Kafka:</strong> sendfile() for log segment transfer</li>
+                                <li><strong>Netty:</strong> CompositeBuffer, FileRegion</li>
+                                <li><strong>nginx:</strong> sendfile for static content</li>
+                                <li><strong>RocksDB:</strong> mmap for SST files</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Traditional copy (4 copies, 4 context switches)</span>
+read(file_fd, buffer, size);    <span class="comment">// kernel→user copy</span>
+write(socket_fd, buffer, size); <span class="comment">// user→kernel copy</span>
+
+<span class="comment">// Zero-copy with sendfile (Linux) - 0 CPU copies</span>
+<span class="function">sendfile</span>(socket_fd, file_fd, &offset, size);
+<span class="comment">// Data goes: disk → page cache → NIC (via DMA)</span>
+<span class="comment">// CPU never touches the data!</span>
+
+<span class="comment">// Java NIO zero-copy</span>
+FileChannel src = <span class="keyword">new</span> FileInputStream(file).<span class="function">getChannel</span>();
+src.<span class="function">transferTo</span>(0, src.<span class="function">size</span>(), socketChannel);</pre>
+                    </div>
+
+                    <div class="best-practice">
+                        <strong>When to Use:</strong> Large payload transfers (video streaming, log shipping), static file serving, high-bandwidth networking.
+                    </div>
+
+                    <div class="warning">
+                        <strong>Avoid When:</strong> Data requires transformation (compression, encryption), small payloads where overhead isn't worth it, complex buffer management.
+                    </div>
+                </section>
+
+                <!-- Concept 4: Lockless Data Structures -->
+                <section id="lockless">
+                    <h2><span class="concept-num">4</span> Lockless / Wait-Free Data Structures</h2>
+                    <p class="intro">Avoid mutex overhead using atomic operations (CAS, fetch-and-add). Critical for ultra-low-latency systems where lock contention dominates.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-concurrency">Concurrency</span>
+                        <span class="tag tag-latency">Latency</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Terminology</h3>
+                            <ul class="list">
+                                <li><strong>Lock-free:</strong> At least one thread makes progress</li>
+                                <li><strong>Wait-free:</strong> Every thread makes progress in bounded steps</li>
+                                <li><strong>Obstruction-free:</strong> Progress if run in isolation</li>
+                            </ul>
+                            <h4>Key Primitives</h4>
+                            <ul class="list">
+                                <li>CAS (Compare-And-Swap)</li>
+                                <li>FAA (Fetch-And-Add)</li>
+                                <li>Memory barriers/fences</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>LMAX Disruptor:</strong> Lock-free ring buffer (6M+ msg/sec)</li>
+                                <li><strong>JVM ConcurrentLinkedQueue:</strong> Michael-Scott queue</li>
+                                <li><strong>HFT systems:</strong> Lock-free order books</li>
+                                <li><strong>Go runtime:</strong> Work-stealing queues</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Lock-free counter using CAS</span>
+<span class="keyword">public class</span> LockFreeCounter {
+    <span class="keyword">private final</span> AtomicLong value = <span class="keyword">new</span> AtomicLong(0);
+    
+    <span class="keyword">public long</span> <span class="function">incrementAndGet</span>() {
+        <span class="keyword">long</span> current, next;
+        <span class="keyword">do</span> {
+            current = value.<span class="function">get</span>();
+            next = current + 1;
+        } <span class="keyword">while</span> (!value.<span class="function">compareAndSet</span>(current, next)); <span class="comment">// CAS loop</span>
+        <span class="keyword">return</span> next;
+    }
+}
+
+<span class="comment">// Simpler: Use built-in atomic operations</span>
+AtomicLong counter = <span class="keyword">new</span> AtomicLong();
+counter.<span class="function">incrementAndGet</span>();  <span class="comment">// Uses hardware atomic instruction</span></pre>
+                    </div>
+
+                    <div class="warning">
+                        <strong>⚠️ Complexity Warning:</strong> Lock-free code is notoriously hard to get right. Memory ordering, ABA problem, and testing are major challenges. Only use when contention is proven bottleneck.
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Explain the Disruptor pattern. Know ABA problem and solutions (tagged pointers, hazard pointers). Discuss memory ordering (acquire/release semantics).
+                    </div>
+                </section>
+
+                <!-- Concept 5: Amortization -->
+                <section id="amortization">
+                    <h2><span class="concept-num">5</span> Amortization</h2>
+                    <p class="intro">Spread expensive operations across many cheap ones. The occasional O(n) operation becomes O(1) amortized when it happens rarely enough.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-memory">Memory</span>
+                        <span class="tag tag-latency">Latency</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Classic Examples</h3>
+                            <ul class="list">
+                                <li><strong>ArrayList:</strong> Double capacity on resize (O(1) amortized add)</li>
+                                <li><strong>HashMap:</strong> Rehash when load factor exceeded</li>
+                                <li><strong>StringBuilder:</strong> Batch character appends</li>
+                                <li><strong>Generational GC:</strong> Minor collections are cheap</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>System-Level Amortization</h3>
+                            <ul class="list">
+                                <li><strong>Kafka:</strong> Batch commits to disk</li>
+                                <li><strong>LSM trees:</strong> Background compaction</li>
+                                <li><strong>Connection pools:</strong> Amortize connection setup</li>
+                                <li><strong>Buffer pools:</strong> Amortize allocation cost</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// ArrayList amortized analysis</span>
+<span class="comment">// Resize doubles capacity: 1→2→4→8→16...</span>
+<span class="comment">// n insertions cause log(n) resizes</span>
+<span class="comment">// Total copy cost: 1+2+4+...+n = 2n-1</span>
+<span class="comment">// Amortized cost per insert: (2n-1)/n ≈ O(1)</span>
+
+<span class="comment">// Kafka batch commit amortization</span>
+producer.<span class="function">send</span>(record);  <span class="comment">// Buffers in memory</span>
+<span class="comment">// Actual disk write happens when:</span>
+<span class="comment">// - Buffer full (batch.size)</span>
+<span class="comment">// - Time elapsed (linger.ms)</span>
+<span class="comment">// - Explicit flush()</span></pre>
+                    </div>
+
+                    <div class="warning">
+                        <strong>⚠️ Tail Latency Risk:</strong> Amortization creates latency spikes. A HashMap rehash during a request can blow your p99. For strict SLAs, consider incremental approaches or pre-warming.
+                    </div>
+                </section>
+
+                <!-- Concept 6: Lock Minimization -->
+                <section id="lock-minimization">
+                    <h2><span class="concept-num">6</span> Lock Minimization</h2>
+                    <p class="intro">When you must use locks, minimize their scope, duration, and granularity. The goal: reduce contention without going fully lock-free.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-concurrency">Concurrency</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Strategies</h3>
+                            <ul class="list">
+                                <li><strong>Lock striping:</strong> Partition data, one lock per partition (ConcurrentHashMap)</li>
+                                <li><strong>Read-write locks:</strong> Allow concurrent reads (ReentrantReadWriteLock)</li>
+                                <li><strong>Copy-on-write:</strong> Readers never block (CopyOnWriteArrayList)</li>
+                                <li><strong>Optimistic locking:</strong> Version checks instead of locks</li>
+                                <li><strong>Lock-free reads:</strong> Volatile + careful ordering</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Scope Reduction</h3>
+                            <ul class="list">
+                                <li>Hold locks for minimum time</li>
+                                <li>Never do I/O while holding locks</li>
+                                <li>Prepare data outside lock, update inside</li>
+                                <li>Use ThreadLocal to avoid sharing</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Bad: Single lock for entire map</span>
+<span class="keyword">synchronized</span>(map) { map.<span class="function">put</span>(key, value); }
+
+<span class="comment">// Good: Lock striping (16 segments by default)</span>
+ConcurrentHashMap<K,V> map = <span class="keyword">new</span> ConcurrentHashMap<>();
+
+<span class="comment">// Better for read-heavy: Copy-on-write</span>
+CopyOnWriteArrayList<Item> items;  <span class="comment">// Writes copy entire list</span>
+
+<span class="comment">// Best for read-heavy with rare writes: Optimistic locking</span>
+<span class="keyword">do</span> {
+    version = data.<span class="function">getVersion</span>();
+    value = data.<span class="function">compute</span>();
+} <span class="keyword">while</span> (!data.<span class="function">compareAndSetVersion</span>(version, version + 1));</pre>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Know when to use each strategy. ConcurrentHashMap internals (Java 7 segments vs Java 8 CAS + synchronized). Discuss lock ordering to prevent deadlocks.
+                    </div>
+                </section>
+
+                <!-- Concept 7: Tail Latency -->
+                <section id="tail-latency">
+                    <h2><span class="concept-num">7</span> Tail-Latency Awareness</h2>
+                    <p class="intro">At scale, p99/p999 matters more than average. If p99 is 100ms and you make 100 parallel calls, you'll likely see 100ms latency. Optimize the tail.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-latency">Latency</span>
+                        <span class="tag tag-network">Network</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Tail Latency Amplification</h3>
+                            <ul class="list">
+                                <li>Single 1% slow request → 100 deps → 63% chance of slowdown</li>
+                                <li>Background tasks (GC, compaction) cause spikes</li>
+                                <li>Queuing delays compound under load</li>
+                                <li>Network hiccups affect subset of requests</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Mitigation Strategies</h3>
+                            <ul class="list">
+                                <li><strong>Hedged requests:</strong> Send to multiple replicas, use first response</li>
+                                <li><strong>Tied requests:</strong> Send to two servers, cancel slower one</li>
+                                <li><strong>Timeouts:</strong> Aggressive timeouts + retry to different server</li>
+                                <li><strong>Circuit breakers:</strong> Fail fast when service degraded</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Hedged requests pattern</span>
+CompletableFuture<Response> primary = <span class="function">sendRequest</span>(server1);
+CompletableFuture<Response> hedged = primary
+    .<span class="function">orTimeout</span>(p95_latency, TimeUnit.MILLISECONDS)
+    .<span class="function">exceptionally</span>(ex -> {
+        <span class="keyword">return</span> <span class="function">sendRequest</span>(server2).<span class="function">join</span>();  <span class="comment">// Hedge after p95</span>
+    });
+
+<span class="comment">// Google's approach: Send to 2 replicas immediately if request is "long"</span>
+<span class="comment">// Cancel the slower one when first responds</span>
+<span class="comment">// Reduces p99 latency significantly with minimal overhead</span></pre>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Reference "The Tail at Scale" paper (Google). Know the math: P(at least one slow) = 1 - (1-p)^n. Discuss when hedging helps vs when it adds load.
+                    </div>
+
+                    <div class="resources">
+                        <h4>📚 Essential Reading</h4>
+                        <a href="https://research.google/pubs/pub40801/" target="_blank">The Tail at Scale (Dean & Barroso)</a>
+                    </div>
+                </section>
+
+                <!-- Concept 8: Batching -->
+                <section id="batching">
+                    <h2><span class="concept-num">8</span> Batching</h2>
+                    <p class="intro">Process multiple items together to amortize per-operation overhead. Fundamental trade-off: throughput increases, latency may increase.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-io">I/O</span>
+                        <span class="tag tag-network">Network</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Where Batching Wins</h3>
+                            <ul class="list">
+                                <li><strong>Disk I/O:</strong> Sequential writes >>> random writes</li>
+                                <li><strong>Network:</strong> Amortize TCP overhead, reduce RTTs</li>
+                                <li><strong>Database:</strong> Batch inserts 10-100x faster</li>
+                                <li><strong>RPC:</strong> Reduce serialization/network overhead</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Examples</h3>
+                            <ul class="list">
+                                <li><strong>Kafka:</strong> batch.size + linger.ms</li>
+                                <li><strong>JDBC:</strong> addBatch() + executeBatch()</li>
+                                <li><strong>gRPC:</strong> Streaming RPCs</li>
+                                <li><strong>Redis:</strong> MGET, Pipeline</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Bad: Individual inserts (1000 round trips)</span>
+<span class="keyword">for</span> (User u : users) {
+    stmt.<span class="function">executeUpdate</span>(<span class="string">"INSERT INTO users VALUES (...)"</span>);
+}
+
+<span class="comment">// Good: Batch inserts (1 round trip)</span>
+<span class="keyword">for</span> (User u : users) {
+    stmt.<span class="function">addBatch</span>(<span class="string">"INSERT INTO users VALUES (...)"</span>);
+}
+stmt.<span class="function">executeBatch</span>();
+
+<span class="comment">// Kafka producer batching config</span>
+props.<span class="function">put</span>(<span class="string">"batch.size"</span>, 16384);     <span class="comment">// Max bytes per batch</span>
+props.<span class="function">put</span>(<span class="string">"linger.ms"</span>, 5);           <span class="comment">// Wait up to 5ms to fill batch</span></pre>
+                    </div>
+
+                    <div class="warning">
+                        <strong>⚠️ Latency Trade-off:</strong> Batching adds latency (wait for batch to fill). Tune batch size and linger time based on your latency SLOs.
+                    </div>
+                </section>
+
+                <!-- Concept 9: Async I/O -->
+                <section id="async-io">
+                    <h2><span class="concept-num">9</span> Asynchronous & Non-Blocking I/O</h2>
+                    <p class="intro">Don't block threads waiting for I/O. A single thread can handle thousands of connections with non-blocking I/O (epoll/kqueue/io_uring).</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-io">I/O</span>
+                        <span class="tag tag-concurrency">Concurrency</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Key Concepts</h3>
+                            <ul class="list">
+                                <li><strong>Event loop:</strong> Single thread polls for ready I/O</li>
+                                <li><strong>Reactor pattern:</strong> Demultiplex events to handlers</li>
+                                <li><strong>epoll (Linux):</strong> O(1) event notification</li>
+                                <li><strong>io_uring:</strong> True async I/O (Linux 5.1+)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>Netty:</strong> EventLoop + ChannelPipeline</li>
+                                <li><strong>Node.js:</strong> libuv event loop</li>
+                                <li><strong>nginx:</strong> Worker processes with epoll</li>
+                                <li><strong>Redis:</strong> Single-threaded event loop</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Blocking I/O (1 thread per connection - doesn't scale)</span>
+<span class="keyword">while</span> (true) {
+    Socket client = server.<span class="function">accept</span>();  <span class="comment">// Blocks</span>
+    <span class="keyword">new</span> Thread(() -> <span class="function">handle</span>(client)).<span class="function">start</span>();  <span class="comment">// Thread per connection</span>
+}
+
+<span class="comment">// Non-blocking I/O with NIO Selector (thousands of connections per thread)</span>
+Selector selector = Selector.<span class="function">open</span>();
+serverChannel.<span class="function">register</span>(selector, SelectionKey.OP_ACCEPT);
+
+<span class="keyword">while</span> (true) {
+    selector.<span class="function">select</span>();  <span class="comment">// Wait for events (epoll under the hood)</span>
+    <span class="keyword">for</span> (SelectionKey key : selector.<span class="function">selectedKeys</span>()) {
+        <span class="keyword">if</span> (key.<span class="function">isAcceptable</span>()) <span class="function">handleAccept</span>(key);
+        <span class="keyword">if</span> (key.<span class="function">isReadable</span>()) <span class="function">handleRead</span>(key);
+    }
+}</pre>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Explain C10K problem and how event-driven architecture solves it. Compare thread-per-request vs event loop models. Know the trade-offs (CPU-bound work still needs threads).
+                    </div>
+                </section>
+
+                <!-- Concept 10: Backpressure -->
+                <section id="backpressure">
+                    <h2><span class="concept-num">10</span> Backpressure</h2>
+                    <p class="intro">Slow down producers when consumers can't keep up. Prevents OOMs, queue explosions, and cascading failures.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-concurrency">Concurrency</span>
+                        <span class="tag tag-network">Network</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Backpressure Mechanisms</h3>
+                            <ul class="list">
+                                <li><strong>Bounded queues:</strong> Block/reject when full</li>
+                                <li><strong>Credit-based:</strong> Consumer grants credits to producer</li>
+                                <li><strong>Rate limiting:</strong> Cap producer rate</li>
+                                <li><strong>TCP flow control:</strong> Window-based (built-in)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>Reactive Streams:</strong> Publisher.subscribe with demand</li>
+                                <li><strong>Kafka:</strong> max.block.ms, buffer.memory</li>
+                                <li><strong>gRPC:</strong> Flow control windows</li>
+                                <li><strong>Akka Streams:</strong> Async boundaries with buffers</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Reactive Streams backpressure</span>
+Flux.<span class="function">range</span>(1, 1000000)
+    .<span class="function">onBackpressureBuffer</span>(1000)  <span class="comment">// Buffer up to 1000</span>
+    .<span class="function">subscribe</span>(
+        item -> <span class="function">process</span>(item),     <span class="comment">// Slow consumer</span>
+        error -> <span class="function">handleError</span>(error),
+        () -> <span class="function">complete</span>()
+    );
+
+<span class="comment">// Bounded BlockingQueue with backpressure</span>
+BlockingQueue<Task> queue = <span class="keyword">new</span> ArrayBlockingQueue<>(1000);
+<span class="comment">// Producer blocks when queue full:</span>
+queue.<span class="function">put</span>(task);  <span class="comment">// Blocks if queue.size() == 1000</span></pre>
+                    </div>
+
+                    <div class="warning">
+                        <strong>Without Backpressure:</strong> Unbounded queues → OOM. Dropping messages without acknowledgment → data loss. Fast producer overwhelms slow consumer → cascading failure.
+                    </div>
+                </section>
+
+                <!-- Concept 11: Load Shedding -->
+                <section id="load-shedding">
+                    <h2><span class="concept-num">11</span> Workload Shaping / Load Shedding</h2>
+                    <p class="intro">When overloaded, drop or degrade non-critical work to protect core functionality. Controlled degradation beats uncontrolled failure.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-latency">Latency</span>
+                        <span class="tag tag-network">Network</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Strategies</h3>
+                            <ul class="list">
+                                <li><strong>Priority queues:</strong> Process high-priority first</li>
+                                <li><strong>Rate limiting:</strong> Cap requests per client/endpoint</li>
+                                <li><strong>Circuit breakers:</strong> Fail fast to degraded services</li>
+                                <li><strong>Graceful degradation:</strong> Return cached/stale data</li>
+                                <li><strong>Request deadlines:</strong> Drop requests past SLO</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>AWS:</strong> Throttling with exponential backoff</li>
+                                <li><strong>Google:</strong> CoDel (Controlled Delay) queues</li>
+                                <li><strong>Netflix:</strong> Hystrix circuit breakers</li>
+                                <li><strong>Envoy:</strong> Adaptive load balancing</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Load shedding with request deadlines</span>
+<span class="keyword">public</span> Response <span class="function">handleRequest</span>(Request req) {
+    <span class="keyword">if</span> (req.<span class="function">getDeadline</span>().<span class="function">isBefore</span>(Instant.<span class="function">now</span>())) {
+        metrics.<span class="function">increment</span>(<span class="string">"requests.shed"</span>);
+        <span class="keyword">return</span> Response.<span class="function">status</span>(503).<span class="function">build</span>();  <span class="comment">// Don't waste work</span>
+    }
+    <span class="comment">// Process normally...</span>
+}
+
+<span class="comment">// Adaptive load shedding based on queue depth</span>
+<span class="keyword">if</span> (queue.<span class="function">size</span>() > HIGH_WATER_MARK) {
+    <span class="keyword">if</span> (req.<span class="function">getPriority</span>() < CRITICAL) {
+        <span class="keyword">return</span> Response.<span class="function">status</span>(503).<span class="function">build</span>();  <span class="comment">// Shed low-priority</span>
+    }
+}</pre>
+                    </div>
+                </section>
+
+                <!-- Concept 12: NUMA -->
+                <section id="numa">
+                    <h2><span class="concept-num">12</span> NUMA Awareness</h2>
+                    <p class="intro">On multi-socket systems, memory access is non-uniform. Local memory access is 2-3x faster than remote. Pin threads to NUMA nodes for consistent performance.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-cpu">CPU</span>
+                        <span class="tag tag-memory">Memory</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>NUMA Concepts</h3>
+                            <ul class="list">
+                                <li><strong>NUMA node:</strong> CPU socket + local memory</li>
+                                <li><strong>Local access:</strong> ~100ns</li>
+                                <li><strong>Remote access:</strong> ~200-300ns (QPI/UPI hop)</li>
+                                <li><strong>NUMA balancing:</strong> Linux auto-migration (imperfect)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Optimization Strategies</h3>
+                            <ul class="list">
+                                <li><strong>numactl:</strong> Pin processes to NUMA nodes</li>
+                                <li><strong>Interleave:</strong> Spread allocations for bandwidth</li>
+                                <li><strong>First-touch:</strong> Allocate on thread that first accesses</li>
+                                <li><strong>Huge pages:</strong> Reduce TLB misses</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment"># Check NUMA topology</span>
+$ numactl --hardware
+
+<span class="comment"># Pin JVM to NUMA node 0</span>
+$ numactl --cpunodebind=0 --membind=0 java -jar app.jar
+
+<span class="comment"># Interleave memory across all nodes (good for bandwidth)</span>
+$ numactl --interleave=all java -jar analytics.jar
+
+<span class="comment"># JVM NUMA-aware GC (G1)</span>
+-XX:+UseG1GC -XX:+UseNUMA</pre>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Know when NUMA matters (databases, in-memory systems, large heap JVMs). Explain first-touch policy. Mention that cloud VMs often abstract this away.
+                    </div>
+                </section>
+
+                <!-- Concept 13: Memory Pooling -->
+                <section id="memory-pooling">
+                    <h2><span class="concept-num">13</span> Memory Pooling / Object Reuse</h2>
+                    <p class="intro">Pre-allocate objects and reuse them to avoid allocation overhead and GC pressure. Critical for latency-sensitive applications.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-memory">Memory</span>
+                        <span class="tag tag-latency">Latency</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Pooling Patterns</h3>
+                            <ul class="list">
+                                <li><strong>Object pools:</strong> Reuse expensive objects (connections, buffers)</li>
+                                <li><strong>Arena allocation:</strong> Bulk allocate, bulk free</li>
+                                <li><strong>ThreadLocal caches:</strong> Per-thread pools (no contention)</li>
+                                <li><strong>Slab allocation:</strong> Fixed-size object pools</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>Netty:</strong> PooledByteBufAllocator</li>
+                                <li><strong>HikariCP:</strong> Connection pooling</li>
+                                <li><strong>Protocol Buffers:</strong> Arena allocation</li>
+                                <li><strong>Game engines:</strong> Entity pools</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// Simple object pool</span>
+<span class="keyword">public class</span> ByteBufferPool {
+    <span class="keyword">private final</span> Queue<ByteBuffer> pool = <span class="keyword">new</span> ConcurrentLinkedQueue<>();
+    <span class="keyword">private final int</span> bufferSize;
+    
+    <span class="keyword">public</span> ByteBuffer <span class="function">acquire</span>() {
+        ByteBuffer buf = pool.<span class="function">poll</span>();
+        <span class="keyword">return</span> buf != <span class="keyword">null</span> ? buf.<span class="function">clear</span>() : ByteBuffer.<span class="function">allocate</span>(bufferSize);
+    }
+    
+    <span class="keyword">public void</span> <span class="function">release</span>(ByteBuffer buf) {
+        pool.<span class="function">offer</span>(buf);  <span class="comment">// Return to pool for reuse</span>
+    }
+}
+
+<span class="comment">// Netty's pooled allocator (production-grade)</span>
+ByteBufAllocator alloc = PooledByteBufAllocator.DEFAULT;
+ByteBuf buf = alloc.<span class="function">buffer</span>(1024);
+<span class="comment">// ... use buffer ...</span>
+buf.<span class="function">release</span>();  <span class="comment">// Returns to pool</span></pre>
+                    </div>
+
+                    <div class="warning">
+                        <strong>⚠️ Risks:</strong> Memory leaks (forget to release), use-after-free bugs, complexity. Pool sizing is tricky—too small causes allocation, too large wastes memory.
+                    </div>
+                </section>
+
+                <!-- Concept 14: PGO -->
+                <section id="pgo">
+                    <h2><span class="concept-num">14</span> Profile-Guided Optimization (PGO)</h2>
+                    <p class="intro">Use production traffic profiles to guide compiler optimizations. The compiler inlines hot paths, optimizes branch layouts, and improves code locality.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-cpu">CPU</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>How PGO Works</h3>
+                            <ul class="list">
+                                <li><strong>Instrument:</strong> Build with profiling enabled</li>
+                                <li><strong>Profile:</strong> Run with representative workload</li>
+                                <li><strong>Optimize:</strong> Rebuild using profile data</li>
+                                <li><strong>Typical gains:</strong> 10-30% performance improvement</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>JVM Equivalent</h3>
+                            <ul class="list">
+                                <li><strong>JIT compilation:</strong> Runtime profiling + optimization</li>
+                                <li><strong>Tiered compilation:</strong> C1 profiles → C2 optimizes</li>
+                                <li><strong>Warm-up:</strong> JVM needs traffic to optimize</li>
+                                <li><strong>AOT (GraalVM):</strong> Profile-guided native compilation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment"># C++ PGO workflow (clang)</span>
+<span class="comment"># Step 1: Instrumented build</span>
+$ clang++ -fprofile-instr-generate -o app_instrumented app.cpp
+
+<span class="comment"># Step 2: Run with representative workload</span>
+$ ./app_instrumented < production_workload.txt
+$ llvm-profdata merge -output=app.profdata default.profraw
+
+<span class="comment"># Step 3: Optimized build</span>
+$ clang++ -fprofile-instr-use=app.profdata -o app_optimized app.cpp
+
+<span class="comment"># Go PGO (Go 1.21+)</span>
+$ go build -pgo=auto  <span class="comment"># Uses default.pgo if present</span></pre>
+                    </div>
+                </section>
+
+                <!-- Concept 15: Data-Oriented Design -->
+                <section id="data-oriented">
+                    <h2><span class="concept-num">15</span> Data-Oriented Design</h2>
+                    <p class="intro">Design systems around data flow and transformation, not object hierarchies. Optimize for how data is accessed, not how it's conceptually organized.</p>
+                    
+                    <div class="concept-meta">
+                        <span class="tag tag-memory">Memory</span>
+                        <span class="tag tag-cpu">CPU</span>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Principles</h3>
+                            <ul class="list">
+                                <li><strong>Understand the data:</strong> Size, access patterns, hot/cold</li>
+                                <li><strong>Separate hot from cold:</strong> Don't pollute cache with unused data</li>
+                                <li><strong>Batch similar operations:</strong> Better instruction cache</li>
+                                <li><strong>Avoid pointer chasing:</strong> Arrays > linked structures</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Real-World Usage</h3>
+                            <ul class="list">
+                                <li><strong>Game engines:</strong> ECS (Entity Component System)</li>
+                                <li><strong>Databases:</strong> Columnar storage, vectorized execution</li>
+                                <li><strong>ML frameworks:</strong> Tensor operations on contiguous memory</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><span class="comment">// OOP: Objects with mixed hot/cold data</span>
+<span class="keyword">class</span> Entity {
+    <span class="keyword">int</span> id;              <span class="comment">// Hot: accessed every frame</span>
+    Vec3 position;       <span class="comment">// Hot: updated every frame</span>
+    Vec3 velocity;       <span class="comment">// Hot: updated every frame</span>
+    String name;         <span class="comment">// Cold: rarely accessed</span>
+    Texture texture;     <span class="comment">// Cold: only for rendering</span>
+    AudioClip sound;     <span class="comment">// Cold: rarely accessed</span>
+}
+
+<span class="comment">// DOD: Separate hot and cold data</span>
+<span class="keyword">class</span> Entities {
+    <span class="comment">// Hot arrays - updated every frame, cache-friendly</span>
+    <span class="keyword">int</span>[] ids;
+    Vec3[] positions;
+    Vec3[] velocities;
+    
+    <span class="comment">// Cold data - accessed rarely, separate cache lines</span>
+    Map<Integer, EntityMetadata> metadata;
+}</pre>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>🎯 Interview Signal:</strong> Explain hot/cold data separation. Know ECS architecture. Discuss trade-offs: DOD can hurt code readability and OOP abstractions.
+                    </div>
+                </section>
+
+                <!-- Learning Roadmap -->
+                <section id="roadmap">
+                    <h2>📈 Learning Roadmap</h2>
+                    <p class="intro">When to learn each concept based on career level.</p>
+                    
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Level</th>
+                                    <th>Focus Areas</th>
+                                    <th>Concepts to Master</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Junior</strong></td>
+                                    <td>Fundamentals, awareness</td>
+                                    <td>Batching, Async I/O basics, Connection pooling</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mid</strong></td>
+                                    <td>Apply patterns, measure</td>
+                                    <td>Lock minimization, Backpressure, Memory pooling, Amortization</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Senior</strong></td>
+                                    <td>Design decisions, trade-offs</td>
+                                    <td>Tail latency, Zero-copy, Cache locality, Load shedding</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Staff+</strong></td>
+                                    <td>System-wide optimization</td>
+                                    <td>Lockless structures, NUMA, Branch prediction, PGO, Data-oriented design</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Decision Matrix -->
+                <section id="decision-matrix">
+                    <h2>🎯 Optimization Decision Matrix</h2>
+                    <p class="intro">How Google/Netflix choose optimizations: identify bottleneck first, then select technique.</p>
+                    
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Bottleneck</th>
+                                    <th>Symptoms</th>
+                                    <th>Techniques</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>CPU-bound</strong></td>
+                                    <td>High CPU%, low I/O wait</td>
+                                    <td>Cache locality, Branch prediction, PGO, SIMD</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Memory-bound</strong></td>
+                                    <td>Cache misses, high memory bandwidth</td>
+                                    <td>Data-oriented design, Memory pooling, NUMA awareness</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contention</strong></td>
+                                    <td>Lock waits, thread blocks</td>
+                                    <td>Lock minimization, Lockless structures, Sharding</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>I/O-bound</strong></td>
+                                    <td>High I/O wait, low CPU%</td>
+                                    <td>Async I/O, Batching, Zero-copy, Caching</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Network-bound</strong></td>
+                                    <td>High latency, low throughput</td>
+                                    <td>Batching, Compression, Connection pooling, CDN</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tail latency</strong></td>
+                                    <td>High p99/p999, normal avg</td>
+                                    <td>Hedging, Timeouts, Load shedding, Backpressure</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Interview Questions -->
+                <section id="interview-questions">
+                    <h2>💼 Sample Interview Questions</h2>
+                    <p class="intro">Staff/Principal level questions to practice.</p>
+                    
+                    <div class="grid">
+                        <div class="card">
+                            <h3>System Design</h3>
+                            <ul class="list">
+                                <li>"Design a system that handles 1M requests/sec with p99 < 10ms"</li>
+                                <li>"How would you reduce tail latency in a fan-out service?"</li>
+                                <li>"Your Kafka consumer is falling behind. What do you check?"</li>
+                                <li>"Database queries are slow despite indexes. What's your approach?"</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Deep Dive</h3>
+                            <ul class="list">
+                                <li>"Explain the LMAX Disruptor architecture and why it's fast"</li>
+                                <li>"How does Kafka achieve zero-copy?"</li>
+                                <li>"What's the difference between lock-free and wait-free?"</li>
+                                <li>"How would you profile a JVM application in production?"</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Trade-offs</h3>
+                            <ul class="list">
+                                <li>"When would you NOT use async I/O?"</li>
+                                <li>"Batching vs latency—how do you decide?"</li>
+                                <li>"Object pooling pros/cons in managed languages?"</li>
+                                <li>"When is premature optimization actually premature?"</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Debugging</h3>
+                            <ul class="list">
+                                <li>"CPU is at 100% but throughput is low. What's happening?"</li>
+                                <li>"Memory usage keeps growing. How do you diagnose?"</li>
+                                <li>"Latency spikes every 30 seconds. What would you check?"</li>
+                                <li>"Service is slow only under high concurrency. Why?"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Language-Specific Notes -->
+                <section id="language-notes">
+                    <h2>🔧 Language-Specific Considerations</h2>
+                    
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Java / JVM</h3>
+                            <ul class="list">
+                                <li><strong>GC tuning:</strong> G1, ZGC for low latency</li>
+                                <li><strong>JIT warm-up:</strong> Critical for consistent latency</li>
+                                <li><strong>Off-heap:</strong> ByteBuffer.allocateDirect() avoids GC</li>
+                                <li><strong>Escape analysis:</strong> Stack allocation optimization</li>
+                                <li><strong>Tools:</strong> async-profiler, JFR, JMH for benchmarks</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Go</h3>
+                            <ul class="list">
+                                <li><strong>GC:</strong> Low-latency by default, tune GOGC</li>
+                                <li><strong>Goroutines:</strong> Cheap, but still have overhead</li>
+                                <li><strong>sync.Pool:</strong> Built-in object pooling</li>
+                                <li><strong>Escape analysis:</strong> Use -gcflags="-m" to check</li>
+                                <li><strong>Tools:</strong> pprof, trace, benchstat</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>C++</h3>
+                            <ul class="list">
+                                <li><strong>No GC:</strong> Full control, full responsibility</li>
+                                <li><strong>RAII:</strong> Deterministic resource management</li>
+                                <li><strong>Move semantics:</strong> Avoid copies</li>
+                                <li><strong>Custom allocators:</strong> Arena, pool, slab</li>
+                                <li><strong>Tools:</strong> perf, VTune, Valgrind, sanitizers</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>Rust</h3>
+                            <ul class="list">
+                                <li><strong>No GC:</strong> Ownership model, no runtime cost</li>
+                                <li><strong>Zero-cost abstractions:</strong> High-level code, low-level perf</li>
+                                <li><strong>Unsafe:</strong> For when you need raw pointers</li>
+                                <li><strong>async/await:</strong> Zero-cost async</li>
+                                <li><strong>Tools:</strong> cargo flamegraph, criterion</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            <p>Built for Staff/Principal Architect interview preparation. Master these concepts to design systems that scale.</p>
+            <p style="margin-top: 8px; font-size: 0.8rem;">Key insight: Measure first, optimize second. The profiler is your best friend.</p>
+        </footer>
+    </div>
+</body>
+</html>
